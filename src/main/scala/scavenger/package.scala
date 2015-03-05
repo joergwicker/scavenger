@@ -32,14 +32,14 @@ package object scavenger {
     }
 
   // Three different constructors for atomic algorithms
-  def trivial[X, Y](algorithmId: String)(f: (X, Context) => Future[Y]):
-    Algorithm[X, Y] = atomicAlgorithmConstructor(Trivial)(algorithmId, f)
+  def cheap[X, Y](algorithmId: String)(f: (X, Context) => Future[Y]):
+    Algorithm[X, Y] = atomicAlgorithmConstructor(Cheap)(algorithmId, f)
 
-  def heavy[X, Y](algorithmId: String)(f: (X, Context) => Future[Y]):
-    Algorithm[X, Y] = atomicAlgorithmConstructor(ComputeHeavy)(algorithmId, f)
+  def expensive[X, Y](algorithmId: String)(f: (X, Context) => Future[Y]):
+    Algorithm[X, Y] = atomicAlgorithmConstructor(Expensive)(algorithmId, f)
 
   def parallel[X, Y](algorithmId: String)(f: (X, Context) => Future[Y]):
-    Algorithm[X, Y] = atomicAlgorithmConstructor(Parallelizable)(algorithmId, f)
+    Algorithm[X, Y] = atomicAlgorithmConstructor(Parallel)(algorithmId, f)
 
   // providing implicit `CanApplyTo`s
   // for the `apply` method of `Resource` that allows to 

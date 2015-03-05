@@ -33,6 +33,8 @@ trait Resource[+X] { outer =>
    */
   def identifier: Identifier[X]
 
+  override def toString = "R(%s)".format(identifier.toString)
+
   /**
    * Start a concrete computation using context `ctx`,
    * that results in a value of type `X`
@@ -121,6 +123,11 @@ trait Resource[+X] { outer =>
   def apply[A, B](arg: Resource[A], difficulty: Difficulty)(
     implicit cat: CanApplyTo[X, A, B]
   ): Resource[B] = cat(this, arg, difficulty)
+}
+
+object Resource {
+  def apply[X](id: String, x: X): Resource[X] = 
+    Value(new freeccc.Edge[Unit, X](id), x, CachingPolicy.Nowhere)
 }
 
 /**

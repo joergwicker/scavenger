@@ -10,6 +10,6 @@ package scavenger
  * evaluated on a worker node.
  */
 sealed trait Difficulty
-case object ComputeHeavy extends Difficulty
-case object Parallelizable extends Difficulty
-case object Trivial extends Difficulty
+case object Expensive extends Difficulty
+case object Parallel extends Difficulty
+case object Cheap extends Difficulty

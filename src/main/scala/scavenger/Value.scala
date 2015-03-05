@@ -15,5 +15,6 @@ case class Value[X](
     import ctx.executionContext
     Future{ value }
   }
-  def difficulty = Trivial
+  def difficulty = Cheap
 }
+

@@ -120,6 +120,7 @@ extends Arrow[(Y => Z, Y), Z] {
   def o[W](other: Arrow[W, (Y => Z, Y)]): Arrow[W, Z] = other match {
     case i: Identity[_] => this.asInstanceOf[Arrow[W, Z]]
     case Pair(Composition(Curry(f), x), y) => f o Pair(x, y)
+    case f => Composition(this, f)
   }
   override def toString = "eval"
 }

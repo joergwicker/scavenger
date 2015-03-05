@@ -15,7 +15,7 @@ case class Fst[X, Y]() extends AtomicAlgorithm[(X, Y), X] {
     val (x, y) = xy
     Future{ x }
   }
-  def difficulty = Trivial
+  def difficulty = Cheap
 }
 
 /**
@@ -29,5 +29,5 @@ case class Snd[X, Y]() extends AtomicAlgorithm[(X, Y), Y] {
     val (x, y) = xy
     Future{ y }
   }
-  def difficulty = Trivial
+  def difficulty = Cheap
 }

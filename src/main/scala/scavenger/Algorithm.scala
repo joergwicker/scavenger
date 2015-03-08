@@ -2,13 +2,13 @@ package scavenger
 
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext
-import scavenger.categories.freeccc.Arrow
+import scavenger.categories.formalccc
 
 /**
  * Formal composition of atomic algorithms.
  */
 trait Algorithm[-X, +Y] { outer =>
-  def identifier: Arrow[X, Y]
+  def identifier: formalccc.Elem
 
   /**
    * Creates a new resource modified by this algorithm
@@ -41,11 +41,29 @@ trait Algorithm[-X, +Y] { outer =>
   def cross[A, B](other: Algorithm[A, B]): Algorithm[(X, A), (Y, B)] = 
     (this o Fst[X, A]) zip (other o Snd[X, A])
 
+  /* Doesn't work: variance doesn't work out.
   def curryFst[A, B](a: Resource[A])(ccf: CanCurryFst[X, A, B, Y]):
     Algorithm[B, Y] = ccf(this, a)
 
   def currySnd[A, B](b: Resource[B])(ccs: CanCurrySnd[X, A, B, Y]):
     Algorithm[A, Y] = ccs(this, b)
+  */
+
+  def curryFst[A, B](a: Resource[A])(cbp: CanBuildProduct[A, B, X]):
+  Algorithm[B, Y] =
+  new Algorithm[B, Y] {
+    def identifier = formalccc.Curry(outer.identifier)(a.identifier)
+    def apply(b: Resource[B]) = outer(cbp(a, b))
+  }
+
+  def currySnd[A, B](b: Resource[B])(cbp: CanBuildProduct[A, B, X]):
+  Algorithm[A, Y] =
+  new Algorithm[A, Y] {
+    import formalccc.{Curry => FCurry, _}
+    // this one is a little tricky, see p. 61 third black CS book
+    def identifier = FCurry(outer.identifier o Pair(Snd, Fst))(b.identifier)
+    def apply(a: Resource[A]) = outer(cbp(a, b))
+  }
 }
 
 /**
@@ -55,18 +73,24 @@ trait Algorithm[-X, +Y] { outer =>
  *
  * Implementations are provided in the `package.scala` file.
  */
-trait CanCurryFst[-In, -InA, -InB, +Out] {
+/*
+trait CanCurryFst[+In, -InA, -InB, +Out] {
   def apply(
     f: Algorithm[In, Out],
     input: Resource[InA]
   ): Algorithm[InB, Out]
 }
 
-trait CanCurrySnd[-In, -InA, -InB, +Out] {
+trait CanCurrySnd[+In, -InA, -InB, +Out] {
   def apply(
     f: Algorithm[In, Out],
     input: Resource[InB]
   ): Algorithm[InA, Out]
+}
+*/
+
+trait CanBuildProduct[-A, -B, +Prod] {
+  def apply(a: Resource[A], b: Resource[B]): Resource[Prod]
 }
 
 /**

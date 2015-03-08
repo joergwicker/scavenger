@@ -2,7 +2,7 @@ package scavenger
 
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext
-import scavenger.categories.freeccc
+import scavenger.categories.formalccc
 
 /**
  * `Resource` is a notion of computation that
@@ -31,7 +31,7 @@ trait Resource[+X] { outer =>
   /**
    * Formal expression that uniquely identifies this resource
    */
-  def identifier: Identifier[X]
+  def identifier: formalccc.Elem
 
   override def toString = "R(%s)".format(identifier.toString)
 
@@ -83,12 +83,12 @@ trait Resource[+X] { outer =>
    * `compute` method of the new resource.
    */
   private[scavenger] def flatMap[Y](
-    algId: freeccc.Arrow[X, Y], 
+    algId: formalccc.Elem, 
     d: Difficulty
   )(
     f: (X, Context) => Future[Y]
   ): Resource[Y] = new Resource[Y] {
-    def identifier = algId o outer.identifier
+    def identifier = algId(outer.identifier)
     def compute(ctx: Context): Future[Y] = {
       import ctx.executionContext
       for {
@@ -128,7 +128,7 @@ trait Resource[+X] { outer =>
 
 object Resource {
   def apply[X](id: String, x: X): Resource[X] = 
-    Value(new freeccc.Edge[Unit, X](id), x, CachingPolicy.Nowhere)
+    Value(new formalccc.Atom(id), x, CachingPolicy.Nowhere)
 }
 
 /**

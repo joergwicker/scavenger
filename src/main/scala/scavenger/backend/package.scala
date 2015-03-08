@@ -8,6 +8,6 @@ package scavenger
  * actors that exchange messages in order to perform the
  * computation in distributed fashion.
  */
-package object cluster {
+package object backend {
   trait HandshakeMessage
 }

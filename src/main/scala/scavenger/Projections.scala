@@ -2,14 +2,14 @@ package scavenger
 
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext
-import scavenger.categories.freeccc
+import scavenger.categories.formalccc
 
 /**
  * A distinguished type of morphism that chooses the
  * first component of a product type.
  */
 case class Fst[X, Y]() extends AtomicAlgorithm[(X, Y), X] {
-  def identifier = freeccc.Fst[X, Y]
+  def identifier = formalccc.Fst
   def apply(xy: (X, Y), ctx: Context): Future[X] = {
     import ctx.executionContext
     val (x, y) = xy
@@ -23,7 +23,7 @@ case class Fst[X, Y]() extends AtomicAlgorithm[(X, Y), X] {
  * second component of a product type.
  */
 case class Snd[X, Y]() extends AtomicAlgorithm[(X, Y), Y] {
-  def identifier = freeccc.Snd[X, Y]
+  def identifier = formalccc.Snd
   def apply(xy: (X, Y), ctx: Context): Future[Y] = {
     import ctx.executionContext
     val (x, y) = xy

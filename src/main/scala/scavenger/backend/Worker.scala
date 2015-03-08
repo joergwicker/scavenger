@@ -1,4 +1,4 @@
-package scavenger.cluster
+package scavenger.backend
 
 import akka.actor._
 import scavenger.{Resource,Context}
@@ -77,6 +77,6 @@ with Remindable {
 object Worker {
   def props(seedPath: ActorPath) = Props(classOf[Worker], seedPath)
   
-  private[cluster] case object WorkerHere extends HandshakeMessage
-  private[cluster] case object NeedJob
+  private[backend] case object WorkerHere extends HandshakeMessage
+  private[backend] case object NeedJob
 }

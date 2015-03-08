@@ -1,9 +1,9 @@
 import scala.concurrent.Future
 import scala.language.implicitConversions
-import scavenger.categories.freeccc
+import scavenger.categories.formalccc
 
 package object scavenger {
-  type Identifier[X] = freeccc.Arrow[Unit, X]
+  type Identifier[X] = formalccc.Elem
 
   // Three castings into the canoical form of a morphism
   implicit def withoutContextToFull[X, Y](f: X => Future[Y]): 
@@ -26,7 +26,7 @@ package object scavenger {
   private def atomicAlgorithmConstructor[X, Y](d: Difficulty)(
     algorithmId: String, f: (X, Context) => Future[Y]
   ): Algorithm[X, Y] = new AtomicAlgorithm[X, Y] {
-      def identifier = freeccc.Edge[X, Y](algorithmId)
+      def identifier = formalccc.Atom(algorithmId)
       def difficulty = d
       def apply(x: X, ctx: Context) = f(x, ctx)
     }
@@ -51,13 +51,14 @@ package object scavenger {
     Eval[X, Y](d)(ResourcePair(f, x))
   }
 
+  /*
   implicit def canCurryXYtoZintoXtoYtoZ[X, Y, Z]: CanCurryFst[(X,Y), X, Y, Z] =
   new CanCurryFst[(X, Y), X, Y, Z] {
     def apply(
       f: Algorithm[(X, Y), Z],
       x: Resource[X]
     ) = new Algorithm[Y, Z] {
-      def identifier = freeccc.Curry(f.identifier) o x.identifier
+      def identifier = formalccc.Curry(f.identifier)(x.identifier)
       def apply(y: Resource[Y]) = f(ResourcePair(x, y))
     }
   }
@@ -69,13 +70,18 @@ package object scavenger {
       y: Resource[Y]
     ) = new Algorithm[X, Z] {
 
-      // this one is a little tricky, see p. 61 third black CS book
-      def identifier = freeccc.Curry(
-        f.identifier o 
-        freeccc.Pair(freeccc.Snd[Y, X], freeccc.Fst[Y, X])
-      ) o y.identifier
+      import formalccc.{Curry => FCurry, _}
 
+      // this one is a little tricky, see p. 61 third black CS book
+      def identifier = FCurry(f.identifier o Pair(Snd, Fst))(y.identifier)
       def apply(x: Resource[X]) = f(ResourcePair(x, y))
     }
+  }
+  */
+
+  implicit def canBuildCouple[A, B]: CanBuildProduct[A, B, (A, B)] = 
+  new CanBuildProduct[A, B, (A, B)] {
+    def apply(a: Resource[A], b: Resource[B]): Resource[(A, B)] =
+      ResourcePair(a, b)
   }
 }

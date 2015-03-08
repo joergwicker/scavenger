@@ -1,4 +1,4 @@
-package scavenger.cluster
+package scavenger.backend
 
 import akka.actor._
 import akka.contrib.pattern.ReliableProxy
@@ -37,8 +37,8 @@ with SeedJoin {
     )
   }
   
-  protected[cluster] def master = _master
-  protected[cluster] def masterProxy = _masterProxy
+  protected[backend] def master = _master
+  protected[backend] def masterProxy = _masterProxy
 
   /**
    * Establishes connection to the master node.

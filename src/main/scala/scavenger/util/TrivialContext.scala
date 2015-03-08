@@ -1,6 +1,7 @@
 package scavenger.util
 
 import scala.concurrent.{Future,ExecutionContext}
+import scala.concurrent.ExecutionContext.Implicits.global
 import scavenger._
 
 /**
@@ -17,11 +18,12 @@ class TrivialContext(printActions: Boolean) extends Context {
   }
 }
 
-/*
+//* <--- Add/remove the single / at the head of this line to block/unblock
+// This is a little demo/usability test
 object TrivialContext {
   import scavenger._
   def main(args: Array[String]): Unit = {
-    // a little demo/usability test
+    
     val ctx = new TrivialContext(true)
 
     val x = Resource("x", 5)
@@ -39,9 +41,23 @@ object TrivialContext {
     )
     val app1 = classif(x, Cheap)
     val app2 = classif(f(x), Expensive)
+    
+    val twoParamFunc = cheap("twoParam") {
+      (id: (Int, Double)) => {
+        val (i,d) = id
+        "foobar(" + (i - d) + ")"
+      }
+    }
 
-    ctx.submit(app1)
-    ctx.submit(app2)
+    val currLeft: Algorithm[Double, String] = 
+      twoParamFunc.curryFst[Int, Double](x)(canBuildCouple[Int, Double])
+    val currRight: Algorithm[Int, String] = 
+      twoParamFunc.currySnd[Int, Double](y)(canBuildCouple[Int, Double])
+
+    for ( res <- ctx.submit(app1) ) println("Result 1 = " + res)
+    for ( res <- ctx.submit(app2) ) println("Result 2 = " + res)
+    for ( res <- ctx.submit(currLeft(y)) ) println("Result 3 = " + res)
+    for ( res <- ctx.submit(currRight(x)) ) println("Result 4 = " + res)
   }
 }
-// */
+// <--- don't touch this. ---> */

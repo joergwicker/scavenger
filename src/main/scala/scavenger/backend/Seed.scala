@@ -1,12 +1,12 @@
-package scavenger.cluster
+package scavenger.backend
 
 import akka.actor.Actor
 import Seed._
 import akka.actor.ActorRef
 import akka.actor.Terminated
 import akka.actor.ActorLogging
-import scavenger.cluster.Master.MasterHere
-import scavenger.cluster.Worker.WorkerHere
+import scavenger.backend.Master.MasterHere
+import scavenger.backend.Worker.WorkerHere
 import akka.actor.Props
 
 /**
@@ -43,5 +43,5 @@ object Seed {
   
   def props = Props[Seed]
   
-  private[cluster] case class MasterRef(master: ActorRef)
+  private[backend] case class MasterRef(master: ActorRef)
 }

@@ -1,4 +1,4 @@
-package scavenger.cluster
+package scavenger.backend
 
 import akka.actor.Actor
 import scala.concurrent.duration._

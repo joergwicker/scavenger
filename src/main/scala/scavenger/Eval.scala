@@ -2,7 +2,7 @@ package scavenger
 
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext
-import scavenger.categories.freeccc
+import scavenger.categories.formalccc
 
 /**
  * A distinguished type of morphisms that is responsible
@@ -13,7 +13,7 @@ import scavenger.categories.freeccc
  */
 case class Eval[X, Y](difficulty: Difficulty) 
 extends AtomicAlgorithm[(X=>Y, X), Y] {
-  def identifier = freeccc.Eval[X, Y]
+  def identifier = formalccc.Eval
   def apply(fx: (X => Y, X), ctx: Context): Future[Y] = {
     import ctx.executionContext
     val (f, x) = fx

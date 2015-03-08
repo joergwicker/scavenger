@@ -1,6 +1,6 @@
 package scavenger
 
-import scavenger.categories.freeccc
+import scavenger.categories.formalccc
 
 /**
  * Pair of algorithms with same domain.
@@ -11,6 +11,6 @@ case class AlgorithmPair[D, X, Y](
   g: Algorithm[D, Y]
 ) extends Algorithm[D, (X, Y)] {
   def identifier = 
-    freeccc.Pair(f.identifier, g.identifier)
+    formalccc.Pair(f.identifier, g.identifier)
   def apply(r: Resource[D]) = ResourcePair(f(r), g(r))
 }

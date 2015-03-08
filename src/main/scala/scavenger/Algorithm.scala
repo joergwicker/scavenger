@@ -40,6 +40,33 @@ trait Algorithm[-X, +Y] { outer =>
    */
   def cross[A, B](other: Algorithm[A, B]): Algorithm[(X, A), (Y, B)] = 
     (this o Fst[X, A]) zip (other o Snd[X, A])
+
+  def curryFst[A, B](a: Resource[A])(ccf: CanCurryFst[X, A, B, Y]):
+    Algorithm[B, Y] = ccf(this, a)
+
+  def currySnd[A, B](b: Resource[B])(ccs: CanCurrySnd[X, A, B, Y]):
+    Algorithm[A, Y] = ccs(this, b)
+}
+
+/**
+ * `CanCurryFst` is an implicitly generated argument that
+ * ensures that we can curry only methods that actually take
+ * product types as inputs.
+ *
+ * Implementations are provided in the `package.scala` file.
+ */
+trait CanCurryFst[-In, -InA, -InB, +Out] {
+  def apply(
+    f: Algorithm[In, Out],
+    input: Resource[InA]
+  ): Algorithm[InB, Out]
+}
+
+trait CanCurrySnd[-In, -InA, -InB, +Out] {
+  def apply(
+    f: Algorithm[In, Out],
+    input: Resource[InB]
+  ): Algorithm[InA, Out]
 }
 
 /**
@@ -67,3 +94,4 @@ with ((X, Context) => Future[Y]) { outer =>
     resource.flatMap(identifier, difficulty)(this)
   }
 }
+

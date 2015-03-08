@@ -50,4 +50,32 @@ package object scavenger {
     Resource[Y] = 
     Eval[X, Y](d)(ResourcePair(f, x))
   }
+
+  implicit def canCurryXYtoZintoXtoYtoZ[X, Y, Z]: CanCurryFst[(X,Y), X, Y, Z] =
+  new CanCurryFst[(X, Y), X, Y, Z] {
+    def apply(
+      f: Algorithm[(X, Y), Z],
+      x: Resource[X]
+    ) = new Algorithm[Y, Z] {
+      def identifier = freeccc.Curry(f.identifier) o x.identifier
+      def apply(y: Resource[Y]) = f(ResourcePair(x, y))
+    }
+  }
+
+  implicit def canCurryXYtoZintoYtoXtoZ[X, Y, Z]: CanCurrySnd[(X,Y), X, Y, Z] = 
+  new CanCurrySnd[(X,Y), X, Y, Z] {
+    def apply(
+      f: Algorithm[(X, Y), Z],
+      y: Resource[Y]
+    ) = new Algorithm[X, Z] {
+
+      // this one is a little tricky, see p. 61 third black CS book
+      def identifier = freeccc.Curry(
+        f.identifier o 
+        freeccc.Pair(freeccc.Snd[Y, X], freeccc.Fst[Y, X])
+      ) o y.identifier
+
+      def apply(x: Resource[X]) = f(ResourcePair(x, y))
+    }
+  }
 }

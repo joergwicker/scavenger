@@ -120,9 +120,10 @@ trait Resource[+X] { outer =>
    * The `CanApplyTo` is provided by a single implicit method 
    * in `package.scala`.
    */
-  def apply[A, B](arg: Resource[A], difficulty: Difficulty)(
+  def apply[A, B](arg: Resource[A], difficulty: Difficulty = Cheap)(
     implicit cat: CanApplyTo[X, A, B]
   ): Resource[B] = cat(this, arg, difficulty)
+
 }
 
 object Resource {

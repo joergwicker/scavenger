@@ -1,7 +1,6 @@
 package scavenger
 
 import scala.concurrent.Future
-import scala.reflect.ClassTag
 import scavenger.categories.formalccc
 
 /**
@@ -12,7 +11,7 @@ case class Value[X](
   identifier: formalccc.Elem,
   value: X,
   cachingPolicy: CachingPolicy
-)(implicit classTag: ClassTag[X]) extends Resource[X] {
+) extends Resource[X] {
   def compute(ctx: Context): Future[X] = {
     import ctx.executionContext
     Future{ value }

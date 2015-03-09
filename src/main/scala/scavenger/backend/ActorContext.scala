@@ -7,7 +7,6 @@ import scala.collection.mutable.HashMap
 import scala.concurrent._
 import scala.concurrent.duration._
 import scala.language.postfixOps
-import scala.reflect.ClassTag
 import scavenger.{Context, Resource}
 import scavenger.categories.formalccc
 
@@ -37,11 +36,14 @@ class ActorContext(
 
   implicit def executionContext = execCtx
 
-  def submit[X](job: Resource[X])(implicit tag: ClassTag[X]): Future[X] = {
+  def submit[X](job: Resource[X]): Future[X] = {
     val p = Promise[Any]
     asked(job.identifier) = p
     actorRef ! Job(job)
-    p.future.mapTo[X]
+    // TODO: is this a potential time-bomb? Can it happen that 
+    // at some point the system will fail to remember what `X`
+    // actually was?
+    p.future.map{ a => a.asInstanceOf[X] }
   }
 
   def receive = ({

@@ -2,7 +2,6 @@ package scavenger
 
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext
-import scala.reflect.ClassTag
 
 /**
  * A `Context` represents a some kind of compute
@@ -20,5 +19,5 @@ import scala.reflect.ClassTag
  */
 trait Context {
   implicit def executionContext: ExecutionContext
-  def submit[X](job: Resource[X])(implicit tag: ClassTag[X]): Future[X]
+  def submit[X](job: Resource[X]): Future[X]
 }

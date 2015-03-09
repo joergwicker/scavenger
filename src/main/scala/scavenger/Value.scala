@@ -1,6 +1,7 @@
 package scavenger
 
 import scala.concurrent.Future
+import scala.concurrent.ExecutionContext
 import scavenger.categories.formalccc
 
 /**
@@ -17,5 +18,18 @@ case class Value[X](
     Future{ value }
   }
   def difficulty = Cheap
+  def directDependencies = Nil
+  def simplify(replacement: List[Future[Resource[_]]])(
+    implicit exec: ExecutionContext
+  ) = {
+    if (!replacement.isEmpty) {
+      throw new SimplificationException(
+        "Value resource " + identifier,
+        "Do not require any replacement-subresources, but received %d != 0".
+          format(replacement.size)
+      )
+    } else {
+      Future(this)
+    }
+  }
 }
-

@@ -41,6 +41,14 @@ trait Resource[+X] { outer =>
    */
   def compute(ctx: Context): Future[X]
 
+  def directDependencies: List[Resource[_]]
+
+  def simplify(
+    directDependenciesReplacement: List[Future[Resource[_]]]
+  )(
+    implicit exec: ExecutionContext
+  ): Future[Resource[X]]
+
   /**
    * Get the caching policy of this resource
    */
@@ -60,6 +68,13 @@ trait Resource[+X] { outer =>
    */
   def copy(newCachingPolicy: CachingPolicy): Resource[X] = 
     new Resource[X] {
+      def directDependencies = outer.directDependencies
+      def simplify(newDependencies: List[Future[Resource[_]]])(
+        implicit exec: ExecutionContext
+      ) = {
+        for (r <- outer.simplify(newDependencies)) 
+          yield r.copy(newCachingPolicy)
+      }
       def identifier = outer.identifier
       def compute(ctx: Context) = outer.compute(ctx)
       def cachingPolicy = newCachingPolicy
@@ -97,16 +112,24 @@ trait Resource[+X] { outer =>
         y <- f(x, ctx) 
       } yield y
     }
+    def directDependencies = List(outer)
+    def simplify(simplifiedOuter: List[Future[Resource[_]]])(
+      implicit exec: ExecutionContext
+    ) = {
+      if (simplifiedOuter.size != 1) {
+        throw new SimplificationException(
+          "flatMapped Resource", 
+          "list has " + simplifiedOuter.size + " != 1 elements"
+        )
+      } else {
+        val replacedOuter = simplifiedOuter.head
+        for (r <- replacedOuter) 
+          yield r.asInstanceOf[Resource[X]].flatMap(algId, d)(f)
+      }
+    }
     def cachingPolicy = CachingPolicy.Nowhere
     def difficulty = d
   }
-
-  /**
-   * Builds a resource mapped by the specified algorithm.
-   */
-  // def map[Y](alg: Algorithm[X, Y]): Resource[Y] = {
-  //   flatMap(alg.identifier, alg.isExpensive, alg)
-  // }
 
   /**
    * Creates a resource that represents a pair of this resource and the

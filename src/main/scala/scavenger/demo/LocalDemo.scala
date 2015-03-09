@@ -1,5 +1,8 @@
 package scavenger.demo
 
+import scala.concurrent.duration._
+import scala.language.postfixOps
+import scavenger._
 import scavenger.mains.LocalScavengerApplication
 
 /**
@@ -11,12 +14,17 @@ import scavenger.mains.LocalScavengerApplication
  */
 object LocalDemo extends LocalScavengerApplication {
   def main(args: Array[String]): Unit = {
-    scavengerInit()
+    scavengerInit(2)
 
-    
+    val x = Resource("x", 5)
+    val f = cheap("square"){ (x: Int) => x * x }
+    val j = f(x)
 
-    Thread.sleep(5)
-    println("ok, enough...")
-    scavengerShutdown()
+    val fut = context.submit(j)
+
+    implicit val execCtx = context.executionContext
+    scheduler.scheduleOnce(30 seconds){ 
+      scavengerShutdown()
+    }
   }
 }

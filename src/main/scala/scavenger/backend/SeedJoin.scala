@@ -36,7 +36,7 @@ with Remindable {
   ): Receive = ({
 
     // wake up and try to connect with the seed node
-    case r: Reminder if(isRelevant(r)) => {
+    case r: Reminder => if(isRelevant(r)) {
       import context.dispatcher
       if (seedRef == null) {
         context.actorSelection(seedPath).resolveOne(1 minutes) map { 
@@ -47,6 +47,8 @@ with Remindable {
         } pipeTo self
         remindMyself(30, "trying to resolve seed")
       }
+    } else {
+      log.info("Received irrelevant reminder: " + r.message)
     }
 
     // result of resolving seed

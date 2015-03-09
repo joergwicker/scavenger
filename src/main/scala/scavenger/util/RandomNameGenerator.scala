@@ -33,7 +33,9 @@ object RandomNameGenerator {
     "zealous",
     "bored",
     "enraged",
-    "grumpy"
+    "grumpy",
+    "thoughtful",
+    "enthusiastic"
   )
 
   private val condition = Array(
@@ -54,7 +56,15 @@ object RandomNameGenerator {
     "tender",
     "uninterested",
     "vast",
-    "wrong"
+    "wrong",
+    "brutal",
+    "merciless",
+    "megalomaniac",
+    "generous",
+    "sensitive",
+    "insidious",
+    "poor",
+    "strong"
   )
 
   // I didn't smoke anything, I just copied it

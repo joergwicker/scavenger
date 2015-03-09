@@ -3,7 +3,7 @@ import scala.language.implicitConversions
 import scavenger.categories.formalccc
 
 package object scavenger {
-  type Identifier[X] = formalccc.Elem
+  //type Identifier = formalccc.Elem
 
   // Three castings into the canoical form of a morphism
   implicit def withoutContextToFull[X, Y](f: X => Future[Y]): 
@@ -50,34 +50,6 @@ package object scavenger {
     Resource[Y] = 
     Eval[X, Y](d)(ResourcePair(f, x))
   }
-
-  /*
-  implicit def canCurryXYtoZintoXtoYtoZ[X, Y, Z]: CanCurryFst[(X,Y), X, Y, Z] =
-  new CanCurryFst[(X, Y), X, Y, Z] {
-    def apply(
-      f: Algorithm[(X, Y), Z],
-      x: Resource[X]
-    ) = new Algorithm[Y, Z] {
-      def identifier = formalccc.Curry(f.identifier)(x.identifier)
-      def apply(y: Resource[Y]) = f(ResourcePair(x, y))
-    }
-  }
-
-  implicit def canCurryXYtoZintoYtoXtoZ[X, Y, Z]: CanCurrySnd[(X,Y), X, Y, Z] = 
-  new CanCurrySnd[(X,Y), X, Y, Z] {
-    def apply(
-      f: Algorithm[(X, Y), Z],
-      y: Resource[Y]
-    ) = new Algorithm[X, Z] {
-
-      import formalccc.{Curry => FCurry, _}
-
-      // this one is a little tricky, see p. 61 third black CS book
-      def identifier = FCurry(f.identifier o Pair(Snd, Fst))(y.identifier)
-      def apply(x: Resource[X]) = f(ResourcePair(x, y))
-    }
-  }
-  */
 
   implicit def canBuildCouple[A, B]: CanBuildProduct[A, B, (A, B)] = 
   new CanBuildProduct[A, B, (A, B)] {

@@ -23,13 +23,14 @@ trait LocalScavengerApplication {
   private var _context: Context = _
   
   def scavengerInit(numWorkers: Int = 16): Unit = {
-    system = ActorSystem("scavenger")
+    val config = ConfigFactory.load()
+    system = ActorSystem("scavenger", config)
     val seed = system.actorOf(Seed.props, "seed")
     val seedPath = seed.path
     master = system.actorOf(Master.props(seedPath), "master")
     _context = new ActorContext(
       master, 
-      scala.concurrent.ExecutionContext.Implicits.global
+      system.dispatcher
     )
     for (i <- 1 to numWorkers) {
       system.actorOf(
@@ -39,8 +40,8 @@ trait LocalScavengerApplication {
     }
   }
 
-  def context: Context = _context
-
+  def context = _context
+  def scheduler = system.scheduler
   def scavengerShutdown(): Unit = {
     system.shutdown()
   }

@@ -2,6 +2,7 @@ package scavenger
 
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext
+import scala.reflect.ClassTag
 import scavenger.categories.formalccc
 
 /**
@@ -26,7 +27,7 @@ import scavenger.categories.formalccc
  * `Context` represents a compute node, and
  * `Future` is the future-monad. 
  */
-trait Resource[+X] { outer =>
+trait Resource[X] { outer =>
 
   /**
    * Formal expression that uniquely identifies this resource
@@ -40,6 +41,12 @@ trait Resource[+X] { outer =>
    * that results in a value of type `X`
    */
   def compute(ctx: Context): Future[X]
+
+  /**
+   * Promises require `ClassTag`s. 
+   * So we have to introduce `ClassTag`s all over the place.
+   */ 
+  def classTag: ClassTag[X]
 
   /**
    * Get the caching policy of this resource
@@ -61,6 +68,7 @@ trait Resource[+X] { outer =>
   def copy(newCachingPolicy: CachingPolicy): Resource[X] = 
     new Resource[X] {
       def identifier = outer.identifier
+      def classTag = outer.classTag
       def compute(ctx: Context) = outer.compute(ctx)
       def cachingPolicy = newCachingPolicy
       def difficulty = outer.difficulty
@@ -87,12 +95,16 @@ trait Resource[+X] { outer =>
     d: Difficulty
   )(
     f: (X, Context) => Future[Y]
+  )(
+    implicit tag: ClassTag[Y]
   ): Resource[Y] = new Resource[Y] {
     def identifier = algId(outer.identifier)
+    def classTag = tag
     def compute(ctx: Context): Future[Y] = {
       import ctx.executionContext
       for {
-        x <- ctx.submit(outer) // guaranteed to be equivalent to x.compute(ctx)
+        // cxt.submit(x) is guaranteed to be equivalent to x.compute(ctx)
+        x <- ctx.submit(outer)(outer.classTag) 
         y <- f(x, ctx) 
       } yield y
     }
@@ -127,7 +139,7 @@ trait Resource[+X] { outer =>
 }
 
 object Resource {
-  def apply[X](id: String, x: X): Resource[X] = 
+  def apply[X](id: String, x: X)(implicit tag: ClassTag[X]): Resource[X] = 
     Value(new formalccc.Atom(id), x, CachingPolicy.Nowhere)
 }
 

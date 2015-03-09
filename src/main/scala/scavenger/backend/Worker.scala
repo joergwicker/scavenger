@@ -26,6 +26,7 @@ with Remindable {
 
   // ########################## INITIALIZATION #################################
   remindMyself(1, "Try to connect to master")
+  log.info("Trying to wake myself up in 1 second")
 
   // ###################### COMPUTATION CONTEXT ################################
   implicit def executionContext = context.dispatcher

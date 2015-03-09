@@ -36,6 +36,8 @@ class Seed extends Actor with ActorLogging {
     
     case Terminated(worker) =>
       workers = workers.filterNot(_ == worker)
+
+    // TODO: Shutdown
   }
 }
 

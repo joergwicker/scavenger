@@ -17,10 +17,11 @@ import scala.concurrent.ExecutionContext
 class Worker(seedPath: ActorPath) 
 extends Actor 
 with ActorLogging
-with Context 
 with SeedJoin
 with MasterJoin
 with Remindable {
+
+  import context.dispatcher
 
   // ############################# STATE #######################################
 
@@ -28,22 +29,7 @@ with Remindable {
   remindMyself(1, "Try to connect to master")
   log.info("Trying to wake myself up in 1 second")
 
-  // ###################### COMPUTATION CONTEXT ################################
-  implicit def executionContext = context.dispatcher
-
-  def submit[X](job: Resource[X]): Future[X] = {
-
-    // TODO: this is a mock-up implementation that currently does 
-    // not check cache, it simply evaluates everything from scratch
-    // right here.
-
-    // val cp = job.cachingPolicy
-    // val id = job.identifier
-    // TODO: check cache accordingly to cachingPolicy
-    job.compute(this)
-  }
-
-  // ########################  ACTOR BEHAVIOR ##################################
+  // ############################  BEHAVIOR ####################################
 
   // The initial connection phase
   import Worker.WorkerHere

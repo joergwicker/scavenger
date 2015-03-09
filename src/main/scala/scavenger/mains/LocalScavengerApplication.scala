@@ -29,8 +29,8 @@ trait LocalScavengerApplication {
     val seedPath = seed.path
     master = system.actorOf(Master.props(seedPath), "master")
     _context = new ActorContext(
-      master, 
-      system.dispatcher
+      master,
+      scala.concurrent.ExecutionContext.Implicits.global
     )
     for (i <- 1 to numWorkers) {
       system.actorOf(

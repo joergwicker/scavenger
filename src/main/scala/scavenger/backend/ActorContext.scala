@@ -33,28 +33,11 @@ class ActorContext(
   import ActorContext._
 
   def submit[X](job: Resource[X]): Future[X] = {
+    // That's totally like Hawking's "grey holes":
+    // Promises are thrown into the "black hole", Futures escape...
     val p = Promise[X]
-    actorRef ! Job(job, p)
+    actorRef ! ExternalInterface.Compute(job, p)
     p.future
   }
-
-}
-
-object ActorContext {
-
-  /**
-   * Job submitted by a user or a locally run Resource.
-   * Contains a job that is to be evaluated, as well as 
-   * a promise where the result should be written as soon
-   * as it is computed. Does not require any responses.
-   *
-   * Warning: these things should never be sent to other nodes!
-   * It works only if the sending `ActorContext` is on the same
-   * node as the actor it refers to. Remoting does not work here.
-   */
-  private[backend] case class Job[X](
-    job: Resource[X], 
-    result: Promise[X]
-  )
 
 }

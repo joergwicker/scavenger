@@ -20,4 +20,9 @@ import scala.concurrent.ExecutionContext
 trait Context {
   implicit def executionContext: ExecutionContext
   def submit[X](job: Resource[X]): Future[X]
+  /**
+   * Similar to `submit`, but the resulting value is 
+   * wrapped into a `Value`-`Resource`
+   */
+  def asExplicitResource[X](job: Resource[X]): Future[ExplicitResource[X]]
 }

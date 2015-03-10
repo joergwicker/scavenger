@@ -41,13 +41,28 @@ trait Resource[+X] { outer =>
    */
   def compute(ctx: Context): Future[X]
 
-  def directDependencies: List[Resource[_]]
-
+  /**
+   * Replace components of this `Resource` that are 
+   * too complex. Used internally by `Scheduler`.
+   */
   def simplify(
-    directDependenciesReplacement: List[Future[Resource[_]]]
-  )(
-    implicit exec: ExecutionContext
+    cxt: Context, 
+    mustBeReplaced: (CachingPolicy, Difficulty) => Boolean
   ): Future[Resource[X]]
+
+  /**
+   * Applies simplification to `this`, if necessary.
+   */
+  protected def simplifySelfIfNecessary(
+    ctx: Context, 
+    mustBeReplaced: (CachingPolicy, Difficulty) => Boolean
+  ): Future[Resource[X]] = {
+    if (mustBeReplaced(cachingPolicy, difficulty)) {
+      ctx.asExplicitResource(this)
+    } else {
+      simplify(ctx, mustBeReplaced)
+    }
+  }
 
   /**
    * Get the caching policy of this resource
@@ -68,17 +83,18 @@ trait Resource[+X] { outer =>
    */
   def copy(newCachingPolicy: CachingPolicy): Resource[X] = 
     new Resource[X] {
-      def directDependencies = outer.directDependencies
-      def simplify(newDependencies: List[Future[Resource[_]]])(
-        implicit exec: ExecutionContext
-      ) = {
-        for (r <- outer.simplify(newDependencies)) 
-          yield r.copy(newCachingPolicy)
-      }
       def identifier = outer.identifier
       def compute(ctx: Context) = outer.compute(ctx)
       def cachingPolicy = newCachingPolicy
       def difficulty = outer.difficulty
+      def simplify(
+        cxt: Context, 
+        mustBeReplaced: (CachingPolicy, Difficulty) => Boolean
+      ): Future[Resource[X]] = {
+        val simplifiedOuter = outer.simplifySelfIfNecessary(ctx, mustBeReplaced)
+        for(simpler <- simplifiedOuter) 
+          yield simpler.copy(newCachingPolicy)
+      }
     }
 
   /**
@@ -112,20 +128,13 @@ trait Resource[+X] { outer =>
         y <- f(x, ctx) 
       } yield y
     }
-    def directDependencies = List(outer)
-    def simplify(simplifiedOuter: List[Future[Resource[_]]])(
-      implicit exec: ExecutionContext
-    ) = {
-      if (simplifiedOuter.size != 1) {
-        throw new SimplificationException(
-          "flatMapped Resource", 
-          "list has " + simplifiedOuter.size + " != 1 elements"
-        )
-      } else {
-        val replacedOuter = simplifiedOuter.head
-        for (r <- replacedOuter) 
-          yield r.asInstanceOf[Resource[X]].flatMap(algId, d)(f)
-      }
+    def simplify(
+      cxt: Context, 
+      mustBeReplaced: (CachingPolicy, Difficulty) => Boolean
+    ): Future[Resource[X]] = {
+      val simplifiedOuter = outer.simplifySelfIfNecessary(ctx, mustBeReplaced)
+      for(simpler <- simplifiedOuter) 
+        yield simpler.flatMap(algId, d)(f)
     }
     def cachingPolicy = CachingPolicy.Nowhere
     def difficulty = d

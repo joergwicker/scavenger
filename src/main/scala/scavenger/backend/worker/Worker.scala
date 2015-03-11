@@ -65,11 +65,11 @@ with ContextProvider {
     // handle jobs from master (simply let them wait for results from the
     // cache)
     // The original `id` of the job is stored in the closure
-    case InternalJob(job) => {
+    case InternalJob(label, job) => {
       log.info("Got a job! " + job + " switching into working state")
       context.become(working)
       provideComputationContext.submit(job).map{
-        x => FinalResult(job.identifier, x)
+        x => FinalResult(label, x)
       } pipeTo self
     }
     
@@ -85,7 +85,8 @@ with ContextProvider {
   }: Receive) orElse 
   handleExternalRequests orElse 
   handleLocalResponses orElse
-  handleHandshakeRemnants
+  handleHandshakeRemnants orElse
+  reportUnexpectedMessages
   
   /**
    * When a worker is occupied, it does not react on
@@ -99,20 +100,19 @@ with ContextProvider {
     case Ping => sender ! Echo
     case JobsAvailable => {} // ignore
     case NoJobsAvailable => {} // ignore
-    case FinalResult(id, value) => {
+    case FinalResult(label, value) => {
       log.debug(
         "Received FinalResult from " + sender + ", " +
         "Computed solution for {}, sending it to master, " + 
-        "switching back into `awaitingJob` mode.", id
+        "switching back into `awaitingJob` mode.", label
       )
-      master ! InternalResult(id, value)
-      master ! WorkerHere
-      context.unbecome() // switch back into `awaitingJob` mode
+      context.become(awaitingJob) // switch back into `awaitingJob` mode
+      master ! InternalResult(label, value)
     }
-    case InternalJob(job) => {
+    case InternalJob(label, job) => {
       log.error(
         "Received a job while already being at work, " +
-        "id = " + job.identifier
+        "id = " + label
       )
       throw new AssertionError(
         "Worker received a new job while working on another job. " +
@@ -122,7 +122,10 @@ with ContextProvider {
   }: Receive) orElse 
   handleExternalRequests orElse 
   handleLocalResponses orElse 
-  handleHandshakeRemnants orElse {
+  handleHandshakeRemnants orElse 
+  reportUnexpectedMessages 
+
+  private def reportUnexpectedMessages: Receive = ({
     case unexpectedMessage => {
       unexpectedMessage match {
         case akka.actor.Status.Failure(exc) => {
@@ -140,7 +143,7 @@ with ContextProvider {
         "The class of this thing is: " + unexpectedMessage.getClass + " "
       )
     }
-  }
+  }: Receive)
 }
 
 /**
@@ -152,5 +155,5 @@ object Worker {
   
   private[backend] case object WorkerHere extends HandshakeMessage
   private[backend] case object NeedJob
-  private[Worker] case class FinalResult(id: formalccc.Elem, x: Any)
+  private[Worker] case class FinalResult(label: InternalLabel, x: Any)
 }

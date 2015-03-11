@@ -164,6 +164,14 @@ trait Resource[+X] { outer =>
 object Resource {
   def apply[X](id: String, x: X): Resource[X] = 
     Value(new formalccc.Atom(id), x, CachingPolicy.Nowhere)
+
+  /**
+   * Creates an ad-hoc resource with UUID as identifier
+   */
+  def apply[X](x: X): Resource[X] = {
+    val uuid = java.util.UUID.randomUUID.toString
+    apply(uuid, x)
+  }
 }
 
 /**

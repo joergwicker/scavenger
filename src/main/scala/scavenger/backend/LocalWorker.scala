@@ -20,9 +20,9 @@ class LocalWorker(val ctx: Context) extends Actor {
   import LocalWorker._
   
   def receive = ({
-    case LocalJob(r) => {
+    case LocalJob(label, r) => {
       r.compute(ctx).map{
-        x => LocalResult(r.identifier, x)
+        x => LocalResult(label, x)
       } pipeTo context.parent
     }
   }: Receive)
@@ -30,6 +30,6 @@ class LocalWorker(val ctx: Context) extends Actor {
 
 object LocalWorker {
   def props(ctx: Context): Props = Props(classOf[LocalWorker], ctx)
-  private[backend] case class LocalJob(r: Resource[Any])
-  private[backend] case class LocalResult(id: formalccc.Elem, x: Any)
+  private[backend] case class LocalJob(label: InternalLabel, r: Resource[Any])
+  private[backend] case class LocalResult(label: InternalLabel, x: Any)
 }

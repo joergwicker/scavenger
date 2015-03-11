@@ -15,14 +15,32 @@ package object backend {
   trait HandshakeMessage
 
   /**
+   * We have to "artificially disjointify" the incoming 
+   * jobs, because it could happen that a job that does 
+   * not get cached is received two times, for example 
+   * it's common that we have to unpack `ExplicitResources`
+   * multiple times.
+   */
+  private[backend] case class InternalLabel(
+    formalId: formalccc.Elem,
+    internalId: Long
+  )
+
+  /**
    * Internal jobs that are sent from the Master node to the Worker nodes
    */
-  private[backend] case class InternalJob(job: Resource[Any])
+  private[backend] case class InternalJob(
+    label: InternalLabel, 
+    job: Resource[Any]
+  )
   
   /**
    * Results sent from Workers to Master
    */
-  private[backend] case class InternalResult(id: formalccc.Elem, result: Any)
+  private[backend] case class InternalResult(
+    label: InternalLabel, 
+    result: Any
+  )
 
   /**
    * Message that tells the worker that there is currently nothing to do.

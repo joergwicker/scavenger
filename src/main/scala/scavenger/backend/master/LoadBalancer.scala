@@ -42,16 +42,17 @@ with LastMessageTimeMonitoring {
   def computeSimplified[X](r: Resource[X]): Future[X] = {
     // we simply create a promise in the promise-map, and enqueue the job
     val p = Promise[Any]
-    promises(r.identifier) = p
-    enqueueSimple(r)
+    val label = toInternalLabel(r.identifier)
+    promises(label) = p
+    enqueueSimple(label, r)
     p.future.map{ a => a.asInstanceOf[X] }
   }
 
   /**
    * Appends an internal job id to a job and puts it into the job queue.
    */
-  private def enqueueSimple(job: Resource[Any]): Unit = { 
-    val internalJob = InternalJob(job)
+  private def enqueueSimple(label: InternalLabel, job: Resource[Any]): Unit = { 
+    val internalJob = InternalJob(label, job)
     queue.enqueue(internalJob)
     log.info("enqueued job " + job)
     // notify all workers that there is something to do
@@ -124,7 +125,7 @@ with LastMessageTimeMonitoring {
             " (nothing to withdraw)")
         case Some(oldJob) =>
           log.info("Withdrawing and re-enqueueing job from " + worker)
-          enqueueSimple(oldJob.job)
+          enqueueSimple(oldJob.label, oldJob.job)
           assignedJobs(worker) = None
       }
     }
@@ -182,7 +183,7 @@ with LastMessageTimeMonitoring {
    * Handles results from workers
    */
   protected[master] def handleWorkerResponses: Receive = {
-    case InternalResult(id, result) => {
+    case InternalResult(label, result) => {
       val logMessageIntro = "Received result " + result + " from " + 
         sender.path.name + " "
       assignedJobs(sender) match {
@@ -190,10 +191,10 @@ with LastMessageTimeMonitoring {
           logMessageIntro + " but there were no jobs assigned to this worker"
         )
         case Some(originalJob) => {
-          if (originalJob.job.identifier != id) {
+          if (originalJob.label != label) {
             log.error(
               logMessageIntro + " but the id was wrong: original = " + 
-              originalJob.job.identifier + " returned = " + id
+              originalJob.label + " returned = " + label
             )
             withdrawJob(sender)
           } else {
@@ -201,7 +202,7 @@ with LastMessageTimeMonitoring {
               logMessageIntro + 
               ", fulfilling promise, try assign new job"
             )
-            fulfillPromise(id, result)
+            fulfillPromise(label, result)
             assignedJobs(sender) = None
             tryAssignJob(sender)
           }

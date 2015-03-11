@@ -21,14 +21,29 @@ trait ResourceEvaluator extends Actor with ContextProvider {
 
   import context.dispatcher
 
+  private var internalLabelCounter: Long = 0L
+  def toInternalLabel(identifier: formalccc.Elem): InternalLabel = {
+    internalLabelCounter += 1
+    InternalLabel(identifier, internalLabelCounter)
+  }
+
   /**
    * Map of promised jobs.
    */
-  protected val promises: mutable.Map[formalccc.Elem, Promise[Any]] =
-    HashMap.empty[formalccc.Elem, Promise[Any]]
+  protected val promises: mutable.Map[InternalLabel, Promise[Any]] =
+    HashMap.empty[InternalLabel, Promise[Any]]
 
-  protected def fulfillPromise(id: formalccc.Elem, result: Any): Unit = {
-    promises(id).success(result)
+  protected def fulfillPromise(label: InternalLabel, result: Any): Unit = {
+    println("DEBUG: fulfilling promise for id = " + label) // TODO: remove debug
+    if (!promises.contains(label)) {
+      println("ERROR: the promise for id = " + label + " does not exist")
+      throw new Error("ResourceEvaluator.fulfillPromise: nothing to fulfill")
+    } else if (promises(label).isCompleted) {
+      println("ERROR: the promise for id = " + label + " is already completed!")
+      throw new Error("ResourceEvaluator.fulfillPromise seems buggy")
+    }
+    promises(label).success(result)
+    promises -= label
   }
 
   /**
@@ -48,16 +63,17 @@ trait ResourceEvaluator extends Actor with ContextProvider {
       "LOCAL_" + scavenger.util.RandomNameGenerator.randomName
     )
     val p = Promise[Any]
-    promises(r.identifier) = p
-    spawned ! LocalJob(r)
+    val label = toInternalLabel(r.identifier)
+    promises(label) = p
+    spawned ! LocalJob(label, r)
     p.future.map{ 
       a => a.asInstanceOf[X] 
     }
   }
 
   def handleLocalResponses: Receive = ({
-    case LocalResult(id, result) => {
-      promises(id).success(result)
+    case LocalResult(label, result) => {
+      fulfillPromise(label, result)
     }
   }: Receive)
 }

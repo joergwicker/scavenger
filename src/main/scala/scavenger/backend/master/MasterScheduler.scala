@@ -16,6 +16,6 @@ trait MasterScheduler extends Scheduler {
     policy: CachingPolicy, 
     difficulty: Difficulty
   ): Boolean = {
-    difficulty == Parallel
+    (difficulty == Parallel) || (difficulty == Cheap)
   }
 }

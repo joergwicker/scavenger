@@ -1,6 +1,8 @@
 package scavenger.util
 
-import scala.concurrent.{Future,ExecutionContext}
+import scala.concurrent.{Future,ExecutionContext,Await}
+import scala.concurrent.duration._
+import scala.language.postfixOps
 import scavenger._
 
 /**
@@ -26,8 +28,46 @@ object TrivialContext {
   import scala.concurrent.ExecutionContext.Implicits.global
   def main(args: Array[String]): Unit = {
     
-    val ctx = new TrivialContext(true)
+    val scavengerContext = new TrivialContext(true)
 
+    val f0 = expensive("2pow"){ 
+      (x: Int) => {
+        Thread.sleep(200)
+        math.pow(2, x).toInt % 3945
+      }
+    }
+    val f1 = cheap("square"){ (x: Int) => (x * x) % 5979 }
+    val f2 = expensive("times2"){
+      Thread.sleep(300)
+      (x: Int) => 2 * x
+    }
+    val f3 = parallel("cube"){
+      (x: Int, ctx: Context) => {
+        val adHocResource = Resource(x)
+        val subjob1 = f1(adHocResource)
+        val subjob2 = f2(adHocResource)
+        for {
+          a <- ctx.submit(subjob1)
+          b <- ctx.submit(subjob2)
+        } yield (a * b / x % 87698)
+      }
+    }
+    
+    val data = List(5, 4)
+    val functions = List(f0, f1, f2, f3)
+    val jobs = for (d <- data; f <- functions; g <- functions) yield {
+      val inputId = "number_" + d 
+      g(f(Resource(inputId, d)))
+    }
+
+    val futures = for (j <- jobs) yield scavengerContext.submit(j)
+    val allTogether = Future.sequence(futures)
+
+    val listOfResults = Await.result(allTogether, 60 seconds) 
+    for (entry <- listOfResults) println(entry)
+    println("Sum = " + listOfResults.sum)
+
+    /*
     val x = Resource("x", 5)
     val y = Resource("y", 7.0)
     val f = cheap("f"){
@@ -58,6 +98,7 @@ object TrivialContext {
     for ( res <- ctx.submit(app2) ) println("Result 2 = " + res)
     for ( res <- ctx.submit(currLeft(y)) ) println("Result 3 = " + res)
     for ( res <- ctx.submit(currRight(x)) ) println("Result 4 = " + res)
+    */
   }
 }
 // <--- don't touch this. ---> */

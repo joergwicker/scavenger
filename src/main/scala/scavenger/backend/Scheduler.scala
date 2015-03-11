@@ -35,6 +35,18 @@ with ContextProvider {
    * individual parts for computation.
    */
   def schedule(job: Resource[Any]): Future[Value[Any]] = {
+
+    val selfName = "" + self
+    if (selfName.matches(".*master.*")) {
+       println("############################\n" * 3)
+       println("self")
+       println("Scheduling " + job)
+       println(Scheduler.totalJobsScheduled)
+       println("############################\n" * 3)
+       Scheduler.totalJobsScheduled += 1
+    }
+    
+
     if (mustScheduleHere(job.cachingPolicy, job.difficulty)) {
       // no choice, we are forced to schedule it right here,
       // we can not delegate it anyway, so there is no
@@ -56,4 +68,8 @@ with ContextProvider {
   private def simplify(job: Resource[Any]): Future[Resource[Any]] = {
     job.simplify(provideComputationContext, mustBeSimplified)
   }
+}
+
+object Scheduler {
+  var totalJobsScheduled: Int = 0 // TODO: remove that, and the if-master above
 }

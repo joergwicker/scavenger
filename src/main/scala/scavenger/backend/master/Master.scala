@@ -17,8 +17,22 @@ with MasterScheduler
 with MasterCache
 with ExternalInterface {
 
-  def receive: Receive = ??? // TODO: compose all the behaviors
+  import Master._
 
+  self ! Reminder(1, "Connect to seed and switch into normal operation mode")
+
+  def receive: Receive = connectingToSeed(
+    seedPath,
+    MasterHere,
+    normalOperationMode
+  )
+
+  private def normalOperationMode: Receive = 
+    handleExternalRequests orElse
+    updatingLastMessageTime(handleWorkerRequests) orElse
+    updatingLastMessageTime(handleWorkerResponses) orElse
+    monitorLastMessageTimes orElse
+    handleReminders
 }
 
 object Master {
@@ -29,7 +43,7 @@ object Master {
    * Handshake message sent to the seed node in the 
    * connection phase.
    */
-  private[backend] case object MasterHere
+  private[backend] case object MasterHere extends HandshakeMessage
 
   /**
    * A message used to delegate a job to the worker node.

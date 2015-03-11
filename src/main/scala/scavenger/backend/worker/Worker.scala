@@ -1,11 +1,12 @@
 package scavenger.backend.worker
 
 import akka.actor._
+import akka.pattern.pipe
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext
 import scavenger._
 import scavenger.backend._
-import scavenger.{Resource,Context}
+import scavenger.backend.LastMessageTimeMonitoring._
 
 /**
  * Actor that controls the computation on
@@ -21,20 +22,21 @@ extends Actor
 with ActorLogging
 with SeedJoin
 with MasterJoin
-with Remindable {
+with Remindable
+with BruteForceEvaluator
+with WorkerScheduler
+with WorkerCache
+with ExternalInterface
+with ContextProvider {
 
   import context.dispatcher
+  import Worker._
 
-  // ############################# STATE #######################################
-
-  // ########################## INITIALIZATION #################################
+  // initialization phase requires a reminder that triggers the connection
+  // establishing behavior.
   remindMyself(1, "Try to connect to master")
-  log.info("Trying to wake myself up in 1 second")
-
-  // ############################  BEHAVIOR ####################################
 
   // The initial connection phase
-  import Worker.WorkerHere
   def receive = connectingToSeed(
     seedPath,    // where to send the handshake
     WorkerHere,  // what exactly to send
@@ -45,17 +47,69 @@ with Remindable {
     )
   )
 
-  // phase where no jobs can make any progress without responses or new
-  // jobs from master.
-  val awaitingJob: Receive = ({
-    // TODO
-    case _ => ???
-  }: Receive)
+  private val awaitingJob: Receive = ({
+    
+    // make use of the opportunity! Get the job!
+    case JobsAvailable => 
+      log.info("Notified of new jobs, let's see if I can get one")
+      master ! WorkerHere
+    
+    // nope, didn't get the last job...
+    // go over to slow polling 
+    // (just in case JobsAvailable messages get lost for some reason)
+    case NoJobsAvailable => 
+      log.info("Master said there are no jobs available. Will check later.")
+      remindMyself(20, "slow polling for jobs as backup-strategy")
+    
+    // handle jobs from master (simply let them wait for results from the
+    // cache)
+    // The original `id` of the job is stored in the closure
+    case InternalJob(job: Resource[Any]) => {
+      log.info("Got a job! " + job + " switching into working state")
+      provideComputationContext.submit(job).map{
+        x => InternalResult(job.identifier, x)
+      } pipeTo self
+      context.become(working)
+    }
+    
+    // ask master for the job again, just in case it forgot us somehow
+    case r: Reminder if(isRelevant(r)) => {
+      log.info("sending a reminder to master")
+      master ! WorkerHere
+      remindMyself(35, "keep re-reminding")
+    }
+    
+    case Ping => sender ! Echo
 
-  // phase with active jobs
-  val working: Receive = ({
-    // TODO
-    case _ => ???
+  }: Receive) orElse handleHandshakeRemnants
+  
+  /**
+   * When a worker is occupied, it does not react on
+   * anything except `Ping` requests.
+   * 
+   * As soon as it gets an `InternalResult` from itself,
+   * it sends it to master, and gets back into `awaitingJob` behavior.
+   */
+  private val working: Receive = ({
+    case r: Reminder => { remindMyself(60, "re-reminding while working") }
+    case Ping => sender ! Echo
+    case JobsAvailable => {} // ignore
+    case NoJobsAvailable => {} // ignore
+    case res @ InternalResult(id, value) => {
+      master ! res
+      master ! WorkerHere
+      context.unbecome() // switch back into `awaitingJob` mode
+    }
+    case InternalJob(job) => {
+      log.error(
+        "Received a job while already being at work, " +
+        "id = " + job.identifier
+      )
+      throw new AssertionError(
+        "Worker received a new job while working on another job. " +
+        "Must be a bug in the scavenger.backend.master.LoadBalancer"
+      )
+    }
   }: Receive) orElse handleHandshakeRemnants
 }
 

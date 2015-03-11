@@ -54,6 +54,6 @@ with ContextProvider {
    * be handled in one piece (e.g. sent to a single worker node)
    */
   private def simplify(job: Resource[Any]): Future[Resource[Any]] = {
-    job.simplify(provideComputationContext, mustScheduleHere)
+    job.simplify(provideComputationContext, mustBeSimplified)
   }
 }

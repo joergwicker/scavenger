@@ -165,51 +165,48 @@ with LastMessageTimeMonitoring {
    * Trying to assign jobs to workers, 
    * withdrawing jobs from terminated workers.
    */
-  protected[master] def handleWorkerRequests: Receive = 
-    updatingLastMessageTime {
-    
-      case WorkerHere =>
-        log.info("Got job request from a worker " + sender.path.name)
-        register(sender)
-        tryAssignJob(sender)
-        
-      case Terminated(worker) if (assignedJobs.contains(worker)) => 
+  protected[master] def handleWorkerRequests: Receive = {
+    case WorkerHere =>
+      log.info("Got job request from a worker " + sender.path.name)
+      register(sender)
+      tryAssignJob(sender)
+      
+    case Terminated(worker) if (assignedJobs.contains(worker)) => 
         withdrawJob(worker)
 
-      case RemoteNodeNotResponding(worker) if(assignedJobs.contains(worker)) =>
-        withdrawJob(worker)
-    }
+    case RemoteNodeNotResponding(worker) if(assignedJobs.contains(worker)) =>
+      withdrawJob(worker)
+  }
   
   /**
    * Handles results from workers
    */
-  protected[master] def handleWorkerResponses: Receive = 
-    updatingLastMessageTime {
-      case InternalResult(id, result) => {
-        val logMessageIntro = "Received result " + result + " from " + 
-          sender.path.name + " "
-        assignedJobs(sender) match {
-          case None => log.error(
-            logMessageIntro + " but there were no jobs assigned to this worker"
-          )
-          case Some(originalJob) => {
-            if (originalJob.job.identifier != id) {
-              log.error(
-                logMessageIntro + " but the id was wrong: original = " + 
-                originalJob.job.identifier + " returned = " + id
-              )
-              withdrawJob(sender)
-            } else {
-              log.info(
-                logMessageIntro + 
-                ", fulfilling promise, try assign new job"
-              )
-              fulfillPromise(id, result)
-              assignedJobs(sender) = None
-              tryAssignJob(sender)
-            }
+  protected[master] def handleWorkerResponses: Receive = {
+    case InternalResult(id, result) => {
+      val logMessageIntro = "Received result " + result + " from " + 
+        sender.path.name + " "
+      assignedJobs(sender) match {
+        case None => log.error(
+          logMessageIntro + " but there were no jobs assigned to this worker"
+        )
+        case Some(originalJob) => {
+          if (originalJob.job.identifier != id) {
+            log.error(
+              logMessageIntro + " but the id was wrong: original = " + 
+              originalJob.job.identifier + " returned = " + id
+            )
+            withdrawJob(sender)
+          } else {
+            log.info(
+              logMessageIntro + 
+              ", fulfilling promise, try assign new job"
+            )
+            fulfillPromise(id, result)
+            assignedJobs(sender) = None
+            tryAssignJob(sender)
           }
         }
       }
     }
+  } 
 }

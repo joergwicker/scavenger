@@ -9,10 +9,10 @@ import scala.concurrent.{ExecutionContext, Future}
  */
 trait ExplicitResource[+X] extends Resource[X] {
   def getIt(implicit execCtx: ExecutionContext): Future[X]
-  def compute(ctx: Context) = getIt(cxt.executionContext)
+  def compute(ctx: Context) = getIt(ctx.executionContext)
   def difficulty = Cheap
   def simplify(
-    cxt: Context, 
+    ctx: Context, 
     mustBeReplaced: (CachingPolicy, Difficulty) => Boolean
   ): Future[Resource[X]] = Future(this)(ctx.executionContext)
 }

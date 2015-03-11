@@ -1,12 +1,20 @@
 package scavenger.backend
 
-import akka.Actor
+import akka.actor.Actor
 import scala.concurrent.{Future, Promise, ExecutionContext}
 import scavenger._
 
 trait Scheduler extends Actor 
 with ResourceEvaluator
 with ActorContextProvider {
+
+  import context.dispatcher
+
+  /**
+   * This method determines whether a job must be 
+   * scheduled on this node, or whether it can
+   * be delegated.
+   */
   protected def mustScheduleHere(
     policy: CachingPolicy, 
     difficulty: Difficulty
@@ -36,6 +44,6 @@ with ActorContextProvider {
    * be handled in one piece (e.g. sent to a single worker node)
    */
   private def simplify(job: Resource[Any]): Future[Resource[Any]] = {
-    job.simplify(getContext, mustScheduleHere)
+    job.simplify(provideComputationContext, mustScheduleHere)
   }
 }

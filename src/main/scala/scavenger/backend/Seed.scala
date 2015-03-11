@@ -5,8 +5,8 @@ import Seed._
 import akka.actor.ActorRef
 import akka.actor.Terminated
 import akka.actor.ActorLogging
-import scavenger.backend.Master.MasterHere
-import scavenger.backend.Worker.WorkerHere
+import scavenger.backend.master.Master.MasterHere
+import scavenger.backend.worker.Worker.WorkerHere
 import akka.actor.Props
 
 /**

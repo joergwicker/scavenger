@@ -53,7 +53,7 @@ trait Resource[+X] { outer =>
   /**
    * Applies simplification to `this`, if necessary.
    */
-  protected def simplifySelfIfNecessary(
+  private[scavenger] def simplifySelfIfNecessary(
     ctx: Context, 
     mustBeReplaced: (CachingPolicy, Difficulty) => Boolean
   ): Future[Resource[X]] = {
@@ -88,9 +88,10 @@ trait Resource[+X] { outer =>
       def cachingPolicy = newCachingPolicy
       def difficulty = outer.difficulty
       def simplify(
-        cxt: Context, 
+        ctx: Context, 
         mustBeReplaced: (CachingPolicy, Difficulty) => Boolean
       ): Future[Resource[X]] = {
+        import ctx.executionContext
         val simplifiedOuter = outer.simplifySelfIfNecessary(ctx, mustBeReplaced)
         for(simpler <- simplifiedOuter) 
           yield simpler.copy(newCachingPolicy)
@@ -129,9 +130,10 @@ trait Resource[+X] { outer =>
       } yield y
     }
     def simplify(
-      cxt: Context, 
+      ctx: Context, 
       mustBeReplaced: (CachingPolicy, Difficulty) => Boolean
-    ): Future[Resource[X]] = {
+    ): Future[Resource[Y]] = {
+      import ctx.executionContext
       val simplifiedOuter = outer.simplifySelfIfNecessary(ctx, mustBeReplaced)
       for(simpler <- simplifiedOuter) 
         yield simpler.flatMap(algId, d)(f)

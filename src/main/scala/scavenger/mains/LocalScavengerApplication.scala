@@ -5,7 +5,9 @@ import akka.actor.ActorSystem
 import akka.actor.ActorPath
 import com.typesafe.config.ConfigFactory
 import scavenger.Context
-import scavenger.backend.{Seed, Master, ActorContext, Worker}
+import scavenger.backend._
+import scavenger.backend.master.Master
+import scavenger.backend.worker.Worker
 
 /**
  * Provides a whole Scavenger service (seed, master, workers) on a 

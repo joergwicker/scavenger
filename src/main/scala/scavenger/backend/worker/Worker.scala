@@ -1,9 +1,11 @@
-package scavenger.backend
+package scavenger.backend.worker
 
 import akka.actor._
-import scavenger.{Resource,Context}
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext
+import scavenger._
+import scavenger.backend._
+import scavenger.{Resource,Context}
 
 /**
  * Actor that controls the computation on

@@ -7,7 +7,7 @@ import scala.collection.mutable.HashMap
 import scala.concurrent._
 import scala.concurrent.duration._
 import scala.language.postfixOps
-import scavenger.{Context, Resource}
+import scavenger._
 import scavenger.categories.formalccc
 
 /**
@@ -30,14 +30,17 @@ class ActorContext(
   implicit val executionContext: ExecutionContext
 ) extends Context {
 
-  import ActorContext._
-
   def submit[X](job: Resource[X]): Future[X] = {
-    // That's totally like Hawking's "grey holes":
+    // That's kind of like Hawking's "grey holes":
     // Promises are thrown into the "black hole", Futures escape...
-    val p = Promise[X]
+    val p = Promise[Any]
     actorRef ! ExternalInterface.Compute(job, p)
-    p.future
+    p.future.map{ a => a.asInstanceOf[X] }
   }
 
+  def toExplicitResource[X](job: Resource[X]): Future[ExplicitResource[X]] = {
+    val p = Promise[ExplicitResource[Any]]
+    actorRef ! ExternalInterface.GetExplicitResource(job, p)
+    p.future.map{ a => a.asInstanceOf[ExplicitResource[X]] }
+  }
 }

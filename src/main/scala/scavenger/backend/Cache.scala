@@ -3,10 +3,10 @@ package scavenger.backend
 import akka.actor.Actor
 import scala.collection.mutable.HashMap
 import scala.concurrent.{Future, Promise, ExecutionContext}
-import scavenger.{Resource, ExplicitResource}
+import scavenger._
 import scavenger.categories.formalccc
 
-trait Caching extends Actor with Scheduler {
+trait Cache extends Actor with Scheduler {
 
   import context.dispatcher
 
@@ -16,7 +16,7 @@ trait Caching extends Actor with Scheduler {
   // Explicit resources are either values or data backed up in file.
   // This enables us to send file-handles around, instead of loading 
   // the file locally and then sending the data to another node.
-  private val cache: 
+  protected val cache: 
     HashMap[formalccc.Elem, Future[ExplicitResource[Any]]] = HashMap.empty
 
   /**
@@ -36,7 +36,7 @@ trait Caching extends Actor with Scheduler {
         // the cache. 
         // Then unpack the explicit resource and return the
         // explicit value.
-        val futValue = compute(job)
+        val futValue = schedule(job)
         cache(job.identifier) = futValue
         for (res <- futValue) yield res.getIt
       }
@@ -44,7 +44,7 @@ trait Caching extends Actor with Scheduler {
       // it doesn't even make sense to check the cache,
       // pass it down to scheduler, unpack the result,
       // don't put anything into cache.
-      for (explicit <- compute(job)) yield explicit.getIt
+      for (explicit <- schedule(job)) yield explicit.getIt
     }
   }
 

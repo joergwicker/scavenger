@@ -1,7 +1,8 @@
 package scavenger.backend
 
-import scala.actor.{Actor, Receive}
+import akka.actor.Actor
 import scala.concurrent.{Future, Promise, ExecutionContext}
+import scavenger._
 
 /**
  * This is the second component of a `Context` implementation on 
@@ -13,16 +14,20 @@ import scala.concurrent.{Future, Promise, ExecutionContext}
  *
  * Empty `Promise`s shall not pass!
  */
-trait ExternalInterface extends Actor with Caching {
+trait ExternalInterface extends Actor with Cache {
+ 
+  import ExternalInterface._
+  import context.dispatcher 
+  
   def handleExternalRequests: Receive = ({
     case Compute(job, result) => {
       getComputed(job).onSuccess{ 
-        r => result.success(r)
+        case r: Any => result.success(r)
       }
     }
     case GetExplicitResource(job, result) => {
       getExplicit(job).onSuccess{
-        r => result.success(r)
+        case r: ExplicitResource[Any] => result.success(r)
       }
     }
   }: Receive)

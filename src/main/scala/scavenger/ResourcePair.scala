@@ -13,9 +13,10 @@ extends Resource[(X, Y)] {
     ctx.submit(x).zip(ctx.submit(y))
   }
   def simplify(
-    cxt: Context, 
+    ctx: Context, 
     mustBeReplaced: (CachingPolicy, Difficulty) => Boolean
-  ): Future[Resource[X]] = {
+  ): Future[Resource[(X, Y)]] = {
+    import ctx.executionContext
     for {
       newX <- x.simplifySelfIfNecessary(ctx, mustBeReplaced)
       newY <- y.simplifySelfIfNecessary(ctx, mustBeReplaced)

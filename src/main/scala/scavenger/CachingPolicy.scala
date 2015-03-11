@@ -6,8 +6,8 @@ package scavenger
  * and whether it should be backed up on hard drive.
  */
 case class CachingPolicy(
-  cacheOnWorker: Boolean,
-  cacheOnMaster: Boolean,
+  cacheGlobally: Boolean,
+  cacheLocally: Boolean,
   backup: Boolean
 )
 

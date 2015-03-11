@@ -1,37 +1,28 @@
 package scavenger.backend.master
 
-import akka.actor.Actor
-import akka.actor.ActorRef
-import akka.actor.ActorLogging
-import akka.actor.Terminated
+import akka.actor._
 import scala.collection.mutable
 import scala.collection.mutable.HashMap
-import Master.{Job, LabeledJob, LabeledResult}
-import ExternalInterface.{NoExternalLabel, PromisedSubjob}
-import scavenger.util.Remindable
-import scavenger.util.Remindable.Reminder
-import scavenger.util.LastMessageTimeMonitoring
-import scavenger.worker.Worker.WorkerHere
-import scavenger.worker.Worker.InternalResult
+import scala.concurrent.{Future, Promise, ExecutionContext}
+import scavenger._
+import scavenger.backend._
+import scavenger.backend.worker.Worker.WorkerHere
+import scavenger.categories.formalccc
+import LastMessageTimeMonitoring.RemoteNodeNotResponding
 
 /**
- * This trait implements load balancing of internal
- * jobs between the workers.
+ * This trait implements load balancing among multiple
+ * worker nodes.
  */
-private[scavenger] trait LoadBalancing 
+trait LoadBalancer 
 extends Actor 
 with ActorLogging 
-with Remindable 
-with LastMessageTimeMonitoring 
-with MasterCache {
-    
-  import LoadBalancing._
+with ResourceEvaluator
+with ActorContextProvider 
+with Remindable
+with LastMessageTimeMonitoring {
 
-  /**
-   * Internal job id's
-   */
-  private var jobId: Long = 0L
-  private def nextJobId() = {jobId += 1; jobId}
+  import context.dispatcher
   
   /** 
    * Stores internal jobs that 
@@ -41,29 +32,37 @@ with MasterCache {
   
   /**
    * Assignment of worker-ActorRef's to the currently processed job.
-   * 
-   * Registered workers that currently have no job are stored as
-   * `
    */
   private val assignedJobs: mutable.Map[ActorRef, Option[InternalJob]] = 
     HashMap.empty[ActorRef, Option[InternalJob]]
-  
+
+  /**
+   * Perform a simple computation that can be delegated.
+   */
+  def computeSimplified[X](r: Resource[X]): Future[X] = {
+    // we simply create a promise in the promise-map, and enqueue the job
+    val p = Promise[Any]
+    promises(r.identifier) = p
+    enqueueSimple(r)
+    p.future.map{ a => a.asInstanceOf[X] }
+  }
+
   /**
    * Appends an internal job id to a job and puts it into the job queue.
    */
-  protected[master] def enqueue(job: PromisedSubjob): Unit = { 
-    val internalJob = InternalJob(job.job, nextJobId())
+  private def enqueueSimple(job: Resource[Any]): Unit = { 
+    val internalJob = InternalJob(job)
     queue.enqueue(internalJob)
-    log.info("enqueued job " + job.job)
+    log.info("enqueued job " + job)
     // notify all workers that there is something to do
-    for ((worker, None) <- assignedJobs) worker ! JobsAvailable
+    for (worker <- idleWorkers) worker ! JobsAvailable
   }
-  
+
   /**
    * Assigns a job to worker.
    * 
    * Just a way to make things a little safer (e.g. prevents you from
-   * sending [[ExternalInterface.PromisedSubjob]]s to workers).
+   * sending `Resource`s to workers).
    */
   private def sendJobToWorker(j: InternalJob, w: ActorRef): Unit = w ! j
   
@@ -125,12 +124,7 @@ with MasterCache {
             " (nothing to withdraw)")
         case Some(oldJob) =>
           log.info("Withdrawing and re-enqueueing job from " + worker)
-          enqueue(PromisedSubjob(
-            oldJob.job, 
-            Nil,
-            true,
-            "recovering from failure of " + worker :: Nil
-          ))
+          enqueueSimple(oldJob.job)
           assignedJobs(worker) = None
       }
     }
@@ -139,23 +133,23 @@ with MasterCache {
   /**
    * Returns collection with all idle workers
    */
-  protected[master] def freeWorkers = 
-    for ((w, None) <- assignedJobs) yield w.path.name
+  private def idleWorkers = 
+    for ((w, None) <- assignedJobs) yield w
     
   /**
    * Returns collection of all workers
    */
-  protected[master] def allWorkers = assignedJobs.keySet
+  private def allWorkers = assignedJobs.keySet
   
   /**
    * Handles reminders sent after the initialization phase
    */
-  protected[master] def handleReminders: Receive = {
+  protected def handleReminders: Receive = {
     // after we switch into normal operation mode, we should 
     // assign a job to all idle workers that joined the master
     // in the initialization phase
     case r: Reminder if (isRelevant(r)) =>
-      val ws = freeWorkers
+      val ws = idleWorkers
       log.info(
         s"Trying to assign ${queue.size} jobs from initialization phase " +
         s"to ${ws.size} workers: { " + ws.mkString(",") +" }" 
@@ -174,63 +168,48 @@ with MasterCache {
   protected[master] def handleWorkerRequests: Receive = 
     updatingLastMessageTime {
     
-    case WorkerHere =>
-      log.info("Got job request from a worker " + sender.path.name)
-      register(sender)
-      tryAssignJob(sender)
-      
-    case Terminated(worker) if (assignedJobs.contains(worker)) => 
-      withdrawJob(worker)
-  }
+      case WorkerHere =>
+        log.info("Got job request from a worker " + sender.path.name)
+        register(sender)
+        tryAssignJob(sender)
+        
+      case Terminated(worker) if (assignedJobs.contains(worker)) => 
+        withdrawJob(worker)
+
+      case RemoteNodeNotResponding(worker) if(assignedJobs.contains(worker)) =>
+        withdrawJob(worker)
+    }
   
   /**
    * Handles results from workers
    */
-  protected[master] def handleWorkerResponses: 
-    Receive = updatingLastMessageTime {
-    case res @ InternalResult(result, id) => {
-      val intro = "Received result " + result + " from " + 
-        sender.path.name + " "
-      assignedJobs(sender) match {
-        case None => log.error(
-          intro + " but there were no jobs assigned to this worker"
-        )
-        case Some(originalJob) => {
-          if (originalJob.internalId != id) {
-            log.error(
-              intro + " but the id was wrong: original = " + 
-              originalJob.internalId + 
-              " returned = " + id
-            )
-            withdrawJob(sender)
-          } else {
-            log.info(intro + ", fulfilling promise, try assign new job")
-            fulfillPromisedSubjob(result.id, result.value)
-            assignedJobs(sender) = None
-            tryAssignJob(sender)
+  protected[master] def handleWorkerResponses: Receive = 
+    updatingLastMessageTime {
+      case InternalResult(id, result) => {
+        val logMessageIntro = "Received result " + result + " from " + 
+          sender.path.name + " "
+        assignedJobs(sender) match {
+          case None => log.error(
+            logMessageIntro + " but there were no jobs assigned to this worker"
+          )
+          case Some(originalJob) => {
+            if (originalJob.job.identifier != id) {
+              log.error(
+                logMessageIntro + " but the id was wrong: original = " + 
+                originalJob.job.identifier + " returned = " + id
+              )
+              withdrawJob(sender)
+            } else {
+              log.info(
+                logMessageIntro + 
+                ", fulfilling promise, try assign new job"
+              )
+              fulfillPromise(id, result)
+              assignedJobs(sender) = None
+              tryAssignJob(sender)
+            }
           }
         }
       }
     }
-  }
-  
-}
-
-private[scavenger] object LoadBalancing {
-  
-  /**
-   * Messages used for communication with the workers.
-   */
-  private[scavenger] case class InternalJob(job: Job, internalId: Long)
-  
-  /**
-   * Message that tells the worker that there is currently nothing to do.
-   */
-  private[scavenger] case object NoJobsAvailable
-  
-  /**
-   * Message that is broadcast to all workers when there are new 
-   * jobs available
-   */
-  private[scavenger] case object JobsAvailable
 }

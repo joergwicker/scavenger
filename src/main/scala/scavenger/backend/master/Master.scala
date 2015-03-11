@@ -1,30 +1,21 @@
-package scavenger.backend
+package scavenger.backend.master
 
 import akka.actor._
 import scala.collection.mutable.{HashSet, HashMap}
 import scavenger._
+import scavenger.backend.{Scheduler => ScavengerScheduler, _}
+import scavenger.categories.formalccc
 
 class Master(val seedPath: ActorPath) 
 extends Actor 
 with ActorLogging
 with SeedJoin 
-with LoadBalancing {
-
-  private val cache: HashMap[formalccc.Elem, Promise[Resource[_]]]
-
-  def receive = ({
-    case _ => ??? // TODO
-  }: Receive)
-
-  val running: Receive = ({
-
-    // Job coming from a context-implementation
-    case Job(resource, promise) => {
-      val caching = resource.cachingPolicy
-      val difficulty = resource.difficulty
-
-    }
-  }: Receive)
+// put the whole stack together...
+with ActorContextProvider
+with LoadBalancer
+with ScavengerScheduler
+with MasterCache
+with ExternalInterface {
 
 }
 

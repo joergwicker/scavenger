@@ -80,6 +80,8 @@ with ContextProvider {
       remindMyself(35, "keep re-reminding")
     }
     
+    case irrelevant: Reminder => { /* ignore */ }
+
     case Ping => sender ! Echo
 
   }: Receive) orElse 

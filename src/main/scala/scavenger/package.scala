@@ -56,4 +56,19 @@ package object scavenger {
     def apply(a: Resource[A], b: Resource[B]): Resource[(A, B)] =
       ResourcePair(a, b)
   }
+
+  def printingStackTrace[X](name: String)(f: => X): X = {
+    println("BEGIN " + name)
+    try {
+      val x = f
+      println("END " + name)
+      x
+    } catch {
+      case t: Throwable => {
+        println("Caught some exception: " + t) 
+        t.printStackTrace
+        throw new Exception("Failure when executing " + name)
+      }
+    }
+  }
 }

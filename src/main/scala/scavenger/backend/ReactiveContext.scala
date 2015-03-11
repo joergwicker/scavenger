@@ -37,12 +37,16 @@ class ReactiveContext(
     // Promises are thrown into the "black hole", Futures escape...
     val p = Promise[Any]
     actorRef ! ExternalInterface.Compute(job, p)
-    p.future.map{ a => a.asInstanceOf[X] }
+    p.future.map{ 
+      a => a.asInstanceOf[X] 
+    }
   }
 
   def asExplicitResource[X](job: Resource[X]): Future[ExplicitResource[X]] = {
     val p = Promise[ExplicitResource[Any]]
     actorRef ! ExternalInterface.GetExplicitResource(job, p)
-    p.future.map{ a => a.asInstanceOf[ExplicitResource[X]] }
+    p.future.map{ 
+      a => a.asInstanceOf[ExplicitResource[X]] 
+    }
   }
 }

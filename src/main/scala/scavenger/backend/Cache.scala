@@ -1,12 +1,12 @@
 package scavenger.backend
 
-import akka.actor.Actor
+import akka.actor.{Actor, ActorLogging}
 import scala.collection.mutable.HashMap
 import scala.concurrent.{Future, Promise, ExecutionContext}
 import scavenger._
 import scavenger.categories.formalccc
 
-trait Cache extends Actor with Scheduler {
+trait Cache extends Actor with ActorLogging with Scheduler {
 
   import context.dispatcher
 
@@ -25,11 +25,15 @@ trait Cache extends Actor with Scheduler {
    * scheduler.
    */
   def getComputed(job: Resource[Any]): Future[Any] = {
+    log.debug("Cache.getComputed({})", job)
     if (shouldBeCachedHere(job.cachingPolicy)) {
       // it makes sense to check the cache
       if (cache.isDefinedAt(job.identifier)) {
         // cache hit. Extract the resource, get its value
-        for (explicit <- cache(job.identifier)) yield explicit.getIt
+        for {
+          explicit <- cache(job.identifier)
+          result <- explicit.getIt
+        } yield result
       } else {
         // it's not in the cache yet. 
         // Get a future from the scheduler, put it into 
@@ -38,13 +42,19 @@ trait Cache extends Actor with Scheduler {
         // explicit value.
         val futValue = schedule(job)
         cache(job.identifier) = futValue
-        for (res <- futValue) yield res.getIt
+        for {
+          res <- futValue
+          value <- res.getIt
+        } yield value
       }
     } else {
       // it doesn't even make sense to check the cache,
       // pass it down to scheduler, unpack the result,
       // don't put anything into cache.
-      for (explicit <- schedule(job)) yield explicit.getIt
+      for {
+        explicit <- schedule(job)
+        value <- explicit.getIt
+      } yield value
     }
   }
 
@@ -53,6 +63,7 @@ trait Cache extends Actor with Scheduler {
    * a backed up resource)
    */
   def getExplicit(job: Resource[Any]): Future[ExplicitResource[Any]] = {
+    log.debug("Cache.getExplicit({})", job)
     if (shouldBeCachedHere(job.cachingPolicy)) {
       // it makes sense to check the cache
       if (cache.isDefinedAt(job.identifier)) {

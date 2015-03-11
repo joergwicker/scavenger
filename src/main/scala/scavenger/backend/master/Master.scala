@@ -25,12 +25,13 @@ with ExternalInterface {
     seedPath,
     MasterHere,
     normalOperationMode
-  )
+  ) orElse handleExternalRequests
 
   private def normalOperationMode: Receive = 
     handleExternalRequests orElse
     updatingLastMessageTime(handleWorkerRequests) orElse
     updatingLastMessageTime(handleWorkerResponses) orElse
+    handleLocalResponses orElse
     monitorLastMessageTimes orElse
     handleReminders
 }

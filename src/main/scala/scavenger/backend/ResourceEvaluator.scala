@@ -6,6 +6,7 @@ import scala.collection.mutable.HashMap
 import scala.concurrent.{Future, Promise}
 import scavenger._
 import scavenger.backend._
+import scavenger.backend.LocalWorker._
 import scavenger.categories.formalccc
 
 /**
@@ -44,11 +45,19 @@ trait ResourceEvaluator extends Actor with ContextProvider {
   def computeHere[X](r: Resource[X]): Future[X] = {
     val spawned = context.actorOf(
       LocalWorker.props(provideComputationContext),
-      "<LocalWorker>_" + scavenger.util.RandomNameGenerator.randomName
+      "LOCAL_" + scavenger.util.RandomNameGenerator.randomName
     )
     val p = Promise[Any]
     promises(r.identifier) = p
-    spawned ! InternalJob(r)
-    p.future.map{ a => a.asInstanceOf[X] }
+    spawned ! LocalJob(r)
+    p.future.map{ 
+      a => a.asInstanceOf[X] 
+    }
   }
+
+  def handleLocalResponses: Receive = ({
+    case LocalResult(id, result) => {
+      promises(id).success(result)
+    }
+  }: Receive)
 }

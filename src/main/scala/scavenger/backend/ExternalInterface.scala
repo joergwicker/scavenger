@@ -1,6 +1,6 @@
 package scavenger.backend
 
-import akka.actor.Actor
+import akka.actor.{Actor, ActorLogging}
 import scala.concurrent.{Future, Promise, ExecutionContext}
 import scavenger._
 
@@ -14,18 +14,20 @@ import scavenger._
  *
  * Empty `Promise`s shall not pass!
  */
-trait ExternalInterface extends Actor with Cache {
+trait ExternalInterface extends Actor with ActorLogging with Cache {
  
   import ExternalInterface._
   import context.dispatcher 
   
   def handleExternalRequests: Receive = ({
     case Compute(job, result) => {
-      getComputed(job).onSuccess{ 
+      log.debug("ExtIntf: got Compute {}", job)
+      getComputed(job).onSuccess{
         case r: Any => result.success(r)
       }
     }
     case GetExplicitResource(job, result) => {
+      log.debug("ExtIntf: got GetExplicitResource {}", job)
       getExplicit(job).onSuccess{
         case r: ExplicitResource[Any] => result.success(r)
       }

@@ -78,7 +78,7 @@ object RandomNameGenerator {
     "AMPHIBIAN",
     "ANAKIM",
     "ANTARCTICAN",
-    "ATLANS",
+    "ATLAN",
     "ASHTAR",
     "BERNARIAN",
     "BOOTEAN",

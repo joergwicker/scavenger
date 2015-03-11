@@ -4,6 +4,7 @@ import akka.actor.{Actor, Props}
 import akka.pattern.pipe
 import scavenger.{Context, Resource}
 import scavenger.backend._
+import scavenger.categories.formalccc
 
 /**
  * A simple actor that can be launched on either 
@@ -16,11 +17,12 @@ import scavenger.backend._
 class LocalWorker(val ctx: Context) extends Actor {
 
   import context.dispatcher
-
+  import LocalWorker._
+  
   def receive = ({
-    case InternalJob(r) => {
+    case LocalJob(r) => {
       r.compute(ctx).map{
-        x => InternalResult(r.identifier, x)
+        x => LocalResult(r.identifier, x)
       } pipeTo context.parent
     }
   }: Receive)
@@ -28,4 +30,6 @@ class LocalWorker(val ctx: Context) extends Actor {
 
 object LocalWorker {
   def props(ctx: Context): Props = Props(classOf[LocalWorker], ctx)
+  private[backend] case class LocalJob(r: Resource[Any])
+  private[backend] case class LocalResult(id: formalccc.Elem, x: Any)
 }

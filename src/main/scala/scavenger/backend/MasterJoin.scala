@@ -33,7 +33,7 @@ with SeedJoin {
   private def master_=(ref: ActorRef): Unit = {
     _master = ref
     _masterProxy = context.actorOf(
-      Props(classOf[ReliableProxy], ref, 10 seconds)
+      ReliableProxy.props(_master.path, 10 seconds)
     )
   }
   

@@ -33,7 +33,7 @@ trait Resource[+X] { outer =>
    */
   def identifier: formalccc.Elem
 
-  override def toString = "R(%s)".format(identifier.toString)
+  override def toString = "Resource{%s}".format(identifier.toString)
 
   /**
    * Start a concrete computation using context `ctx`,

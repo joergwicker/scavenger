@@ -42,8 +42,10 @@ trait LocalScavengerApplication {
     }
   }
 
-  def context = _context
+  def scavengerContext = _context
+  implicit def executionContext = scavengerContext.executionContext
   def scheduler = system.scheduler
+  
   def scavengerShutdown(): Unit = {
     system.shutdown()
   }

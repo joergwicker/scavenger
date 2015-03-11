@@ -20,9 +20,10 @@ object LocalDemo extends LocalScavengerApplication {
     val f = cheap("square"){ (x: Int) => x * x }
     val j = f(x)
 
-    val fut = context.submit(j)
+    val fut = scavengerContext.submit(j)
 
-    implicit val execCtx = context.executionContext
+    fut.onSuccess { case res: Int => println("Result = " + res) }
+
     scheduler.scheduleOnce(30 seconds){ 
       scavengerShutdown()
     }

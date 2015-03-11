@@ -1,7 +1,6 @@
 package scavenger.util
 
 import scala.concurrent.{Future,ExecutionContext}
-import scala.concurrent.ExecutionContext.Implicits.global
 import scavenger._
 
 /**
@@ -16,12 +15,15 @@ class TrivialContext(printActions: Boolean) extends Context {
     }
     r.compute(this)
   }
+  def asExplicitResource[X](r: Resource[X]): Future[ExplicitResource[X]] = {
+    for (x <- submit(r)) yield Value(r.identifier, x, CachingPolicy.Nowhere)
+  }
 }
 
 //* <--- Add/remove the single / at the head of this line to block/unblock
 // This is a little demo/usability test
 object TrivialContext {
-  import scavenger._
+  import scala.concurrent.ExecutionContext.Implicits.global
   def main(args: Array[String]): Unit = {
     
     val ctx = new TrivialContext(true)
@@ -49,10 +51,8 @@ object TrivialContext {
       }
     }
 
-    val currLeft: Algorithm[Double, String] = 
-      twoParamFunc.curryFst[Int, Double](x)(canBuildCouple[Int, Double])
-    val currRight: Algorithm[Int, String] = 
-      twoParamFunc.currySnd[Int, Double](y)(canBuildCouple[Int, Double])
+    val currLeft: Algorithm[Double, String] = twoParamFunc.curryFst(x)
+    val currRight: Algorithm[Int, String] = twoParamFunc.currySnd(y)
 
     for ( res <- ctx.submit(app1) ) println("Result 1 = " + res)
     for ( res <- ctx.submit(app2) ) println("Result 2 = " + res)

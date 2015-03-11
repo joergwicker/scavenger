@@ -49,14 +49,14 @@ trait Algorithm[-X, +Y] { outer =>
     Algorithm[A, Y] = ccs(this, b)
   */
 
-  def curryFst[A, B](a: Resource[A])(cbp: CanBuildProduct[A, B, X]):
+  def curryFst[A, B](a: Resource[A])(implicit cbp: CanBuildProduct[A, B, X]):
   Algorithm[B, Y] =
   new Algorithm[B, Y] {
     def identifier = formalccc.Curry(outer.identifier)(a.identifier)
     def apply(b: Resource[B]) = outer(cbp(a, b))
   }
 
-  def currySnd[A, B](b: Resource[B])(cbp: CanBuildProduct[A, B, X]):
+  def currySnd[A, B](b: Resource[B])(implicit cbp: CanBuildProduct[A, B, X]):
   Algorithm[A, Y] =
   new Algorithm[A, Y] {
     import formalccc.{Curry => FCurry, _}

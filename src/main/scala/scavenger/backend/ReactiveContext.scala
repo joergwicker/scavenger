@@ -11,8 +11,10 @@ import scavenger._
 import scavenger.categories.formalccc
 
 /**
- * Implementation of a context that sends jobs to 
- * an actor on the same node (Worker or Master).
+ * Implementation of a context that interfaces with
+ * the reactive ActorSystem-model.
+ * It translates method calls into messages and sends them
+ * to an actor on the same node (Worker or Master).
  *
  * Classes of this type provide a bridge between the `Actor`
  * world and the `Future` world, similarly to the `PromiseActorRef`,
@@ -25,7 +27,7 @@ import scavenger.categories.formalccc
  * being executed on a node, or by a user who submits jobs
  * to the `Master` node.
  */
-class ActorContext(
+class ReactiveContext(
   private val actorRef: ActorRef,
   implicit val executionContext: ExecutionContext
 ) extends Context {
@@ -38,7 +40,7 @@ class ActorContext(
     p.future.map{ a => a.asInstanceOf[X] }
   }
 
-  def toExplicitResource[X](job: Resource[X]): Future[ExplicitResource[X]] = {
+  def asExplicitResource[X](job: Resource[X]): Future[ExplicitResource[X]] = {
     val p = Promise[ExplicitResource[Any]]
     actorRef ! ExternalInterface.GetExplicitResource(job, p)
     p.future.map{ a => a.asInstanceOf[ExplicitResource[X]] }

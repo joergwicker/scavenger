@@ -30,7 +30,7 @@ trait LocalScavengerApplication {
     val seed = system.actorOf(Seed.props, "seed")
     val seedPath = seed.path
     master = system.actorOf(Master.props(seedPath), "master")
-    _context = new ActorContext(
+    _context = new ReactiveContext(
       master,
       scala.concurrent.ExecutionContext.Implicits.global
     )

@@ -16,7 +16,7 @@ import scavenger.categories.formalccc
  * What "maximally simplified" means depends on the type of
  * node.
  */
-trait ResourceEvaluator extends Actor with ActorContextProvider {
+trait ResourceEvaluator extends Actor with ContextProvider {
 
   import context.dispatcher
 

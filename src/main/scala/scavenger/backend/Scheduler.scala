@@ -6,7 +6,7 @@ import scavenger._
 
 trait Scheduler extends Actor 
 with ResourceEvaluator
-with ActorContextProvider {
+with ContextProvider {
 
   import context.dispatcher
 
@@ -17,6 +17,16 @@ with ActorContextProvider {
    */
   protected def mustScheduleHere(
     policy: CachingPolicy, 
+    difficulty: Difficulty
+  ): Boolean
+
+  /** 
+   * This method determines whether a job has to 
+   * be processed separately before it can be delegated
+   * as a subjob of a larger job.
+   */
+  protected def mustBeSimplified(
+    policy: CachingPolicy,
     difficulty: Difficulty
   ): Boolean
 

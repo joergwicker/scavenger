@@ -7,7 +7,7 @@ import scavenger._
 /**
  * This is the second component of a `Context` implementation on 
  * a compute node. It gets messages containing `Promise`s from
- * an `ActorContext`, and makes sure that these promises are
+ * an `ReactiveContext`, and makes sure that these promises are
  * not passed any further. In some sense, it provides kind of
  * demilitarized zone between the `Future`-computing model and
  * the actor-model.

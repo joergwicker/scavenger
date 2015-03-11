@@ -3,7 +3,7 @@ package scavenger.backend.master
 import akka.actor._
 import scala.collection.mutable.{HashSet, HashMap}
 import scavenger._
-import scavenger.backend.{Scheduler => ScavengerScheduler, _}
+import scavenger.backend.{Scheduler => _, _}
 import scavenger.categories.formalccc
 
 class Master(val seedPath: ActorPath) 
@@ -11,11 +11,13 @@ extends Actor
 with ActorLogging
 with SeedJoin 
 // put the whole stack together...
-with ActorContextProvider
+with ContextProvider
 with LoadBalancer
-with ScavengerScheduler
+with MasterScheduler
 with MasterCache
 with ExternalInterface {
+
+  def receive: Receive = ??? // TODO: compose all the behaviors
 
 }
 

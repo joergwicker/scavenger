@@ -18,7 +18,7 @@ trait LoadBalancer
 extends Actor 
 with ActorLogging 
 with ResourceEvaluator
-with ActorContextProvider 
+with ContextProvider 
 with Remindable
 with LastMessageTimeMonitoring {
 

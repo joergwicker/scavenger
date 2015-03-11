@@ -7,8 +7,8 @@ import scavenger.Context
  * Mixin for `Actor`s that provide an `ExternalInterface`
  * that allows to create `Context`-decorators.
  */
-trait ActorContextProvider extends Actor {
-  def provideComputationContext: Context = new ActorContext(
+trait ContextProvider extends Actor {
+  def provideComputationContext: Context = new ReactiveContext(
     self,
     context.dispatcher
   )

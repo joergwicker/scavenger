@@ -18,7 +18,7 @@ package object backend {
    * We have to "artificially disjointify" the incoming 
    * jobs, because it could happen that a job that does 
    * not get cached is received two times, for example 
-   * it's common that we have to unpack `ExplicitResources`
+   * it's common that we have to unpack `ExplicitComputations`
    * multiple times.
    */
   private[backend] case class InternalLabel(
@@ -31,7 +31,7 @@ package object backend {
    */
   private[backend] case class InternalJob(
     label: InternalLabel, 
-    job: Resource[Any]
+    job: Computation[Any]
   )
   
   /**

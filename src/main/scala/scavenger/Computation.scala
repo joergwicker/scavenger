@@ -5,35 +5,35 @@ import scala.concurrent.ExecutionContext
 import scavenger.categories.formalccc
 
 /**
- * `Resource` is a notion of computation that
+ * `Computation` is a notion of computation that
  * incorporates the following three aspects.
  * First: a value of type `X` can be obtained
- * from a `Resource[X]` asynchronously, after
- * some potentially long computation.
+ * from a `Computation[X]` asynchronously, after
+ * some potentially long execution.
  * Second: this computation can be distributed
  * across multiple compute nodes with different
  * capabilities.
- * Third: resources can be backed up and 
+ * Third: computations can be backed up and 
  * cached.
  *
- * Simplified, a `Resource[X]` can be thought
+ * Simplified, a `Computation[X]` can be thought
  * of as the following type:
  * {{{
  *   (Identifier[X], Context => Future[X])
  * }}}
  * where `Identifier[X]` is something that can
- * be used to identify saved or cached resources,
+ * be used to identify saved or cached computations,
  * `Context` represents a compute node, and
  * `Future` is the future-monad. 
  */
-trait Resource[+X] { outer =>
+trait Computation[+X] { outer =>
 
   /**
-   * Formal expression that uniquely identifies this resource
+   * Formal expression that uniquely identifies this computation
    */
   def identifier: formalccc.Elem
 
-  override def toString = "Resource{%s}".format(identifier.toString)
+  override def toString = "Computation{%s}".format(identifier.toString)
 
   /**
    * Start a concrete computation using context `ctx`,
@@ -42,13 +42,13 @@ trait Resource[+X] { outer =>
   def compute(ctx: Context): Future[X]
 
   /**
-   * Replace components of this `Resource` that are 
+   * Replace components of this `Computation` that are 
    * too complex. Used internally by `Scheduler`.
    */
   def simplify(
     cxt: Context, 
     mustBeReplaced: (CachingPolicy, Difficulty) => Boolean
-  ): Future[Resource[X]]
+  ): Future[Computation[X]]
 
   /**
    * Applies simplification to `this`, if necessary.
@@ -56,21 +56,21 @@ trait Resource[+X] { outer =>
   private[scavenger] def simplifySelfIfNecessary(
     ctx: Context, 
     mustBeReplaced: (CachingPolicy, Difficulty) => Boolean
-  ): Future[Resource[X]] = {
+  ): Future[Computation[X]] = {
     if (mustBeReplaced(cachingPolicy, difficulty)) {
-      ctx.asExplicitResource(this)
+      ctx.asExplicitComputation(this)
     } else {
       simplify(ctx, mustBeReplaced)
     }
   }
 
   /**
-   * Get the caching policy of this resource
+   * Get the caching policy of this computation
    */
   def cachingPolicy: CachingPolicy
 
   /**
-   * Specifies whether this resource is difficult to 
+   * Specifies whether this computation is difficult to 
    * compute. It determines whether the evaluation should 
    * be launched on a node that is responsible for coordination, 
    * or sent to a node responsible for the heavy number-crunching.
@@ -78,11 +78,11 @@ trait Resource[+X] { outer =>
   def difficulty: Difficulty
 
   /**
-   * Returns a resource that looks exactly the same, except for
+   * Returns a computation that looks exactly the same, except for
    * the changed caching policy.
    */
-  def copy(newCachingPolicy: CachingPolicy): Resource[X] = 
-    new Resource[X] {
+  def copy(newCachingPolicy: CachingPolicy): Computation[X] = 
+    new Computation[X] {
       def identifier = outer.identifier
       def compute(ctx: Context) = outer.compute(ctx)
       def cachingPolicy = newCachingPolicy
@@ -90,7 +90,7 @@ trait Resource[+X] { outer =>
       def simplify(
         ctx: Context, 
         mustBeReplaced: (CachingPolicy, Difficulty) => Boolean
-      ): Future[Resource[X]] = {
+      ): Future[Computation[X]] = {
         import ctx.executionContext
         val simplifiedOuter = outer.simplifySelfIfNecessary(ctx, mustBeReplaced)
         for(simpler <- simplifiedOuter) 
@@ -100,26 +100,26 @@ trait Resource[+X] { outer =>
 
   /**
    * This is the most general method that allows to
-   * transform `Resource`s.
+   * transform `Computation`s.
    *
-   * When a `Resource[X]` is mapped by an `Algorithm[X, Y]`,
-   * the identifiers of the algorithm and the resources
+   * When a `Computation[X]` is mapped by an `Algorithm[X, Y]`,
+   * the identifiers of the algorithm and the computations
    * are composed, and the result of type `X`
    * that is encapsulated
-   * in the `Resource[X]` becomes the argument of the
+   * in the `Computation[X]` becomes the argument of the
    * algorithm's `apply` method, which then produces 
    * a value of type `Y` after some delay.
    *
    * Additional optimizations (caching, distribution) is
    * performed by the context, which is passed to the
-   * `compute` method of the new resource.
+   * `compute` method of the new computation.
    */
   private[scavenger] def flatMap[Y](
     algId: formalccc.Elem, 
     d: Difficulty
   )(
     f: (X, Context) => Future[Y]
-  ): Resource[Y] = new Resource[Y] {
+  ): Computation[Y] = new Computation[Y] {
     def identifier = algId(outer.identifier)
     def compute(ctx: Context): Future[Y] = {
       import ctx.executionContext
@@ -132,7 +132,7 @@ trait Resource[+X] { outer =>
     def simplify(
       ctx: Context, 
       mustBeReplaced: (CachingPolicy, Difficulty) => Boolean
-    ): Future[Resource[Y]] = {
+    ): Future[Computation[Y]] = {
       import ctx.executionContext
       val simplifiedOuter = outer.simplifySelfIfNecessary(ctx, mustBeReplaced)
       for(simpler <- simplifiedOuter) 
@@ -143,32 +143,32 @@ trait Resource[+X] { outer =>
   }
 
   /**
-   * Creates a resource that represents a pair of this resource and the
-   * other resource
+   * Creates a computation that represents a pair of this computation and the
+   * other computation
    */
-  def zip[Y](other: Resource[Y]): Resource[(X, Y)] = ResourcePair(this, other)
+  def zip[Y](other: Computation[Y]): Computation[(X, Y)] = ComputationPair(this, other)
 
   /**
    * Assuming that `X` is actually a function type `A => B`, 
-   * allows to apply this resource to an `A`-valued one.
+   * allows to apply this computation to an `A`-valued one.
    *
    * The `CanApplyTo` is provided by a single implicit method 
    * in `package.scala`.
    */
-  def apply[A, B](arg: Resource[A], difficulty: Difficulty = Cheap)(
+  def apply[A, B](arg: Computation[A], difficulty: Difficulty = Cheap)(
     implicit cat: CanApplyTo[X, A, B]
-  ): Resource[B] = cat(this, arg, difficulty)
+  ): Computation[B] = cat(this, arg, difficulty)
 
 }
 
-object Resource {
-  def apply[X](id: String, x: X): Resource[X] = 
+object Computation {
+  def apply[X](id: String, x: X): Computation[X] = 
     Value(new formalccc.Atom(id), x, CachingPolicy.Nowhere)
 
   /**
-   * Creates an ad-hoc resource with UUID as identifier
+   * Creates an ad-hoc computation with UUID as identifier
    */
-  def apply[X](x: X): Resource[X] = {
+  def apply[X](x: X): Computation[X] = {
     val uuid = java.util.UUID.randomUUID.toString
     apply(uuid, x)
   }
@@ -176,15 +176,15 @@ object Resource {
 
 /**
  * This is the type-dependent polymorphism pattern used 
- * in the method `apply` of the `Resource` trait.
+ * in the method `apply` of the `Computation` trait.
  * 
- * It ensures that only function-valued resources can be
- * applied to other resources.
+ * It ensures that only function-valued computations can be
+ * applied to other computations.
  */
 trait CanApplyTo[-Func, -In, +Out] {
   def apply(
-    f: Resource[Func], 
-    input: Resource[In], 
+    f: Computation[Func], 
+    input: Computation[In], 
     d: Difficulty
-  ): Resource[Out]
+  ): Computation[Out]
 }

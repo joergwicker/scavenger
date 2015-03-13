@@ -28,11 +28,11 @@ object LocalDemo extends LocalScavengerApplication {
       Thread.sleep(90)
       (x: Int) => 2 * x
     }
-    val f3 = parallel("adHocResourceExample"){
+    val f3 = parallel("adHocComputationExample"){
       (x: Int, ctx: Context) => {
-        val adHocResource = Resource(x)
-        val subjob1 = f1(adHocResource)
-        val subjob2 = f2(adHocResource)
+        val adHocComputation = Computation(x)
+        val subjob1 = f1(adHocComputation)
+        val subjob2 = f2(adHocComputation)
         for {
           a <- ctx.submit(subjob1)
           b <- ctx.submit(subjob2)
@@ -44,7 +44,7 @@ object LocalDemo extends LocalScavengerApplication {
     val functions = List(f0, f1, f2, f3)
     val jobs = for (d <- data; f <- functions; g <- functions) yield {
       val inputId = "number_" + d 
-      g(f(Resource(inputId, d)))
+      g(f(Computation(inputId, d)))
     }
 
     val futures = for (j <- jobs) yield scavengerContext.submit(j)

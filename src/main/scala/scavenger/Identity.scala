@@ -7,5 +7,5 @@ import scavenger.categories.formalccc
  */
 case class Identity[X]() extends Algorithm[X, X] {
   def identifier = formalccc.Id
-  def apply(resource: Resource[X]) = resource
+  def apply(computation: Computation[X]) = computation
 }

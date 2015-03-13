@@ -17,7 +17,7 @@ import LastMessageTimeMonitoring.RemoteNodeNotResponding
 trait LoadBalancer 
 extends Actor 
 with ActorLogging 
-with ResourceEvaluator
+with SimpleComputationExecutor
 with ContextProvider 
 with Remindable
 with LastMessageTimeMonitoring {
@@ -39,7 +39,7 @@ with LastMessageTimeMonitoring {
   /**
    * Perform a simple computation that can be delegated.
    */
-  def computeSimplified[X](r: Resource[X]): Future[X] = {
+  def computeSimplified[X](r: Computation[X]): Future[X] = {
     // we simply create a promise in the promise-map, and enqueue the job
     val p = Promise[Any]
     val label = toInternalLabel(r.identifier)
@@ -51,7 +51,7 @@ with LastMessageTimeMonitoring {
   /**
    * Appends an internal job id to a job and puts it into the job queue.
    */
-  private def enqueueSimple(label: InternalLabel, job: Resource[Any]): Unit = { 
+  private def enqueueSimple(label: InternalLabel, job: Computation[Any]): Unit = { 
     val internalJob = InternalJob(label, job)
     queue.enqueue(internalJob)
     log.info("enqueued job " + job)
@@ -63,7 +63,7 @@ with LastMessageTimeMonitoring {
    * Assigns a job to worker.
    * 
    * Just a way to make things a little safer (e.g. prevents you from
-   * sending `Resource`s to workers).
+   * sending `Computation`s to workers).
    */
   private def sendJobToWorker(j: InternalJob, w: ActorRef): Unit = w ! j
   

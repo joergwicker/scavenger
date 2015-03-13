@@ -12,5 +12,5 @@ case class AlgorithmPair[D, X, Y](
 ) extends Algorithm[D, (X, Y)] {
   def identifier = 
     formalccc.Pair(f.identifier, g.identifier)
-  def apply(r: Resource[D]) = ResourcePair(f(r), g(r))
+  def apply(r: Computation[D]) = ComputationPair(f(r), g(r))
 }

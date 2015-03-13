@@ -5,7 +5,7 @@ import scala.concurrent.{Future, Promise, ExecutionContext}
 import scavenger._
 
 trait Scheduler extends Actor 
-with ResourceEvaluator
+with SimpleComputationExecutor
 with ContextProvider {
 
   import context.dispatcher
@@ -34,7 +34,7 @@ with ContextProvider {
    * Decomposes a potentially complex job and schedules 
    * individual parts for computation.
    */
-  def schedule(job: Resource[Any]): Future[Value[Any]] = {
+  def schedule(job: Computation[Any]): Future[Value[Any]] = {
 
     val selfName = "" + self
     if (selfName.matches(".*master.*")) {
@@ -55,17 +55,17 @@ with ContextProvider {
         yield Value(job.identifier, x, job.cachingPolicy)
     } else {
       for {
-        simplifiedResource <- simplify(job)
-        finalResult <- computeSimplified(simplifiedResource)
+        simplifiedComputation <- simplify(job)
+        finalResult <- computeSimplified(simplifiedComputation)
       } yield Value(job.identifier, finalResult, CachingPolicy.Nowhere)
     }
   }
 
   /**
-   * Simplify a resource such that the resulting resource can
+   * Simplify a computation such that the resulting computation can
    * be handled in one piece (e.g. sent to a single worker node)
    */
-  private def simplify(job: Resource[Any]): Future[Resource[Any]] = {
+  private def simplify(job: Computation[Any]): Future[Computation[Any]] = {
     job.simplify(provideComputationContext, mustBeSimplified)
   }
 }

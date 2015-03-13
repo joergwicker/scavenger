@@ -11,9 +11,9 @@ trait Algorithm[-X, +Y] { outer =>
   def identifier: formalccc.Elem
 
   /**
-   * Creates a new resource modified by this algorithm
+   * Creates a new computation modified by this algorithm
    */
-  def apply(resource: Resource[X]): Resource[Y] 
+  def apply(computation: Computation[X]): Computation[Y] 
 
   /**
    * Composes with another algorithm (Order: this=first, other=second)
@@ -21,7 +21,7 @@ trait Algorithm[-X, +Y] { outer =>
   def andThen[Z](other: Algorithm[Y, Z]): Algorithm[X, Z] = 
   new Algorithm[X, Z] {
     def identifier = other.identifier o outer.identifier
-    def apply(resource: Resource[X]) = other(outer(resource))
+    def apply(computation: Computation[X]) = other(outer(computation))
   }
 
   /**
@@ -42,27 +42,27 @@ trait Algorithm[-X, +Y] { outer =>
     (this o Fst[X, A]) zip (other o Snd[X, A])
 
   /* Doesn't work: variance doesn't work out.
-  def curryFst[A, B](a: Resource[A])(ccf: CanCurryFst[X, A, B, Y]):
+  def curryFst[A, B](a: Computation[A])(ccf: CanCurryFst[X, A, B, Y]):
     Algorithm[B, Y] = ccf(this, a)
 
-  def currySnd[A, B](b: Resource[B])(ccs: CanCurrySnd[X, A, B, Y]):
+  def currySnd[A, B](b: Computation[B])(ccs: CanCurrySnd[X, A, B, Y]):
     Algorithm[A, Y] = ccs(this, b)
   */
 
-  def curryFst[A, B](a: Resource[A])(implicit cbp: CanBuildProduct[A, B, X]):
+  def curryFst[A, B](a: Computation[A])(implicit cbp: CanBuildProduct[A, B, X]):
   Algorithm[B, Y] =
   new Algorithm[B, Y] {
     def identifier = formalccc.Curry(outer.identifier)(a.identifier)
-    def apply(b: Resource[B]) = outer(cbp(a, b))
+    def apply(b: Computation[B]) = outer(cbp(a, b))
   }
 
-  def currySnd[A, B](b: Resource[B])(implicit cbp: CanBuildProduct[A, B, X]):
+  def currySnd[A, B](b: Computation[B])(implicit cbp: CanBuildProduct[A, B, X]):
   Algorithm[A, Y] =
   new Algorithm[A, Y] {
     import formalccc.{Curry => FCurry, _}
     // this one is a little tricky, see p. 61 third black CS book
     def identifier = FCurry(outer.identifier o Pair(Snd, Fst))(b.identifier)
-    def apply(a: Resource[A]) = outer(cbp(a, b))
+    def apply(a: Computation[A]) = outer(cbp(a, b))
   }
 }
 
@@ -77,25 +77,25 @@ trait Algorithm[-X, +Y] { outer =>
 trait CanCurryFst[+In, -InA, -InB, +Out] {
   def apply(
     f: Algorithm[In, Out],
-    input: Resource[InA]
+    input: Computation[InA]
   ): Algorithm[InB, Out]
 }
 
 trait CanCurrySnd[+In, -InA, -InB, +Out] {
   def apply(
     f: Algorithm[In, Out],
-    input: Resource[InB]
+    input: Computation[InB]
   ): Algorithm[InA, Out]
 }
 */
 
 trait CanBuildProduct[-A, -B, +Prod] {
-  def apply(a: Resource[A], b: Resource[B]): Resource[Prod]
+  def apply(a: Computation[A], b: Computation[B]): Computation[Prod]
 }
 
 /**
  * This is the natural notion of a morphism between 
- * objects of type `Resource[X]` for some `X`.
+ * objects of type `Computation[X]` for some `X`.
  *
  * An `AtomicAlgorithm[X,Y]` describes how to obtain a value
  * of type `Y` from a value of type `X` using a 
@@ -105,7 +105,7 @@ trait CanBuildProduct[-A, -B, +Prod] {
  *
  * Furthermore, an algorithm provides a symbolic 
  * identifier, that enables us to identify modified
- * resources, and load them from cache or a file, if
+ * computations, and load them from cache or a file, if
  * possible.
  */
 abstract class AtomicAlgorithm[-X, +Y] 
@@ -114,8 +114,8 @@ with ((X, Context) => Future[Y]) { outer =>
   def difficulty: Difficulty
   def apply(x: X, ctx: Context): Future[Y]
 
-  def apply(resource: Resource[X]): Resource[Y] = {
-    resource.flatMap(identifier, difficulty)(this)
+  def apply(computation: Computation[X]): Computation[Y] = {
+    computation.flatMap(identifier, difficulty)(this)
   }
 }
 

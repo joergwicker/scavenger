@@ -12,24 +12,24 @@ trait Cache extends Actor with ActorLogging with Scheduler {
 
   protected def shouldBeCachedHere(p: CachingPolicy): Boolean
 
-  // The cache stores futures of explicit resources.
-  // Explicit resources are either values or data backed up in file.
+  // The cache stores futures of explicit computations.
+  // Explicit computations are either values or data backed up in file.
   // This enables us to send file-handles around, instead of loading 
   // the file locally and then sending the data to another node.
   protected val cache: 
-    HashMap[formalccc.Elem, Future[ExplicitResource[Any]]] = HashMap.empty
+    HashMap[formalccc.Elem, Future[ExplicitComputation[Any]]] = HashMap.empty
 
   /**
-   * Gets the final value of the resource, either by retrieving it from
+   * Gets the final value of the computation, either by retrieving it from
    * cache or by getting it as computation result from the underlying 
    * scheduler.
    */
-  def getComputed(job: Resource[Any]): Future[Any] = {
+  def getComputed(job: Computation[Any]): Future[Any] = {
     log.debug("Cache.getComputed({})", job)
     if (shouldBeCachedHere(job.cachingPolicy)) {
       // it makes sense to check the cache
       if (cache.isDefinedAt(job.identifier)) {
-        // cache hit. Extract the resource, get its value
+        // cache hit. Extract the computation, get its value
         for {
           explicit <- cache(job.identifier)
           result <- explicit.getIt
@@ -38,7 +38,7 @@ trait Cache extends Actor with ActorLogging with Scheduler {
         // it's not in the cache yet. 
         // Get a future from the scheduler, put it into 
         // the cache. 
-        // Then unpack the explicit resource and return the
+        // Then unpack the explicit computation and return the
         // explicit value.
         val futValue = schedule(job)
         cache(job.identifier) = futValue
@@ -59,15 +59,15 @@ trait Cache extends Actor with ActorLogging with Scheduler {
   }
 
   /**
-   * Get an equivalent `ExplicitResource` (either explicit value or 
-   * a backed up resource)
+   * Get an equivalent `ExplicitComputation` (either explicit value or 
+   * a backed up computation)
    */
-  def getExplicit(job: Resource[Any]): Future[ExplicitResource[Any]] = {
+  def getExplicit(job: Computation[Any]): Future[ExplicitComputation[Any]] = {
     log.debug("Cache.getExplicit({})", job)
     if (shouldBeCachedHere(job.cachingPolicy)) {
       // it makes sense to check the cache
       if (cache.isDefinedAt(job.identifier)) {
-        // cache hit. Extract the resource, just return it 
+        // cache hit. Extract the computation, just return it 
         // (it's already explicit, no need to simplify it any further)
         cache(job.identifier)
       } else {

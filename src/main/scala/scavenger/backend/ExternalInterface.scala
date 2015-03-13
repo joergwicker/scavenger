@@ -26,10 +26,10 @@ trait ExternalInterface extends Actor with ActorLogging with Cache {
         case r: Any => result.success(r)
       }
     }
-    case GetExplicitResource(job, result) => {
-      log.debug("ExtIntf: got GetExplicitResource {}", job)
+    case GetExplicitComputation(job, result) => {
+      log.debug("ExtIntf: got GetExplicitComputation {}", job)
       getExplicit(job).onSuccess{
-        case r: ExplicitResource[Any] => result.success(r)
+        case r: ExplicitComputation[Any] => result.success(r)
       }
     }
   }: Receive)
@@ -42,15 +42,15 @@ object ExternalInterface {
    * Requests the evaluation of `job`. The result should be written into 
    * the `result`-`Promise`.
    */
-  private[backend] case class Compute(job: Resource[Any], result: Promise[Any])
+  private[backend] case class Compute(job: Computation[Any], result: Promise[Any])
 
   /**
    * Second (2/2) type of messages accepted by an `ExternalInterface`.
    * Similar to `Compute`, but does not need the final value, accepts a 
-   * slightly more general `ExplicitResource` instead.
+   * slightly more general `ExplicitComputation` instead.
    */
-  private[backend] case class GetExplicitResource(
-    job: Resource[Any], 
-    result: Promise[ExplicitResource[Any]]
+  private[backend] case class GetExplicitComputation(
+    job: Computation[Any], 
+    result: Promise[ExplicitComputation[Any]]
   )
 }

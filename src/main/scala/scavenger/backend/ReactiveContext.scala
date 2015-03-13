@@ -23,7 +23,7 @@ import scavenger.categories.formalccc
  * Such contexts interact with the referenced actor by 
  * sending `Job`s and getting `Result`s from the actor.
  *
- * Such a context can be used by a `Resource` that is 
+ * Such a context can be used by a `Computation` that is 
  * being executed on a node, or by a user who submits jobs
  * to the `Master` node.
  */
@@ -32,7 +32,7 @@ class ReactiveContext(
   implicit val executionContext: ExecutionContext
 ) extends Context {
 
-  def submit[X](job: Resource[X]): Future[X] = {
+  def submit[X](job: Computation[X]): Future[X] = {
     // That's kind of like Hawking's "grey holes":
     // Promises are thrown into the "black hole", Futures escape...
     val p = Promise[Any]
@@ -42,11 +42,11 @@ class ReactiveContext(
     }
   }
 
-  def asExplicitResource[X](job: Resource[X]): Future[ExplicitResource[X]] = {
-    val p = Promise[ExplicitResource[Any]]
-    actorRef ! ExternalInterface.GetExplicitResource(job, p)
+  def asExplicitComputation[X](job: Computation[X]): Future[ExplicitComputation[X]] = {
+    val p = Promise[ExplicitComputation[Any]]
+    actorRef ! ExternalInterface.GetExplicitComputation(job, p)
     p.future.map{ 
-      a => a.asInstanceOf[ExplicitResource[X]] 
+      a => a.asInstanceOf[ExplicitComputation[X]] 
     }
   }
 }

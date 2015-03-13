@@ -13,11 +13,11 @@ import scavenger.categories.formalccc
  * Common interface for a `LoadBalancer` (on Master node)
  * and a simple `BruteForceEvaluator` (on Worker node).
  *
- * It is able to evaluate "maximally simplified" `Resources`.
+ * It is able to evaluate "maximally simplified" `Computations`.
  * What "maximally simplified" means depends on the type of
  * node.
  */
-trait ResourceEvaluator extends Actor with ContextProvider {
+trait SimpleComputationExecutor extends Actor with ContextProvider {
 
   import context.dispatcher
 
@@ -37,10 +37,10 @@ trait ResourceEvaluator extends Actor with ContextProvider {
     println("DEBUG: fulfilling promise for id = " + label) // TODO: remove debug
     if (!promises.contains(label)) {
       println("ERROR: the promise for id = " + label + " does not exist")
-      throw new Error("ResourceEvaluator.fulfillPromise: nothing to fulfill")
+      throw new Error("SimpleComputationExecutor.fulfillPromise: nothing to fulfill")
     } else if (promises(label).isCompleted) {
       println("ERROR: the promise for id = " + label + " is already completed!")
-      throw new Error("ResourceEvaluator.fulfillPromise seems buggy")
+      throw new Error("SimpleComputationExecutor.fulfillPromise seems buggy")
     }
     promises(label).success(result)
     promises -= label
@@ -49,7 +49,7 @@ trait ResourceEvaluator extends Actor with ContextProvider {
   /**
    * Perform a simple computation that can be delegated.
    */
-  def computeSimplified[X](r: Resource[X]): Future[X]
+  def computeSimplified[X](r: Computation[X]): Future[X]
 
   /**
    * Perform a complex computation that can not be delegated.
@@ -57,7 +57,7 @@ trait ResourceEvaluator extends Actor with ContextProvider {
    * Simply spawns an little separate actor on same node, and
    * delegates the computation.
    */
-  def computeHere[X](r: Resource[X]): Future[X] = {
+  def computeHere[X](r: Computation[X]): Future[X] = {
     val spawned = context.actorOf(
       LocalWorker.props(provideComputationContext),
       "LOCAL_" + scavenger.util.RandomNameGenerator.randomName

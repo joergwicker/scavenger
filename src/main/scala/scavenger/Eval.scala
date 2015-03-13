@@ -9,7 +9,7 @@ import scavenger.categories.formalccc
  * for application of functions to input arguments.
  *
  * It is used in the formulation of partially applied
- * resources.
+ * computations.
  */
 case class Eval[X, Y](difficulty: Difficulty) 
 extends AtomicAlgorithm[(X=>Y, X), Y] {

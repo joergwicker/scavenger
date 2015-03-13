@@ -42,19 +42,19 @@ package object scavenger {
     Algorithm[X, Y] = atomicAlgorithmConstructor(Parallel)(algorithmId, f)
 
   // providing implicit `CanApplyTo`s
-  // for the `apply` method of `Resource` that allows to 
-  // build `Y`-valued resources from `X`-valued and `Y => X`-valued ones.
+  // for the `apply` method of `Computation` that allows to 
+  // build `Y`-valued computations from `X`-valued and `Y => X`-valued ones.
   implicit def canApplyFunctionToArg[X, Y]: CanApplyTo[X => Y, X, Y] = 
   new CanApplyTo[X => Y, X, Y] {
-    def apply(f: Resource[X => Y], x: Resource[X], d: Difficulty): 
-    Resource[Y] = 
-    Eval[X, Y](d)(ResourcePair(f, x))
+    def apply(f: Computation[X => Y], x: Computation[X], d: Difficulty): 
+    Computation[Y] = 
+    Eval[X, Y](d)(ComputationPair(f, x))
   }
 
   implicit def canBuildCouple[A, B]: CanBuildProduct[A, B, (A, B)] = 
   new CanBuildProduct[A, B, (A, B)] {
-    def apply(a: Resource[A], b: Resource[B]): Resource[(A, B)] =
-      ResourcePair(a, b)
+    def apply(a: Computation[A], b: Computation[B]): Computation[(A, B)] =
+      ComputationPair(a, b)
   }
 
   def printingStackTrace[X](name: String)(f: => X): X = {

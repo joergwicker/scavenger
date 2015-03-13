@@ -4,8 +4,8 @@ import scala.concurrent.Future
 import scala.concurrent.ExecutionContext
 import scavenger.categories.formalccc
 
-case class ResourcePair[X, Y](x: Resource[X], y: Resource[Y])
-extends Resource[(X, Y)] {
+case class ComputationPair[X, Y](x: Computation[X], y: Computation[Y])
+extends Computation[(X, Y)] {
   def identifier = formalccc.Couple(x.identifier, y.identifier)
   def difficulty = Cheap
   def cachingPolicy = CachingPolicy.Nowhere
@@ -15,11 +15,11 @@ extends Resource[(X, Y)] {
   def simplify(
     ctx: Context, 
     mustBeReplaced: (CachingPolicy, Difficulty) => Boolean
-  ): Future[Resource[(X, Y)]] = {
+  ): Future[Computation[(X, Y)]] = {
     import ctx.executionContext
     for {
       newX <- x.simplifySelfIfNecessary(ctx, mustBeReplaced)
       newY <- y.simplifySelfIfNecessary(ctx, mustBeReplaced)
-    } yield ResourcePair(x, y)
+    } yield ComputationPair(x, y)
   }
 }

@@ -5,12 +5,12 @@ import scala.concurrent.ExecutionContext
 
 /**
  * A `Context` represents a some kind of compute
- * node that provides resources for the 
+ * node that provides computations for the 
  * computation.
  * The most important property of a `Context` is
- * that `Resource`s can be submitted to it as jobs,
+ * that `Computation`s can be submitted to it as jobs,
  * and are then guaranteed to produce the same 
- * results as if `Resource.compute(ctx)` has
+ * results as if `Computation.compute(ctx)` has
  * been called on this `Context`.
  * This makes it possible for `Context`s to delegate
  * some of the work to other contexts (e.g. other
@@ -19,10 +19,10 @@ import scala.concurrent.ExecutionContext
  */
 trait Context {
   implicit def executionContext: ExecutionContext
-  def submit[X](job: Resource[X]): Future[X]
+  def submit[X](job: Computation[X]): Future[X]
   /**
    * Similar to `submit`, but the resulting value is 
-   * wrapped into a `Value`-`Resource`
+   * wrapped into a `Value`-`Computation`
    */
-  def asExplicitResource[X](job: Resource[X]): Future[ExplicitResource[X]]
+  def asExplicitComputation[X](job: Computation[X]): Future[ExplicitComputation[X]]
 }

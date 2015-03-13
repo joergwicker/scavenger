@@ -15,30 +15,30 @@ trait Cache {
 
   def containsKey[X](identifier: Identifier[X]) 
   private val subjobPromises = 
-    new HashMap[ResourceIdentifier, Promise[Any]]
+    new HashMap[ComputationIdentifier, Promise[Any]]
   
   /**
-   * Cache with byValue or promise-backed resources
+   * Cache with byValue or promise-backed computations
    * 
    * Read and Write access for subclasses of this trait.
    */
   protected[scavenger] val _cache = 
-    new HashMap[ResourceIdentifier, AtomicResource[Any]]
+    new HashMap[ComputationIdentifier, AtomicComputation[Any]]
   
   /**
-   * Read-only access for Resource[X]
+   * Read-only access for Computation[X]
    */
-  protected[scavenger] def cache: ResourceCache = _cache
+  protected[scavenger] def cache: ComputationCache = _cache
   
   /**
-   * Mark a resource in the cache as available.
+   * Mark a computation in the cache as available.
    * 
-   * Internally, stores a promise that is tied to the resource in the cache.
-   * The resource becomes actually available when the `fulfillPromisedSubjob` 
-   * is called for the same resource identifier.
+   * Internally, stores a promise that is tied to the computation in the cache.
+   * The computation becomes actually available when the `fulfillPromisedSubjob` 
+   * is called for the same computation identifier.
    */
   protected[scavenger] def promiseSubjob(
-    job: Resource[Any]
+    job: Computation[Any]
   ): Unit = {
     log.info("promising: " + job)
     if (cache.contains(job.id)) {
@@ -47,7 +47,7 @@ trait Cache {
     }
     val p = Promise[Any]()
     subjobPromises(job.id) = p 
-    _cache(job.id) = AtomicResource(job.id, p, job.isCachedOnWorkers)
+    _cache(job.id) = AtomicComputation(job.id, p, job.isCachedOnWorkers)
     log.info("Current cache: " + cache.values.mkString(","))
   }
   
@@ -55,7 +55,7 @@ trait Cache {
    * Fulfill a promise to compute the explicit result of a subjob.
    */
   protected[scavenger] def fulfillPromisedSubjob(
-    resultId: ResourceIdentifier, 
+    resultId: ComputationIdentifier, 
     result: Any
   ): Unit = {
     subjobPromises(resultId).success(result)
@@ -63,28 +63,28 @@ trait Cache {
   }
   
   /**
-   * Fulfill a promise with a `ByValueResource` (which is expected to
+   * Fulfill a promise with a `ByValueComputation` (which is expected to
    * contain the correct identifier)
    */
-  protected[scavenger] def fulfillPromisedSubjob(bv: ByValueResource[Any]): 
+  protected[scavenger] def fulfillPromisedSubjob(bv: ByValueComputation[Any]): 
     Unit = {
     fulfillPromisedSubjob(bv.id, bv.value)
   }
   
   /**
-   * Deletes resource from cache if it's marked temporary
+   * Deletes computation from cache if it's marked temporary
    */
-  def tryFree(id: ResourceIdentifier): Unit = {
+  def tryFree(id: ComputationIdentifier): Unit = {
     log.info("Trying to free " + id + " (temporary=" + isTemporary(id) + ")")
     if (isTemporary(id)) _cache.remove(id)
   }
   
-  def tryFreeAll(requiredCleanup: List[ResourceIdentifier]): Unit = {
+  def tryFreeAll(requiredCleanup: List[ComputationIdentifier]): Unit = {
     requiredCleanup foreach tryFree
   }
 }
 
 object PromiseBackedCache {
-  case class Cleanup(requiredCleanup: List[ResourceIdentifier])
+  case class Cleanup(requiredCleanup: List[ComputationIdentifier])
 }
 */

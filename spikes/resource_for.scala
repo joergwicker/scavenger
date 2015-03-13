@@ -6,11 +6,11 @@ object Foo {
 type Identifier[X] = String
 
 trait Context {
-  def submit[X](r: Resource[X]): Future[X]
+  def submit[X](r: Computation[X]): Future[X]
 }
 
 class EasyContext extends Context {
-  def submit[X](r: Resource[X]): Future[X] = r.compute(this)
+  def submit[X](r: Computation[X]): Future[X] = r.compute(this)
 }
 
 trait CanApplyTo[-What, -To, +Out] {
@@ -19,23 +19,23 @@ trait CanApplyTo[-What, -To, +Out] {
 
 case class In[+X](x: X, ctx: Context)
 
-case class ResourceBuilder[+X](from: Resource[X], arrowName: String) {
+case class ComputationBuilder[+X](from: Computation[X], arrowName: String) {
   def filter(input: In[X] => Boolean) = this /* HACK */
-  def map[Y](f: In[X] => Y): Resource[Y] = {
+  def map[Y](f: In[X] => Y): Computation[Y] = {
     from.flatMap(arrowName, {case (x, ctx) => Future(f(In(x, ctx))) } )
   }
-  def flatMap[Y](f: In[X] => Future[Y]): Resource[Y] = {
+  def flatMap[Y](f: In[X] => Future[Y]): Computation[Y] = {
     from.flatMap(arrowName, {case (x, ctx) => f(In(x, ctx)) } )
   }
 }
 
-trait Resource[+X] { x =>
+trait Computation[+X] { x =>
   def compute(ctx: Context): Future[X]
   def identifier: Identifier[X]
 
   def flatMap[Y](arrowName: String, f: (X, Context) => Future[Y]): 
-  Resource[Y] = {
-    new Resource[Y] {
+  Computation[Y] = {
+    new Computation[Y] {
       def identifier = arrowName + " o " + x.identifier
       def compute(c: Context) = {
         c.submit(x).flatMap{ f((_:X), c) }
@@ -52,11 +52,11 @@ trait Resource[+X] { x =>
   def map[Y](arrowName: String, f: X => Y) = 
     flatMap(arrowName, { case (x, c) => Future{f(x)} })
 
-  def into(arrowName: String): ResourceBuilder[X] =
-    ResourceBuilder(this, arrowName)
+  def into(arrowName: String): ComputationBuilder[X] =
+    ComputationBuilder(this, arrowName)
 
-  def zip[Y](other: Resource[Y]): Resource[(X, Y)] = {
-    new Resource[(X, Y)] {
+  def zip[Y](other: Computation[Y]): Computation[(X, Y)] = {
+    new Computation[(X, Y)] {
       def identifier = "(" + x.identifier + "," + other.identifier + ")"
       def compute(c: Context) = {
         c.submit(x).zip(c.submit(other))
@@ -64,8 +64,8 @@ trait Resource[+X] { x =>
     }
   }
 
-  def apply[Y, Z](other: Resource[Y])(implicit cat: CanApplyTo[X, Y, Z]):
-    Resource[Z] = new Resource[Z] {
+  def apply[Y, Z](other: Computation[Y])(implicit cat: CanApplyTo[X, Y, Z]):
+    Computation[Z] = new Computation[Z] {
       def identifier = "eval o <%s,%s>".format(x.identifier, other.identifier)
       def compute(c: Context) = {
         for {
@@ -76,9 +76,9 @@ trait Resource[+X] { x =>
     }
 }
 
-object Resource {
-  def apply[X](name: String, x: => X): Resource[X] = {
-    new Resource[X] {
+object Computation {
+  def apply[X](name: String, x: => X): Computation[X] = {
+    new Computation[X] {
       def identifier = name
       def compute(ctx: Context) = Future(x)
     }
@@ -94,7 +94,7 @@ def main(args: Array[String]): Unit = {
   }
   
   val ctx = new EasyContext
-  val xRes = Resource("x", 5)
+  val xRes = Computation("x", 5)
   
   block("The explicit method to transform x") {
     val y = xRes.flatMap("square", { case (i, c) => Future(i * i) })

@@ -2,7 +2,7 @@ package scavenger.backend
 
 import akka.actor.{Actor, Props}
 import akka.pattern.pipe
-import scavenger.{Context, Resource}
+import scavenger.{Context, Computation}
 import scavenger.backend._
 import scavenger.categories.formalccc
 
@@ -30,6 +30,6 @@ class LocalWorker(val ctx: Context) extends Actor {
 
 object LocalWorker {
   def props(ctx: Context): Props = Props(classOf[LocalWorker], ctx)
-  private[backend] case class LocalJob(label: InternalLabel, r: Resource[Any])
+  private[backend] case class LocalJob(label: InternalLabel, r: Computation[Any])
   private[backend] case class LocalResult(label: InternalLabel, x: Any)
 }

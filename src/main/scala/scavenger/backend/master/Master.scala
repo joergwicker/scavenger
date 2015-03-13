@@ -50,13 +50,13 @@ object Master {
    * A message used to delegate a job to the worker node.
    * This kind of communication is initiated by the master.
    */
-  private[backend] case class Delegated(job: Resource[Any])
+  private[backend] case class Delegated(job: Computation[Any])
 
   /**
    * Message for sending important partial results to self
    */
   private[Master] case class CacheThis(
-    result: Resource[Any], 
+    result: Computation[Any], 
     shouldCache: Boolean,
     shouldBackUp: Boolean
   )
@@ -65,6 +65,6 @@ object Master {
    * Message for sending simplified partial results to self
    */
   private[Master] case class DelegateThis(
-    simplified: Resource[Any]
+    simplified: Computation[Any]
   )
 }

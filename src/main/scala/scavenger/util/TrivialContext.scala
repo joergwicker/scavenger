@@ -11,13 +11,13 @@ import scavenger._
  */
 class TrivialContext(printActions: Boolean) extends Context {
   implicit def executionContext = ExecutionContext.Implicits.global
-  def submit[X](r: Resource[X]): Future[X] = {
+  def submit[X](r: Computation[X]): Future[X] = {
     if (printActions) {
       println("Computing: " + r)
     }
     r.compute(this)
   }
-  def asExplicitResource[X](r: Resource[X]): Future[ExplicitResource[X]] = {
+  def asExplicitComputation[X](r: Computation[X]): Future[ExplicitComputation[X]] = {
     for (x <- submit(r)) yield Value(r.identifier, x, CachingPolicy.Nowhere)
   }
 }
@@ -43,9 +43,9 @@ object TrivialContext {
     }
     val f3 = parallel("cube"){
       (x: Int, ctx: Context) => {
-        val adHocResource = Resource(x)
-        val subjob1 = f1(adHocResource)
-        val subjob2 = f2(adHocResource)
+        val adHocComputation = Computation(x)
+        val subjob1 = f1(adHocComputation)
+        val subjob2 = f2(adHocComputation)
         for {
           a <- ctx.submit(subjob1)
           b <- ctx.submit(subjob2)
@@ -57,7 +57,7 @@ object TrivialContext {
     val functions = List(f0, f1, f2, f3)
     val jobs = for (d <- data; f <- functions; g <- functions) yield {
       val inputId = "number_" + d 
-      g(f(Resource(inputId, d)))
+      g(f(Computation(inputId, d)))
     }
 
     val futures = for (j <- jobs) yield scavengerContext.submit(j)
@@ -68,8 +68,8 @@ object TrivialContext {
     println("Sum = " + listOfResults.sum)
 
     /*
-    val x = Resource("x", 5)
-    val y = Resource("y", 7.0)
+    val x = Computation("x", 5)
+    val y = Computation("y", 7.0)
     val f = cheap("f"){
       (i: Int) => i * i
     }
@@ -77,7 +77,7 @@ object TrivialContext {
       (d: Double, ctx: Context) => 
         Future(d * 3.0)(ctx.executionContext)
     }
-    val classif = Resource[Int => Boolean](
+    val classif = Computation[Int => Boolean](
       "classif", 
       {(x: Int) => x > 0}
     )

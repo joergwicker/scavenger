@@ -36,7 +36,7 @@ class ReactiveContext(
     // That's kind of like Hawking's "grey holes":
     // Promises are thrown into the "black hole", Futures escape...
     val p = Promise[Any]
-    actorRef ! ExternalInterface.Compute(job, p)
+    actorRef ! DemilitarizedZone.Compute(job, p)
     p.future.map{ 
       a => a.asInstanceOf[X] 
     }
@@ -44,7 +44,7 @@ class ReactiveContext(
 
   def asExplicitComputation[X](job: Computation[X]): Future[ExplicitComputation[X]] = {
     val p = Promise[ExplicitComputation[Any]]
-    actorRef ! ExternalInterface.GetExplicitComputation(job, p)
+    actorRef ! DemilitarizedZone.GetExplicitComputation(job, p)
     p.future.map{ 
       a => a.asInstanceOf[ExplicitComputation[X]] 
     }

@@ -14,9 +14,9 @@ import scavenger._
  *
  * Empty `Promise`s shall not pass!
  */
-trait ExternalInterface extends Actor with ActorLogging with Cache {
+trait DemilitarizedZone extends Actor with ActorLogging with Cache {
  
-  import ExternalInterface._
+  import DemilitarizedZone._
   import context.dispatcher 
   
   def handleExternalRequests: Receive = ({
@@ -35,17 +35,17 @@ trait ExternalInterface extends Actor with ActorLogging with Cache {
   }: Receive)
 }
 
-object ExternalInterface {
+object DemilitarizedZone {
 
   /**
-   * First (1/2) type of messages accepted by an `ExternalInterface`.
+   * First (1/2) type of messages accepted by an `DemilitarizedZone`.
    * Requests the evaluation of `job`. The result should be written into 
    * the `result`-`Promise`.
    */
   private[backend] case class Compute(job: Computation[Any], result: Promise[Any])
 
   /**
-   * Second (2/2) type of messages accepted by an `ExternalInterface`.
+   * Second (2/2) type of messages accepted by an `DemilitarizedZone`.
    * Similar to `Compute`, but does not need the final value, accepts a 
    * slightly more general `ExplicitComputation` instead.
    */

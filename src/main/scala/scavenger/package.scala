@@ -5,10 +5,17 @@ import scavenger.categories.formalccc
 package object scavenger {
   //type Identifier = formalccc.Elem
 
-  // Three castings into the canoical form of a morphism
+  // Three castings into the canonical form of a morphism
   implicit def withoutContextToFull[X, Y](f: X => Future[Y]): 
     ((X, Context) => Future[Y]) = {
-    case (x, ctx) => f(x)
+    // case (x, ctx) => f(x)
+    throw new UnsupportedOperationException(
+      "Attempted to use a function of type X => Future[Y] as Scavenger-Algorithm. " + 
+      "Notice that the definition of the function closes over some execution context, " + 
+      "which can not be easily serialized and sent over the wire. Please change the " +
+      "type to (X, Context) => Future[Y], and use the executionContext provided by " +
+      "the Scavenger `Context`."
+    )
   }
 
   implicit def synchronousToFull[X, Y](f: (X, Context) => Y): 

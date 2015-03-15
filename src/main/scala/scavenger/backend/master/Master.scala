@@ -15,7 +15,7 @@ with ContextProvider
 with LoadBalancer
 with MasterScheduler
 with MasterCache
-with ExternalInterface {
+with DemilitarizedZone {
 
   import Master._
 

@@ -27,7 +27,7 @@ with Remindable
 with BruteForceEvaluator
 with WorkerScheduler
 with WorkerCache
-with ExternalInterface
+with DemilitarizedZone
 with ContextProvider {
 
   import context.dispatcher

@@ -10,7 +10,7 @@
  * 
  * Seems that this is in principle an implementation
  * of the Categorical Abstract Machine (for programs 
- * given as abstract syntax trees)
+ * given as abstract syntax trees).
  */
 sealed trait Elem {
   // two methods that must be implemented,

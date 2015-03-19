@@ -16,6 +16,11 @@ trait Algorithm[-X, +Y] { outer =>
   def apply(computation: Computation[X]): Computation[Y] 
 
   /**
+   * Determines how every output of this algorithm is cached.
+   */
+  def cachingPolicy: CachingPolicy = CachingPolicy.Nowhere
+
+  /**
    * Composes with another algorithm (Order: this=first, other=second)
    */
   def andThen[Z](other: Algorithm[Y, Z]): Algorithm[X, Z] = 
@@ -64,6 +69,36 @@ trait Algorithm[-X, +Y] { outer =>
     def identifier = FCurry(outer.identifier o Pair(Snd, Fst))(b.identifier)
     def apply(a: Computation[A]) = outer(cbp(a, b))
   }
+
+  /**
+   * Returns a an that looks exactly the same, except that the 
+   * output of this algorithm has a different caching policy.
+   */
+  private[scavenger] def withCachingPolicy(newCachingPolicy: CachingPolicy): 
+  Algorithm[X, Y] = 
+    new Algorithm[X, Y] {
+      def identifier = outer.identifier
+      override def cachingPolicy = newCachingPolicy
+      def apply(computation: Computation[X]): Computation[Y] = 
+        outer.apply(computation).withCachingPolicy(newCachingPolicy)
+    }
+
+  /**
+   * Creates new computation that does exactly the same, but is additionally
+   * cached on the Master node.
+   */
+  def cacheGlobally = withCachingPolicy(cachingPolicy.copy(cacheGlobally=true))
+ 
+  /**
+   * Creates new computation that does exactly the same, but is additionally
+   * cached on the worker nodes.
+   */
+  def cacheLocally = withCachingPolicy(cachingPolicy.copy(cacheLocally = true)) 
+
+  /**
+   * Instructs the master node to back up the result of this computation
+   */
+  def backUp = withCachingPolicy(cachingPolicy.copy(backup = true))
 }
 
 /**

@@ -81,7 +81,7 @@ trait Computation[+X] { outer =>
    * Returns a computation that looks exactly the same, except for
    * the changed caching policy.
    */
-  private def withCachingPolicy(newCachingPolicy: CachingPolicy): 
+  private[scavenger] def withCachingPolicy(newCachingPolicy: CachingPolicy): 
   Computation[X] = 
     new Computation[X] {
       def identifier = outer.identifier
@@ -95,7 +95,7 @@ trait Computation[+X] { outer =>
         import ctx.executionContext
         val simplifiedOuter = outer.simplifySelfIfNecessary(ctx, mustBeReplaced)
         for(simpler <- simplifiedOuter) 
-          yield simpler.copy(newCachingPolicy)
+          yield simpler.withCachingPolicy(newCachingPolicy)
       }
     }
 
@@ -109,13 +109,13 @@ trait Computation[+X] { outer =>
    * Creates new computation that does exactly the same, but is additionally
    * cached on the worker nodes.
    */
-  def cacheGlobally = withCachingPolicy(cachingPolicy.copy(cacheLocally = true)) 
+  def cacheLocally = withCachingPolicy(cachingPolicy.copy(cacheLocally = true)) 
 
   /**
    * Instructs the master node to back up the result of this computation
    */
   def backUp = withCachingPolicy(cachingPolicy.copy(backup = true))
-  
+
   /**
    * This is the most general method that allows to
    * transform `Computation`s.

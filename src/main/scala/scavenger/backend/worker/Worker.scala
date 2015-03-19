@@ -88,6 +88,7 @@ with ContextProvider {
   handleExternalRequests orElse 
   handleLocalResponses orElse
   handleHandshakeRemnants orElse
+  monitorCache orElse
   reportUnexpectedMessages
   
   /**
@@ -125,7 +126,8 @@ with ContextProvider {
   handleExternalRequests orElse 
   handleLocalResponses orElse 
   handleHandshakeRemnants orElse 
-  reportUnexpectedMessages 
+  monitorCache orElse
+  reportUnexpectedMessages
 
   private def reportUnexpectedMessages: Receive = ({
     case unexpectedMessage => {

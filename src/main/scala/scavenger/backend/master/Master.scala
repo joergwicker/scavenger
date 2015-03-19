@@ -33,7 +33,8 @@ with DemilitarizedZone {
     updatingLastMessageTime(handleWorkerResponses) orElse
     handleLocalResponses orElse
     monitorLastMessageTimes orElse
-    handleReminders
+    handleReminders orElse
+    monitorCache
 }
 
 object Master {

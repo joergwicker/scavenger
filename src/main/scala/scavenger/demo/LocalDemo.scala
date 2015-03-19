@@ -44,7 +44,7 @@ object LocalDemo extends LocalScavengerApp(4) {
     val functions = List(f0, f1, f2, f3)
     val jobs = for (d <- data; f <- functions; g <- functions) yield {
       val inputId = "number_" + d 
-      g(f(Computation(inputId, d)))
+      g(f(Computation(inputId, d)).cacheGlobally)
     }
 
     val futures = for (j <- jobs) yield scavengerContext.submit(j)
@@ -52,6 +52,11 @@ object LocalDemo extends LocalScavengerApp(4) {
 
     allTogether.onSuccess { 
       case listOfResults: List[Int] => {
+
+        println("#####Contents of the master cache: ")
+        for (id <- scavengerContext.dumpCacheKeys) println(id)
+        println("#####")
+
         for (entry <- listOfResults) println(entry)
         println("Sum = " + listOfResults.sum)
         scavengerShutdown()

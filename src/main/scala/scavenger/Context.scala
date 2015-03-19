@@ -19,10 +19,28 @@ import scala.concurrent.ExecutionContext
  */
 trait Context {
   implicit def executionContext: ExecutionContext
+  
+  /**
+   * Guarantees to return the same value as if `job.compute(this)` 
+   * have been called instead.
+   */
   def submit[X](job: Computation[X]): Future[X]
+  
   /**
    * Similar to `submit`, but the resulting value is 
    * wrapped into a `Value`-`Computation`
    */
-  def asExplicitComputation[X](job: Computation[X]): Future[ExplicitComputation[X]]
+  def asExplicitComputation[X](job: Computation[X]): 
+    Future[ExplicitComputation[X]]
+
+  /**
+   * Dumps list with identifiers of the cached intermediate
+   * results, if this `Context` is backed by something that 
+   * actually has a cache.
+   *
+   * Mostly for testing purposes, so that we can make sure that
+   * the caching behavior is as we expect.
+   */
+  private[scavenger] def dumpCacheKeys: 
+    List[scavenger.categories.formalccc.Elem] 
 }

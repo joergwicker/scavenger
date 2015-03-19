@@ -17,9 +17,12 @@ class TrivialContext(printActions: Boolean) extends Context {
     }
     r.compute(this)
   }
-  def asExplicitComputation[X](r: Computation[X]): Future[ExplicitComputation[X]] = {
+  def asExplicitComputation[X](r: Computation[X]): 
+    Future[ExplicitComputation[X]] = {
     for (x <- submit(r)) yield Value(r.identifier, x, CachingPolicy.Nowhere)
   }
+
+  private[scavenger] def dumpCacheKeys = Nil
 }
 
 //* <--- Add/remove the single / at the head of this line to block/unblock

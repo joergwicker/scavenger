@@ -9,6 +9,7 @@ import scala.concurrent.duration._
 import scala.language.postfixOps
 import scavenger._
 import scavenger.categories.formalccc
+import scavenger.backend.Cache.DumpKeys
 
 /**
  * Implementation of a context that interfaces with
@@ -42,11 +43,20 @@ class ReactiveContext(
     }
   }
 
-  def asExplicitComputation[X](job: Computation[X]): Future[ExplicitComputation[X]] = {
+  def asExplicitComputation[X](job: Computation[X]): 
+    Future[ExplicitComputation[X]] = {
     val p = Promise[ExplicitComputation[Any]]
     actorRef ! DemilitarizedZone.GetExplicitComputation(job, p)
     p.future.map{ 
       a => a.asInstanceOf[ExplicitComputation[X]] 
     }
+  }
+
+  private[scavenger] def dumpCacheKeys: List[formalccc.Elem] = {
+    implicit val to = Timeout(60 seconds)
+    Await.result(
+      (actorRef ? DumpKeys).mapTo[List[formalccc.Elem]],
+      60 seconds
+    )
   }
 }

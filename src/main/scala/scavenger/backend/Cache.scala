@@ -8,6 +8,7 @@ import scavenger.categories.formalccc
 
 trait Cache extends Actor with ActorLogging with Scheduler {
 
+  import Cache._
   import context.dispatcher
 
   protected def shouldBeCachedHere(p: CachingPolicy): Boolean
@@ -18,6 +19,8 @@ trait Cache extends Actor with ActorLogging with Scheduler {
   // the file locally and then sending the data to another node.
   protected val cache: 
     HashMap[formalccc.Elem, Future[ExplicitComputation[Any]]] = HashMap.empty
+
+  def dumpKeys: List[formalccc.Elem] = cache.keys.toList.sortBy(_.toString)
 
   /**
    * Gets the final value of the computation, either by retrieving it from
@@ -80,4 +83,24 @@ trait Cache extends Actor with ActorLogging with Scheduler {
       schedule(job)
     }
   }
+
+  /**
+   * Behavior that returns additional information about the state of the
+   * cache.
+   */
+  protected def monitorCache: Receive = ({
+    case DumpKeys => sender ! dumpKeys
+  }: Receive)
+}
+
+object Cache {
+
+  /**
+   * Message that asks this cache to return a list with all currently stored
+   * keys.
+   *
+   * This type of messages is supposed to be used mainly for testing and
+   * monitoring purposes.
+   */
+  case object DumpKeys
 }

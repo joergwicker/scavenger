@@ -164,7 +164,8 @@ trait Computation[+X] { outer =>
    * Creates a computation that represents a pair of this computation and the
    * other computation
    */
-  def zip[Y](other: Computation[Y]): Computation[(X, Y)] = ComputationPair(this, other)
+  def zip[Y](other: Computation[Y]): Computation[(X, Y)] = 
+    ComputationPair(this, other)
 
   /**
    * Assuming that `X` is actually a function type `A => B`, 

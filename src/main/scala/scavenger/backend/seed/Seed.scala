@@ -1,4 +1,4 @@
-package scavenger.backend
+package scavenger.backend.seed
 
 import akka.actor.Actor
 import Seed._

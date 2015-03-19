@@ -1,9 +1,11 @@
-package scavenger.backend
+package scavenger.backend.worker
 
 import akka.actor._
 import akka.contrib.pattern.ReliableProxy
 import scala.concurrent.duration._
 import scala.language.postfixOps
+import scavenger.backend._
+import scavenger.backend.seed.Seed.MasterRef
 
 /**
  * This mixin implements actor behavior that is 
@@ -16,7 +18,6 @@ with Remindable
 with SeedJoin {
 
   import MasterJoin._
-  import Seed.MasterRef
   import context.dispatcher 
 
   // reference to master

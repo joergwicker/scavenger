@@ -4,7 +4,7 @@ import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.language.postfixOps
 import scavenger._
-import scavenger.mains.LocalScavengerApplication
+import scavenger.app.LocalScavengerApp
 
 /**
  * A little demo that shows how to get Scavenger up and running on 
@@ -13,9 +13,9 @@ import scavenger.mains.LocalScavengerApplication
  * This might be useful if you want to test it locally, before 
  * installing the framework on the cluster.
  */
-object LocalDemo extends LocalScavengerApplication {
+object LocalDemo extends LocalScavengerApp(4) {
   def main(args: Array[String]): Unit = {
-    scavengerInit(2)
+    scavengerInit()
 
     val f0 = expensive("2pow"){ 
       (x: Int) => {
@@ -57,11 +57,5 @@ object LocalDemo extends LocalScavengerApplication {
         scavengerShutdown()
       }  
     }
-
-    /*
-    scheduler.scheduleOnce(30 seconds){ 
-      scavengerShutdown()
-    }
-    */
   }
 }

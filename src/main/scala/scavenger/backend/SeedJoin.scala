@@ -12,6 +12,8 @@ import scala.language.postfixOps
  * Once the `ActorPath` of the seed is resolved,
  * the reference to the seed is available as `seedRef`
  * member variable.
+ *
+ * Used by both `Worker` and `Master` actors.
  */
 trait SeedJoin 
 extends Actor 

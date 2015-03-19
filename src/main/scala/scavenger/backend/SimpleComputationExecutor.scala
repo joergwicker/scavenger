@@ -9,30 +9,36 @@ import scavenger.backend._
 import scavenger.backend.LocalWorker._
 import scavenger.categories.formalccc
 
-/**
- * Common interface for a `LoadBalancer` (on Master node)
- * and a simple `BruteForceEvaluator` (on Worker node).
- *
- * It is able to evaluate "maximally simplified" `Computations`.
- * What "maximally simplified" means depends on the type of
- * node.
- */
+/** Common interface for a `LoadBalancer` (on Master node)
+  * and a simple `BruteForceEvaluator` (on Worker node).
+  *
+  * It is able to evaluate "maximally simplified" `Computations`.
+  * What "maximally simplified" means depends on the type of
+  * node.
+  *
+  * @since 2.1
+  * @author Andrey Tyukin
+  */
 trait SimpleComputationExecutor extends Actor with ContextProvider {
 
   import context.dispatcher
 
   private var internalLabelCounter: Long = 0L
+  
+  /** Wraps an identifier into an `InternalLabel`, adds additional
+    * `Long` id to avoid collisions.
+    */
   def toInternalLabel(identifier: formalccc.Elem): InternalLabel = {
     internalLabelCounter += 1
     InternalLabel(identifier, internalLabelCounter)
   }
 
-  /**
-   * Map of promised jobs.
-   */
+  /** Map of promised jobs.
+    */
   protected val promises: mutable.Map[InternalLabel, Promise[Any]] =
     HashMap.empty[InternalLabel, Promise[Any]]
 
+  /** Helper method for fulfilling promises */
   protected def fulfillPromise(label: InternalLabel, result: Any): Unit = {
     println("DEBUG: fulfilling promise for id = " + label) // TODO: remove debug
     if (!promises.contains(label)) {
@@ -46,17 +52,15 @@ trait SimpleComputationExecutor extends Actor with ContextProvider {
     promises -= label
   }
 
-  /**
-   * Perform a simple computation that can be delegated.
-   */
+  /** Perform a simple computation that can be delegated.
+    */
   def computeSimplified[X](r: Computation[X]): Future[X]
 
-  /**
-   * Perform a complex computation that can not be delegated.
-   *
-   * Simply spawns an little separate actor on same node, and
-   * delegates the computation.
-   */
+  /** Perform a complex computation that can not be delegated.
+    *
+    * Simply spawns an little separate actor on same node, and
+    * delegates the computation.
+    */
   def computeHere[X](r: Computation[X]): Future[X] = {
     val spawned = context.actorOf(
       LocalWorker.props(provideComputationContext),

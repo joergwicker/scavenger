@@ -2,6 +2,9 @@ import scala.concurrent.Future
 import scala.language.implicitConversions
 import scavenger.categories.formalccc
 
+/** Contains the API and an Akka-backend implementation of the 
+  * Scavenger framework.
+  */
 package object scavenger {
   //type Identifier = formalccc.Elem
 
@@ -39,18 +42,22 @@ package object scavenger {
     }
 
   // Three different constructors for atomic algorithms
+  /** Constructs a cheap atomic algorithm with specified identifier */
   def cheap[X, Y](algorithmId: String)(f: (X, Context) => Future[Y]):
     Algorithm[X, Y] = atomicAlgorithmConstructor(Cheap)(algorithmId, f)
 
+  /** Constructs an expensive atomic algorithm with specified identifier */
   def expensive[X, Y](algorithmId: String)(f: (X, Context) => Future[Y]):
     Algorithm[X, Y] = atomicAlgorithmConstructor(Expensive)(algorithmId, f)
 
+  /** Constructs a parallelizable atomic algorithm with specified identifier */
   def parallel[X, Y](algorithmId: String)(f: (X, Context) => Future[Y]):
     Algorithm[X, Y] = atomicAlgorithmConstructor(Parallel)(algorithmId, f)
 
-  // providing implicit `CanApplyTo`s
-  // for the `apply` method of `Computation` that allows to 
-  // build `Y`-valued computations from `X`-valued and `Y => X`-valued ones.
+  /** Provides implicit `CanApplyTo`s
+    * for the `apply` method of `Computation` that allows to 
+    * build `Y`-valued computations from `X`-valued and `Y => X`-valued ones.
+    */
   implicit def canApplyFunctionToArg[X, Y]: CanApplyTo[X => Y, X, Y] = 
   new CanApplyTo[X => Y, X, Y] {
     def apply(f: Computation[X => Y], x: Computation[X], d: Difficulty): 
@@ -64,6 +71,8 @@ package object scavenger {
       ComputationPair(a, b)
   }
 
+  // TODO: do we still need this? 
+  // Would anyone remember it's there? (CRUFT?)
   def printingStackTrace[X](name: String)(f: => X): X = {
     println("BEGIN " + name)
     try {

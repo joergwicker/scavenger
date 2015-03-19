@@ -6,14 +6,16 @@ import scavenger.{Context, Computation}
 import scavenger.backend._
 import scavenger.categories.formalccc
 
-/**
- * A simple actor that can be launched on either 
- * Master and Worker nodes. 
- * 
- * The purpose of this kind of actors is to keep 
- * the node-manager actor responsive and isolate it
- * from eventual errors.
- */
+/** A simple actor that can be launched on either
+  * Master and Worker nodes.
+  *
+  * The purpose of this kind of actors is to keep
+  * the node-manager actor responsive and isolate it
+  * from eventual errors.
+  *
+  * @since 2.1
+  * @author Andrey Tyukin
+  */
 class LocalWorker(val ctx: Context) extends Actor {
 
   import context.dispatcher

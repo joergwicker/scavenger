@@ -7,11 +7,15 @@ import scala.language.postfixOps
 import scavenger.backend._
 import scavenger.backend.seed.Seed.MasterRef
 
-/**
- * This mixin implements actor behavior that is 
- * useful at the initial stage when the connection to 
- * the `Master` node has not yet been established.
- */
+/** Helps to join the master node.
+  *
+  * This mixin implements actor behavior that is
+  * useful at the initial stage when the connection to
+  * the `Master` node has not yet been established.
+  *
+  * @since 2.1
+  * @author Andrey Tyukin
+  */
 trait MasterJoin extends Actor 
 with ActorLogging
 with Remindable 
@@ -23,12 +27,11 @@ with SeedJoin {
   // reference to master
   private var _master: ActorRef = _
   
-  /**
-   * We use a reliably proxy to the master in order to 
-   * communicate results, since the results are rather 
-   * expensive to obtain (would be bad if we lose them 
-   * without a good reason)
-   */
+  /** We use a reliably proxy to the master in order to
+    * communicate results, since the results are rather
+    * expensive to obtain (would be bad if we lose them
+    * without a good reason)
+    */
   private var _masterProxy: ActorRef = _ 
   
   private def master_=(ref: ActorRef): Unit = {
@@ -41,11 +44,10 @@ with SeedJoin {
   protected[backend] def master = _master
   protected[backend] def masterProxy = _masterProxy
 
-  /**
-   * Establishes connection to the master node.
-   * Assumes that the connection to seed node has already been established.
-   * Requires a `Reminder` that initiates the connection process.
-   */
+  /** Establishes connection to the master node.
+    * Assumes that the connection to seed node has already been established.
+    * Requires a `Reminder` that initiates the connection process.
+    */
   def connectingToMaster(
     seedMsg: HandshakeMessage,
     masterMsg: HandshakeMessage,

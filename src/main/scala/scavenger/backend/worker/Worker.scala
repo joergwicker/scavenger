@@ -9,15 +9,18 @@ import scavenger.backend._
 import scavenger.backend.LastMessageTimeMonitoring._
 import scavenger.categories.formalccc
 
-/**
- * Actor that controls the computation on
- * a worker node.
- * 
- * A worker node obtains the address of a 
- * master node from a seed node.
- * Whenever it is not occupied, it sends 
- * a job request to the master.
- */
+/** Actor that controls the computation on
+  * a worker node.
+  *
+  * A worker node obtains the address of a
+  * master node from a seed node.
+  * Whenever it is not occupied, it sends
+  * a job request to the master. Then it processes
+  * the job, and sends back the result.
+  *
+  * @since 2.1
+  * @author Andrey Tyukin
+  */
 class Worker(seedPath: ActorPath) 
 extends Actor 
 with ActorLogging
@@ -91,13 +94,12 @@ with ContextProvider {
   monitorCache orElse
   reportUnexpectedMessages
   
-  /**
-   * When a worker is occupied, it does not react on
-   * anything except `Ping` requests.
-   * 
-   * As soon as it gets an `FinalResult` from itself,
-   * it sends it to master, and gets back into `awaitingJob` behavior.
-   */
+  /** When a worker is occupied, it does not react on
+    * anything except `Ping` requests.
+    *
+    * As soon as it gets an `FinalResult` from itself,
+    * it sends it to master, and gets back into `awaitingJob` behavior.
+    */
   private val working: Receive = ({
     case r: Reminder => { remindMyself(60, "re-reminding while working") }
     case Ping => sender ! Echo
@@ -129,6 +131,7 @@ with ContextProvider {
   monitorCache orElse
   reportUnexpectedMessages
 
+  /** Behavior for reporting unexpected messages */
   private def reportUnexpectedMessages: Receive = ({
     case unexpectedMessage => {
       unexpectedMessage match {
@@ -150,10 +153,9 @@ with ContextProvider {
   }: Receive)
 }
 
-/**
- * The worker object describes various kinds of messages that
- * can be sent by a worker.
- */
+/** The worker object describes various kinds of messages that
+  * can be sent by a worker.
+  */
 object Worker {
   def props(seedPath: ActorPath) = Props(classOf[Worker], seedPath)
   

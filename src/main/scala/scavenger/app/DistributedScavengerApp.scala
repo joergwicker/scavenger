@@ -9,17 +9,19 @@ import scavenger.backend._
 import scavenger.backend.master.Master
 import scavenger.backend.worker.Worker
 
-/**
- * Base class for an application that wants to make use of the 
- * distributed Scavenger service.
- */
+/** Base class for an application that wants to make use of the
+  * distributed Scavenger service.
+  *
+  * @since 2.1
+  * @author Andrey Tyukin
+  */
 abstract class DistributedScavengerApp
 extends ScavengerApp
 with ScavengerNode {
-
+  
   private var context: Option[Context] = None
   
-  def extractNodeConfig(generalConfig: Config): Config = {
+  private[app] def extractNodeConfig(generalConfig: Config): Config = {
     generalConfig.getConfig("master") withFallback generalConfig
   }
 

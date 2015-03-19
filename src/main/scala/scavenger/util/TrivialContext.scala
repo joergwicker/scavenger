@@ -5,10 +5,14 @@ import scala.concurrent.duration._
 import scala.language.postfixOps
 import scavenger._
 
-/**
- * Implementation of a trivial context that does nothing and
- * does not attempt to distribute or cache anything
- */
+/** Implementation of a trivial context that does nothing and
+  * does not attempt to distribute or cache anything.
+  *
+  * Might be useful for testing purposes.
+  *
+  * @since 2.1
+  * @author Andrey Tyukin
+  */
 class TrivialContext(printActions: Boolean) extends Context {
   implicit def executionContext = ExecutionContext.Implicits.global
   def submit[X](r: Computation[X]): Future[X] = {

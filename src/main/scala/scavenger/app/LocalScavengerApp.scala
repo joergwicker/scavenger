@@ -10,27 +10,29 @@ import scavenger.backend.seed.Seed
 import scavenger.backend.master.Master
 import scavenger.backend.worker.Worker
 
-/**
- * Implements the complete Scavenger service (seed, master, workers) on a 
- * single physical computer.
- * 
- * This trait can be mixed in into the object with 
- * the `main` function, for example in order to test the
- * behavior of the algorithm on a local machine before
- * submitting the job to the cluster.
- *
- * @param numWorkers number of virtual worker nodes created locally
- */
+/** Implements the complete Scavenger service (seed, master, workers) on a
+  * single physical computer.
+  *
+  * This trait can be mixed in into the object with
+  * the `main` function, for example in order to test the
+  * behavior of the algorithm on a local machine before
+  * submitting the job to the cluster.
+  *
+  * @constructor initializes an actor system with all required node types an a single JVM
+  * @param numWorkers number of virtual worker nodes created locally
+  *
+  * @since 2.1
+  * @author Andrey Tyukin
+  */
 abstract class LocalScavengerApp(val numWorkers: Int) 
 extends ScavengerApp
 with ScavengerNode {
 
   private var context: Option[Context] = None
   
-  /**
-   * Don't use any node-specific config, it doesn't make sense here.
-   */
-  def extractNodeConfig(generalConfig: Config): Config = generalConfig
+  /** Don't use any node-specific config, it doesn't make sense here.
+    */
+  private[app] def extractNodeConfig(generalConfig: Config): Config = generalConfig
 
   private[app] def initializeActors(
     system: ActorSystem, 

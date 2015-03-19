@@ -4,6 +4,14 @@ import scala.concurrent.Future
 import scala.concurrent.ExecutionContext
 import scavenger.categories.formalccc
 
+/** Product-construction for `Computation`s.
+  *
+  * Computes a tuple of type `(X, Y)` from two values of 
+  * type `X` and `Y`.
+  *
+  * @since 2.1
+  * @author Andrey Tyukin
+  */
 case class ComputationPair[X, Y](x: Computation[X], y: Computation[Y])
 extends Computation[(X, Y)] {
   def identifier = formalccc.Couple(x.identifier, y.identifier)

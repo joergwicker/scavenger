@@ -6,13 +6,15 @@ import scala.language.postfixOps
 import scavenger._
 import scavenger.app.LocalScavengerApp
 
-/**
- * A little demo that shows how to get Scavenger up and running on 
- * a single computer.
- *
- * This might be useful if you want to test it locally, before 
- * installing the framework on the cluster.
- */
+/** A little demo that shows how to get Scavenger up and running on
+  * a single computer.
+  *
+  * This might be useful if you want to test it locally, before
+  * installing the framework on the cluster.
+  *
+  * @since 2.1
+  * @author Andrey Tyukin
+  */
 object LocalDemo extends LocalScavengerApp(4) {
   def main(args: Array[String]): Unit = {
     scavengerInit()

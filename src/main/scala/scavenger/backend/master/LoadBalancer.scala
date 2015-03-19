@@ -10,10 +10,12 @@ import scavenger.backend.worker.Worker.WorkerHere
 import scavenger.categories.formalccc
 import LastMessageTimeMonitoring.RemoteNodeNotResponding
 
-/**
- * This trait implements load balancing among multiple
- * worker nodes.
- */
+/** This trait implements load balancing among multiple
+  * worker nodes.
+  *
+  * @since 2.1
+  * @author Andrey Tyukin
+  */
 trait LoadBalancer 
 extends Actor 
 with ActorLogging 
@@ -24,21 +26,18 @@ with LastMessageTimeMonitoring {
 
   import context.dispatcher
   
-  /** 
-   * Stores internal jobs that 
-   * have not yet been assigned to a worker 
-   */ 
+  /** Stores internal jobs that
+    * have not yet been assigned to a worker
+    */
   private val queue = mutable.Queue.empty[InternalJob]
   
-  /**
-   * Assignment of worker-ActorRef's to the currently processed job.
-   */
+  /** Assignment of worker-ActorRef's to the currently processed job.
+    */
   private val assignedJobs: mutable.Map[ActorRef, Option[InternalJob]] = 
     HashMap.empty[ActorRef, Option[InternalJob]]
 
-  /**
-   * Perform a simple computation that can be delegated.
-   */
+  /** Perform a simple computation that can be delegated.
+    */
   def computeSimplified[X](r: Computation[X]): Future[X] = {
     // we simply create a promise in the promise-map, and enqueue the job
     val p = Promise[Any]
@@ -48,9 +47,8 @@ with LastMessageTimeMonitoring {
     p.future.map{ a => a.asInstanceOf[X] }
   }
 
-  /**
-   * Appends an internal job id to a job and puts it into the job queue.
-   */
+  /** Appends an internal job id to a job and puts it into the job queue.
+    */
   private def enqueueSimple(label: InternalLabel, job: Computation[Any]): Unit = { 
     val internalJob = InternalJob(label, job)
     queue.enqueue(internalJob)
@@ -59,17 +57,15 @@ with LastMessageTimeMonitoring {
     for (worker <- idleWorkers) worker ! JobsAvailable
   }
 
-  /**
-   * Assigns a job to worker.
-   * 
-   * Just a way to make things a little safer (e.g. prevents you from
-   * sending `Computation`s to workers).
-   */
+  /** Assigns a job to worker.
+    *
+    * Just a way to make things a little safer (e.g. prevents you from
+    * sending `Computation`s to workers).
+    */
   private def sendJobToWorker(j: InternalJob, w: ActorRef): Unit = w ! j
   
-  /**
-   * Makes sure that we know about the existence of the worker
-   */
+  /** Makes sure that we know about the existence of the worker
+    */
   protected[master] def register(worker: ActorRef): Unit = {
     context.watch(worker)
     if (!assignedJobs.contains(worker)) {
@@ -78,10 +74,9 @@ with LastMessageTimeMonitoring {
     }
   }
   
-  /**
-   * Tries to assign a job to a worker.
-   * Sends an `NothingToDo` reply if there is currently nothing to do.
-   */
+  /** Tries to assign a job to a worker.
+    * Sends an `NothingToDo` reply if there is currently nothing to do.
+    */
   private def tryAssignJob(worker: ActorRef): Unit = {
     if (queue.isEmpty) {
       log.info("Currently nothing to do for " + worker.path.name)
@@ -108,9 +103,8 @@ with LastMessageTimeMonitoring {
     }
   }
 
-  /**
-   * Puts a job of a failed worker back into the queue
-   */
+  /** Puts a job of a failed worker back into the queue
+    */
   private def withdrawJob(worker: ActorRef): Unit = {
     if (!assignedJobs.contains(worker)) {
       log.error(
@@ -131,20 +125,17 @@ with LastMessageTimeMonitoring {
     }
   }
   
-  /**
-   * Returns collection with all idle workers
-   */
+  /** Returns collection with all idle workers
+    */
   private def idleWorkers = 
     for ((w, None) <- assignedJobs) yield w
     
-  /**
-   * Returns collection of all workers
-   */
+  /** Returns collection of all workers
+    */
   private def allWorkers = assignedJobs.keySet
   
-  /**
-   * Handles reminders sent after the initialization phase
-   */
+  /** Handles reminders sent after the initialization phase
+    */
   protected def handleReminders: Receive = {
     // after we switch into normal operation mode, we should 
     // assign a job to all idle workers that joined the master
@@ -160,12 +151,11 @@ with LastMessageTimeMonitoring {
       }
   }
   
-  /**
-   * Behavior for normal operation mode.
-   * 
-   * Trying to assign jobs to workers, 
-   * withdrawing jobs from terminated workers.
-   */
+  /** Behavior for normal operation mode.
+    *
+    * Trying to assign jobs to workers,
+    * withdrawing jobs from terminated workers.
+    */
   protected[master] def handleWorkerRequests: Receive = {
     case WorkerHere =>
       log.info("Got job request from a worker " + sender.path.name)
@@ -179,9 +169,8 @@ with LastMessageTimeMonitoring {
       withdrawJob(worker)
   }
   
-  /**
-   * Handles results from workers
-   */
+  /** Handles results from workers
+    */
   protected[master] def handleWorkerResponses: Receive = {
     case InternalResult(label, result) => {
       val logMessageIntro = "Received result " + result + " from " + 

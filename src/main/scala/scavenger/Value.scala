@@ -4,14 +4,16 @@ import scala.concurrent.Future
 import scala.concurrent.ExecutionContext
 import scavenger.categories.formalccc
 
-/**
- * A computation with an explicitly specified value of type `X`
- * that does not require any computation at all.
- */
+/** Explicit value of type `X`
+  * that does not require any computation at all.
+  *
+  * @since 2.1
+  * @author Andrey Tyukin
+  */
 case class Value[X](
   identifier: formalccc.Elem,
   value: X,
   cachingPolicy: CachingPolicy
 ) extends ExplicitComputation[X] {
-  def getIt(implicit execCtx: ExecutionContext) = Future{ value }
+  def getExplicitValue(implicit execCtx: ExecutionContext) = Future{ value }
 }

@@ -6,6 +6,15 @@ import scavenger._
 import scavenger.backend.{Scheduler => _, _}
 import scavenger.categories.formalccc
 
+/** The central `Master` node of the Scavenger backend.
+  *
+  * It receives `Computation`-value requests from the client application,
+  * and coordinates the `Worker` nodes to obtain a result in an 
+  * efficient manner.
+  *
+  * @since 2.1
+  * @author Andrey Tyukin
+  */
 class Master(val seedPath: ActorPath) 
 extends Actor 
 with ActorLogging
@@ -37,35 +46,35 @@ with DemilitarizedZone {
     monitorCache
 }
 
+/** Defines `props` used to construct `Master` actors, 
+  * and master-specific handshake messages
+  */
 object Master {
 
   def props(seedPath: ActorPath) = Props(classOf[Master], seedPath)
 
-  /**
-   * Handshake message sent to the seed node in the 
-   * connection phase.
-   */
+  /** Handshake message sent to the seed node in the
+    * connection phase.
+    */
   private[backend] case object MasterHere extends HandshakeMessage
 
-  /**
-   * A message used to delegate a job to the worker node.
-   * This kind of communication is initiated by the master.
-   */
+  /** A message used to delegate a job to the worker node.
+    * This kind of communication is initiated by the master.
+    */
   private[backend] case class Delegated(job: Computation[Any])
 
-  /**
-   * Message for sending important partial results to self
-   */
-  private[Master] case class CacheThis(
-    result: Computation[Any], 
-    shouldCache: Boolean,
-    shouldBackUp: Boolean
-  )
+  // TODO: is this CRUFT?  remove it asap
+  // /** Message for sending important partial results to self
+  //   */
+  // private[Master] case class CacheThis(
+  //   result: Computation[Any], 
+  //   shouldCache: Boolean,
+  //   shouldBackUp: Boolean
+  // )
 
-  /**
-   * Message for sending simplified partial results to self
-   */
-  private[Master] case class DelegateThis(
-    simplified: Computation[Any]
-  )
+  // /** Message for sending simplified partial results to self
+  //   */
+  // private[Master] case class DelegateThis(
+  //   simplified: Computation[Any]
+  // )
 }

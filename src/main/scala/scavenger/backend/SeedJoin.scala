@@ -5,16 +5,18 @@ import akka.pattern.pipe
 import scala.concurrent.duration._
 import scala.language.postfixOps
 
-/**
- * Implements the behavior of an Actor that tries 
- * to establish connection to the seed node.
- *
- * Once the `ActorPath` of the seed is resolved,
- * the reference to the seed is available as `seedRef`
- * member variable.
- *
- * Used by both `Worker` and `Master` actors.
- */
+/** Implements the behavior of an Actor that tries
+  * to establish connection to the seed node.
+  *
+  * Once the `ActorPath` of the seed is resolved,
+  * the reference to the seed is available as `seedRef`
+  * member variable.
+  *
+  * Used by both `Worker` and `Master` actors.
+  *
+  * @since 2.1
+  * @author Andrey Tyukin
+  */
 trait SeedJoin 
 extends Actor 
 with ActorLogging
@@ -25,12 +27,11 @@ with Remindable {
 
   protected var seedRef: ActorRef = _
 
-  /**
-   * Behavior of the actor that tries to connect to seed node.
-   * 
-   * Requires an initial `Reminder` to trigger the active attempts
-   * to connect to the seed node.
-   */
+  /** Behavior of the actor that tries to connect to seed node.
+    *
+    * Requires an initial `Reminder` to trigger the active attempts
+    * to connect to the seed node.
+    */
   def connectingToSeed(
     seedPath: ActorPath,
     msg: HandshakeMessage,
@@ -71,6 +72,8 @@ with Remindable {
 
 }
 
+/** Contains `SeedJoin` specific messages */
 object SeedJoin {
+  /** Sent to oneself when the seed is resolved */
   protected case class SeedResolution(seed: Option[ActorRef])
 }

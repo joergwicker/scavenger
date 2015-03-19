@@ -1,11 +1,15 @@
 package scavenger.util
 
-/** 
- * A bull****-generator that generates random
- * names for worker nodes. It's slightly more
- * easier than referencing them by numbers when
- * debugging.
- */
+/** A bull****-generator that generates random
+  * names for worker nodes. 
+  * 
+  * It makes it slightly more
+  * easier than referencing nodes by numbers when
+  * debugging.
+  *
+  * @since 2.1
+  * @author Andrey Tyukin
+  */
 object RandomNameGenerator {
 
   // ensures that there are no two actors with same name on same JVM
@@ -131,6 +135,9 @@ object RandomNameGenerator {
   
   private val rnd = new scala.util.Random
 
+  /**
+    * Generates random name that is guaranteed to be unique for each JVM.
+    */
   def randomName: String = {
     val e = rnd.nextInt(emotions.size)
     val c = rnd.nextInt(condition.size)

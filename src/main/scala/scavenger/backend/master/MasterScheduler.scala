@@ -3,6 +3,11 @@ package scavenger.backend.master
 import scavenger._
 import scavenger.backend._
 
+/** Master-specific scheduler implementation
+  * 
+  * @since 2.1
+  * @author Andrey Tyukin
+  */
 trait MasterScheduler extends Scheduler {
 
   protected def mustBeSimplified(

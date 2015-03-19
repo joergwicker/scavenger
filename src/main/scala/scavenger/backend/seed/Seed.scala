@@ -9,11 +9,14 @@ import scavenger.backend.master.Master.MasterHere
 import scavenger.backend.worker.Worker.WorkerHere
 import akka.actor.Props
 
-/**
- * This actor is responsible for awaiting the backup server and 
- * the master, then helping the workers to find the master.
- * Basically, it just tries to connect everyone with everyone else.
- */
+/** This actor helps everyone else to establish connections.
+  *
+  * It waits for the master, then helps the workers to find the master.
+  * Basically, it just tries to connect everyone with everyone else.
+  *
+  * @since 2.1
+  * @author Andrey Tyukin
+  */
 class Seed extends Actor with ActorLogging {
   
   var master: Option[ActorRef] = None

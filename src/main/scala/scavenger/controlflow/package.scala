@@ -3,12 +3,13 @@ package scavenger
 import scala.concurrent.{Future, ExecutionContext, Await}
 import scala.concurrent.duration._
 
-/**
- * This package contains implementation of 
- * control flow structures like `if` and `while` with
- * bodies that return a result asynchronously.
- */
-
+/** This package contains implementation of
+  * control flow structures like `if` and `while` with
+  * bodies that return a result asynchronously.
+  *
+  * @since 2.1
+  * @author Andrey Tyukin
+  */
 package object controlflow {
   
   def full_async_while[U](

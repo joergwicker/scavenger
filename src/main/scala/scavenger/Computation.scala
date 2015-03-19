@@ -81,7 +81,8 @@ trait Computation[+X] { outer =>
    * Returns a computation that looks exactly the same, except for
    * the changed caching policy.
    */
-  def copy(newCachingPolicy: CachingPolicy): Computation[X] = 
+  private def withCachingPolicy(newCachingPolicy: CachingPolicy): 
+  Computation[X] = 
     new Computation[X] {
       def identifier = outer.identifier
       def compute(ctx: Context) = outer.compute(ctx)
@@ -98,6 +99,23 @@ trait Computation[+X] { outer =>
       }
     }
 
+  /**
+   * Creates new computation that does exactly the same, but is additionally
+   * cached on the Master node.
+   */
+  def cacheGlobally = withCachingPolicy(cachingPolicy.copy(cacheGlobally=true))
+ 
+  /**
+   * Creates new computation that does exactly the same, but is additionally
+   * cached on the worker nodes.
+   */
+  def cacheGlobally = withCachingPolicy(cachingPolicy.copy(cacheLocally = true)) 
+
+  /**
+   * Instructs the master node to back up the result of this computation
+   */
+  def backUp = withCachingPolicy(cachingPolicy.copy(backup = true))
+  
   /**
    * This is the most general method that allows to
    * transform `Computation`s.

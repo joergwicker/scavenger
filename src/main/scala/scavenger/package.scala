@@ -70,21 +70,4 @@ package object scavenger {
     def apply(a: Computation[A], b: Computation[B]): Computation[(A, B)] =
       ComputationPair(a, b)
   }
-
-  // TODO: do we still need this? 
-  // Would anyone remember it's there? (CRUFT?)
-  def printingStackTrace[X](name: String)(f: => X): X = {
-    println("BEGIN " + name)
-    try {
-      val x = f
-      println("END " + name)
-      x
-    } catch {
-      case t: Throwable => {
-        println("Caught some exception: " + t) 
-        t.printStackTrace
-        throw new Exception("Failure when executing " + name)
-      }
-    }
-  }
 }

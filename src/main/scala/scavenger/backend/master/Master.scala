@@ -62,19 +62,4 @@ object Master {
     * This kind of communication is initiated by the master.
     */
   private[backend] case class Delegated(job: Computation[Any])
-
-  // TODO: is this CRUFT?  remove it asap
-  // /** Message for sending important partial results to self
-  //   */
-  // private[Master] case class CacheThis(
-  //   result: Computation[Any], 
-  //   shouldCache: Boolean,
-  //   shouldBackUp: Boolean
-  // )
-
-  // /** Message for sending simplified partial results to self
-  //   */
-  // private[Master] case class DelegateThis(
-  //   simplified: Computation[Any]
-  // )
 }

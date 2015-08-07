@@ -3,10 +3,10 @@
 # This script can be used to start seed and worker nodes of
 # the Scavenger 2.x framework.
 
-source "$SCAVENGER_HOME/bin/help.sh"
-source "$SCAVENGER_HOME/bin/startSeed.sh"
-source "$SCAVENGER_HOME/bin/startWorker.sh"
-source "$SCAVENGER_HOME/bin/startMaster.sh"
+source $SCAVENGER_HOME/bin/plumbing/help.sh
+source $SCAVENGER_HOME/bin/plumbing/startSeed.sh
+source $SCAVENGER_HOME/bin/plumbing/startWorker.sh 
+source $SCAVENGER_HOME/bin/plumbing/startMaster.sh
 
 # prints out error messages
 function errcho() {
@@ -22,6 +22,7 @@ port="2552"
 verbose="false"
 jars=""
 main=""
+verbose="false"
 
 # parse arguments passed to this script
 while (( $# > 0 ))
@@ -31,6 +32,10 @@ do
       printHelp
       shift
       exit 0
+    ;;
+    "--verbose" | "-v" )
+      verbose="true"
+      shift
     ;;
     "startSeed" | "seed" )
       theCommand="startSeed"

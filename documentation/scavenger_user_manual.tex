@@ -1,0 +1,40 @@
+\documentclass{scrbook}
+
+\begin{document}
+%\chapter{Introduction}
+\chapter{Deployment}
+\section{Prerequisites}
+The framework does not require any particular operating system.
+We will assume that you want to install Scavenger 2.x on a Linux cluster
+using only the shell (e.g. bash).
+
+You do not need any administrator rights on the system where you want
+to install the Scavenger framework. 
+All you need is a working Java Runtime Environment (> 1.6) on the cluster, 
+and some way to connect to the cluster (presumably \lstinline{ssh} and \lstinline{scp}).
+
+You will need the following resources and software to be able to install and run the
+Scavenger 2.x framework:
+
+\begin{itemize}
+  \item A working JRE installation (at least 1.6, later versions should work fine too)
+  \item Internet access, browser + \lstinline{scp}, \lstinline{git} or at least \lstinline{wget} to download
+    the necessary JARs.
+\end{itemize}
+
+\subsection{Adding plugins to SBT}
+TODO: sbt-pack plugin
+
+\section{Obtaining the software}
+\section{Trying it out locally}
+\section{Installation on a cluster}
+\section{Updating the Scavenger 2.x framework}
+Currently, the Scavenger 2.x framework does not provide any built-in mechanism for
+software updates. If you want to get a never version, delete the TODO directory,
+download and unpack the newer version, and adjust the paths in your \lstinline{.bashrc}.
+
+\section{Configuration}
+\section{Running a Scavenger 2.x application}
+\section{Running with LSF}
+%\chapter{Writing applications for the Scavenger 2.x framework}
+\end{document}

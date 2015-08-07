@@ -2,11 +2,11 @@
 #
 # Contains help for the 'scavenger'-script. Should not be used directly.
 
-if [ -z 'SOURCED_HELP' ]
+if [ -z "$LOADED_HELP" ]
 then
-  export SOURCED_HELP='true'
+  export LOADED_HELP='true'
 else
-  return
+  exit
 fi
 
 function printHelp() {
@@ -27,26 +27,29 @@ function printHelp() {
   echo "  --host <hostNameOrIp>"
   echo "  --port <portNumber>"
   echo "  --jars <applicationSpecificJars>"
-  echo "  --main <org.full.name.of.ClientApp> "
+  echo "  --main <full.name.of.ClientApp> "
+  echo "  --verbose | -v"
   echo ""
   echo "Examples:"
-  echo "1) Assuming 'scavenger.conf' is in the current directory,"
-  echo "   starting a seed node should not be as simple as this: "
-  echo "    $ scavenger startSeed"
-  echo "2) If 'scavenger.conf' is in '/my/path/scavenger.conf',"
-  echo "   we have to specify it explicitly:"
-  echo "    $ scavenger startSeed --scavenger-conf /my/path/scavenger.conf"
-  echo "3) Starting worker nodes is similar, but one has to keep in mind "
+  echo "1) Assuming 'scavenger.conf' is in '/pathXYZ/scavenger.conf',"
+  echo "   all dependency JARs are in the directory '/pathZYX/target/pack/lib/',"
+  echo "   you can start a seed node as follows: "
+  echo "    $ scavenger startSeed --jars '/pathZYX/target/pack/lib/*' --scavenger-conf '/pathXYZ/scavenger.conf'"
+  echo "   Notice: there are single quotes around the paths, and it's just '.../lib/*', not '.../lib/*.jar' or "
+  echo "   something like this. The glob-syntax for java-classpath is very fragile, adding '*.jar' in the end "
+  echo "   breaks it, and you will probably get ClassNotFoundExceptions"
+  echo "   ========== TODO: the stuff below is not verified =========="
+  echo "2) Starting worker nodes is similar, but one has to keep in mind "
   echo "   that every worker needs the jars with all classes that are"
   echo "   used for the actual computations:"
   echo "    $ scavenger startWorker --jars /myApp/target/myStuff.jar"
   echo "   Notice that the hostname should be determined automatically, "
   echo "   so that you should leave the option --host out most of the times."
-  echo "4) A master node makes sense only as a part of the client application"
+  echo "4) A master node makes sense only as a part of the client application."
   echo "   Therefore, to start a master node, we have to specify the full"
-  echo "   name of the class that contains the `main`-method and starts "
+  echo "   name of the class that contains the 'main'-method and starts "
   echo "   the master node:"
   echo "    $ scavenger startMaster \\"
-  echo "      --jars /myApp/myStuff.jar \\"
+  echo "      --jars /myApp/myJar.jar \\"
   echo "      --main org.myOrg.myApp.MyMain"
 }

@@ -5,11 +5,11 @@
 # This script is a part of the 'scavenger'-script, it should not be used 
 # directly.
 
-if [ -z 'SOURCED_START_MASTER' ]
+if [ -z "$LOADED_START_MASTER" ]
 then
-  export SOURCED_START_MASTER='true'
+  export LOADED_START_MASTER='true'
 else
-  return
+  exit 0
 fi
 
 function startMaster() {

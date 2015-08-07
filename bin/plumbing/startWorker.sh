@@ -5,11 +5,11 @@
 # This script is a part of the 'scavenger'-script, it should not be used 
 # directly.
 
-if [ -z 'SOURCED_START_WORKER' ]
+if [ -z "$LOADED_START_WORKER" ]
 then
-  export SOURCED_START_WORKER='true'
+  export LOADED_START_WORKER='true'
 else
-  return
+  exit 0
 fi
 
 function startWorker() {

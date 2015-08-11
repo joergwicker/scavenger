@@ -10,11 +10,15 @@ import akka.dispatch.*;
 public final class PrintResults<T> extends OnSuccess<T> {
     
     @Override
-    public final void onSuccess(T t) {
+    public final void onSuccess(T t) 
+    {
+
         Iterable<Integer> results = (Iterable<Integer>)t;
         for (Integer i : results)
         {
-            System.out.println("PrintResults says: " + ((Integer)i));
+            System.out.println("PrintResults says: " + i);
         }
+
+        
     }
 }

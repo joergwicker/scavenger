@@ -31,7 +31,7 @@ import scavenger.categories.formalccc
   * @since 2.1
   * @author Andrey Tyukin
   */
-trait Computation[+X] { outer =>
+trait Computation[+X] extends Serializable{ outer =>
 
   /** Formal expression that uniquely identifies this computation
     */

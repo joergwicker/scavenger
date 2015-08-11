@@ -29,7 +29,6 @@ extends ScavengerApp
 with ScavengerNode {
 
   private var context: Option[Context] = None
-  
   /** Don't use any node-specific config, it doesn't make sense here.
     */
   private[app] def extractNodeConfig(generalConfig: Config): Config = generalConfig

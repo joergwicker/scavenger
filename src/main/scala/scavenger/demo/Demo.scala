@@ -1,10 +1,16 @@
 package scavenger.demo
 
+import scala.concurrent.Await
 import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.language.postfixOps
+import scala.util.{Try, Success, Failure}
+
+import akka.util.Timeout
+
 import scavenger._
-import scavenger.app.LocalScavengerApp
+import scavenger.app.DistributedScavengerApp
+
 
 /** A little demo that shows how to get Scavenger up and running on
   * a single computer.
@@ -15,7 +21,7 @@ import scavenger.app.LocalScavengerApp
   * @since 2.1
   * @author Andrey Tyukin
   */
-object LocalDemo extends LocalScavengerApp(4) {
+object Demo extends DistributedScavengerApp(){
   def main(args: Array[String]): Unit = {
     scavengerInit()
 
@@ -23,10 +29,15 @@ object LocalDemo extends LocalScavengerApp(4) {
       (x: Int) => {
         Thread.sleep(50)
         math.pow(2, x).toInt % 3945
+	
       }
     }
+    val f1 = cheap("square"){ 
+     (x: Int) => {
+	     (x * x) % 5979 
+     }
+    }
 
-    val f1 = cheap("square"){ (x: Int) => (x * x) % 5979 }
     val f2 = expensive("times2"){
       Thread.sleep(90)
       (x: Int) => 2 * x
@@ -50,21 +61,27 @@ object LocalDemo extends LocalScavengerApp(4) {
       g(f(Computation(inputId, d)).cacheGlobally)
     }
 
+
     val futures = for (j <- jobs) yield scavengerContext.submit(j)
     val allTogether = Future.sequence(futures)
 
-    allTogether.onSuccess { 
-      case listOfResults: List[Int] => {
 
+   allTogether.onSuccess {
+
+      case listOfResults: List[Int] => {
+	
         println("#####Contents of the master cache: ")
         for (id <- scavengerContext.dumpCacheKeys) println(id)
         println("#####")
 
+
         for (entry <- listOfResults) println(entry)
         println("Sum = " + listOfResults.sum)
         scavengerShutdown()
-      }  
+      } 
+    case _ => println("allTogether.onSuccess ")
     }
 
   }
 }
+

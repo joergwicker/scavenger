@@ -11,7 +11,7 @@ import scavenger.categories.formalccc
   * @since 2.1
   * @author AndreyTyukin
   */
-trait Algorithm[-X, +Y] { outer =>
+trait Algorithm[-X, +Y] extends Serializable{ outer =>
   def identifier: formalccc.Elem
 
   /** Creates a new computation modified by this algorithm

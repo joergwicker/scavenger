@@ -5,7 +5,7 @@ import scavenger.categories.formalccc
 /** Contains the API and an Akka-backend implementation of the 
   * Scavenger framework.
   */
-package object scavenger {
+package object scavenger{
   //type Identifier = formalccc.Elem
 
   // Three castings into the canonical form of a morphism

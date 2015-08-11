@@ -1,3 +1,4 @@
+
 lazy val root = (project in file(".")).
   settings(
     organization := "org.scavenger",

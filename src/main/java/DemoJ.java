@@ -1,7 +1,6 @@
 package scavenger.demo;
 
 import scavenger.*;
-import scavenger.app.LocalScavengerApp;
 import java.util.function.Function;
 
 import java.util.ArrayList;
@@ -31,18 +30,24 @@ import scala.concurrent.Future;
 import static akka.dispatch.Futures.future;
 import static akka.dispatch.Futures.sequence;
 import java.util.concurrent.Callable;
+import scavenger.app.DistributedScavengerApp;
 
-class LocalDemoJ extends LocalScavengerApp 
+class DemoJ extends DistributedScavengerApp
 {
-    static final Function2<Integer, Context, Future<Integer>> f0 = new AbstractFunction2<Integer, Context, scala.concurrent.Future<Integer>>() 
+    static final Function2<Integer, Context, Future<Integer>> f0 = new Function<Integer, Context, scala.concurrent.Future<Integer>>() 
     {
         public Future<Integer> apply(Integer x, Context ctx) 
         {
-            Callable<Integer> f = new Power(x);             
+            System.out.println("running");
+            
+            Callable<Integer> f = new Power(x); 
+            
             return future(f, ctx.executionContext());
         }
     };
 
+
+    static abstract class Function<X, Y, Z> extends AbstractFunction2<X, Y, Z> implements java.io.Serializable{}
 
     static class Power implements Callable<Integer>
     {
@@ -68,9 +73,9 @@ class LocalDemoJ extends LocalScavengerApp
 
 
 
-    public LocalDemoJ(int numWorkers)
+    public DemoJ()
     {
-        super(numWorkers);        
+        super();        
     }    
     
     public void runDemo()
@@ -108,14 +113,13 @@ class LocalDemoJ extends LocalScavengerApp
         }
         catch(Exception e) { e.printStackTrace(); }
         scavengerShutdown(); 
-        
     }
     
     
     public static void main(final String[] args)
     {    
-        LocalDemoJ localDemo = new LocalDemoJ(1);
-        localDemo.runDemo();
+        DemoJ demo = new DemoJ();
+        demo.runDemo();
     }
 }
 

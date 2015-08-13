@@ -20,6 +20,8 @@ function startSeed() {
     echo "Classpath: '$completeClassPath'"
     echo "Path to scavenger.conf file: '$configFile'"
     echo "Main class: scavenger.app.SeedMain"
+    echo "Full command:"
+    set -x
   fi
   java \
     $jvmOpts \

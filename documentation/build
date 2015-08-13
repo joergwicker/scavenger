@@ -1,0 +1,4 @@
+#!/bin/bash
+# Builds the documentation PDF file
+pdflatex --halt-on-error scavenger_user_manual.tex &&
+pdflatex --halt-on-error scavenger_user_manual.tex

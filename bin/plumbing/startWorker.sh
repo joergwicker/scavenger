@@ -13,11 +13,23 @@ else
 fi
 
 function startWorker() {
+  completeClassPath="$SCAVENGER_HOME/target/scala-2.10/scavenger_2.10-2.1.jar:$jars"
+  if [ $verbose == 'true' ]
+  then
+    echo "JVM-Options: '$jvmOpts'"
+    echo "Classpath: '$completeClassPath'"
+    echo "Path to scavenger.conf file: '$configFile'"
+    echo "Main class: '$scavenger.app.WorkerMain'"
+    echo "Full command: "
+    set -x
+  fi
+
   java \
     $jvmOpts \
     -Dakka.remote.netty.tcp.hostname=$host \
     -Dakka.remote.netty.tcp.port=$port \
     -Dconfig.file=$configFile \
-    -cp "$SCAVENGER_HOME/target/scala-2.10/scavenger_2.10-2.1.jar:$jars" \
+    -cp "$completeClassPath" \
     scavenger.app.WorkerMain
 }
+

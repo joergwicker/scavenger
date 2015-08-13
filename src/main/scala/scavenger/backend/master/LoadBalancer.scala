@@ -62,7 +62,11 @@ with LastMessageTimeMonitoring {
     * Just a way to make things a little safer (e.g. prevents you from
     * sending `Computation`s to workers).
     */
-  private def sendJobToWorker(j: InternalJob, w: ActorRef): Unit = w ! j
+  private def sendJobToWorker(j: InternalJob, w: ActorRef): Unit = {
+    log.debug("sendJobToWorker: job = {}",j)
+    assert(j != null)
+    w ! j
+  }
   
   /** Makes sure that we know about the existence of the worker
     */

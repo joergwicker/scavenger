@@ -1,3 +1,7 @@
 \[blue\]
 \[orange\]
 target/
+*.aux
+*.log
+*.out
+*.pdf

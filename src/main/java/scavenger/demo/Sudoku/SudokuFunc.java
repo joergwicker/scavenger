@@ -27,18 +27,19 @@ import static akka.dispatch.Futures.sequence;
 
 class SudokuFunc extends ScavengerFunction<Location> implements java.io.Serializable
 {
-    protected package$ scavengerAlgorithm = package$.MODULE$;
-    protected Computation$ scavengerComputation = Computation$.MODULE$;
     private List<List<Integer>> board;
-    int BOARD_SIZE = 9;
-    int BOARD_SECTION_SIZE = 3;
+    
+    /**
+     *
+     */
     public SudokuFunc(List<List<Integer>> board)
     {
         this.board = board;
     }
-    
-    // Value computation is being applied to can be accessed using "this.value"
-    // To submit a new job this.ctx.submit(...) can be used
+
+    /**
+     *
+     */
     public Location call() 
     {
         if (value.possibleValues.size() == 1)
@@ -49,8 +50,13 @@ class SudokuFunc extends ScavengerFunction<Location> implements java.io.Serializ
         return value;
     }
     
+    /**
+     *
+     */
     private void checkPossibleValues()
     {
+        int BOARD_SIZE = board.size();
+        int BOARD_SECTION_SIZE = (int)java.lang.Math.sqrt((double)BOARD_SIZE);    
         int offSetRow = (value.x / BOARD_SECTION_SIZE)*BOARD_SECTION_SIZE;
         int offSetCol = (value.y / BOARD_SECTION_SIZE)*BOARD_SECTION_SIZE;
         List<Integer> newPossibleValues = new ArrayList<Integer>();

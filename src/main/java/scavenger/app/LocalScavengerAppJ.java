@@ -14,7 +14,7 @@ public abstract class LocalScavengerAppJ extends LocalScavengerApp
         scavengerInit();
         try
         { // must sleep after calling scavengerInit()
-            Thread.sleep(3000);
+            Thread.sleep(10000);
         }
         catch (Exception e) 
         { 

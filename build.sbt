@@ -12,4 +12,13 @@ lazy val root = (project in file(".")).
     ),
     scalacOptions ++= Seq("-feature"),
     scalacOptions in (Compile,doc) ++= Seq("-groups", "-implicits")
+
+	
   )
+
+
+val buildSettings = Defaults.defaultSettings ++ Seq(
+  //…
+  javaOptions += "-Xmx4G"
+  //…
+)

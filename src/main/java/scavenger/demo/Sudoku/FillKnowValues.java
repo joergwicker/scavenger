@@ -25,7 +25,7 @@ import static akka.dispatch.Futures.future;
 import static akka.dispatch.Futures.sequence;
 
 
-class RunSudoku extends ScavengerFunction<List<List<Integer>>>
+class FillKnowValues extends ScavengerFunction<List<List<Integer>>>
 {
     protected package$ scavengerAlgorithm = package$.MODULE$;
     protected Computation$ scavengerComputation = Computation$.MODULE$;
@@ -54,7 +54,7 @@ class RunSudoku extends ScavengerFunction<List<List<Integer>>>
     private boolean fillInKnownValues()
     {
         System.out.println("Running : fillInKnownValues()");
-        Iterable<Location> locations = SudokuUtils.findPossibleValues(board, ctx);        
+        List<Location> locations = findValues();       
         boolean changed = false;
         for (Location location : locations)
         {
@@ -63,9 +63,31 @@ class RunSudoku extends ScavengerFunction<List<List<Integer>>>
                 board.get(location.x).set(location.y, location.possibleValues.get(0));
                 changed = true;
             }
-            
         }
         return changed;
+    }
+    
+    
+    /**
+     *
+     */
+    private List<Location> findValues()
+    {
+        List<Location> locations = new ArrayList<Location>();
+        for(int i = 0; i < board.size(); i++)
+        {
+            for(int j = 0; j < board.get(i).size(); j++)
+            {
+                if(board.get(i).get(j) == 0)
+                {
+                    FindPossibleValues findLocations = new FindPossibleValues(board);
+                    Location loc = new Location(i, j, board.get(i).get(j));
+                    findLocations.setValue(loc);
+                    locations.add(findLocations.call());
+                }
+            }
+        }
+        return locations;
     }
 }
 

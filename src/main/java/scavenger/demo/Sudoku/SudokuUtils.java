@@ -28,46 +28,6 @@ import static akka.dispatch.Futures.sequence;
 class SudokuUtils
 {   
     /**
-     * Finds all possible values for each position
-     */
-    protected static Iterable<Location> findPossibleValues(List<List<Integer>> board, Context scavengerContext)
-    {
-        System.out.println("running findPossibleValues()");
-        package$ scavengerAlgorithm = package$.MODULE$;
-        Computation$ scavengerComputation = Computation$.MODULE$;
-        
-        List<Future<Location>> futures = new ArrayList<Future<Location>>();
-        for(int i = 0; i < board.size(); i++)
-        {
-            for(int j = 0; j < board.get(i).size(); j++)
-            {
-                if(board.get(i).get(j) == 0)
-                {
-                    ScavengerFunction<Location> fillLocation = new SudokuFunc(board);
-                    Algorithm<Location, Location> algorithm = scavengerAlgorithm.expensive("id", fillLocation).cacheGlobally();
-                    Location loc = new Location(i, j, board.get(i).get(j));
-                    Computation<Location> computationData = scavengerComputation.apply("Computation_" + i + j, loc).cacheGlobally();
-                    futures.add(scavengerContext.submit(algorithm.apply(computationData)));
-                }
-            }
-        }
-        
-        Future<Iterable<Location>> allTogether = Futures.sequence(futures, scavengerContext.executionContext());
-        
-        Iterable<Location> results = new ArrayList<Location>();
-        try
-        {
-            System.out.println("findPossibleValues : Waiting for results");
-            results = (Iterable<Location>)Await.result(allTogether, (new Timeout(Duration.create(60, "seconds")).duration()));
-        }
-        catch(Exception e) 
-        { 
-            e.printStackTrace(); 
-        }        
-        return results;
-    }
-    
-    /**
      *
      */
     protected static boolean isSolved(List<List<Integer>> board)

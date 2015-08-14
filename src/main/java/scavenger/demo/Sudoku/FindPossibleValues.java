@@ -25,16 +25,21 @@ import static akka.dispatch.Futures.future;
 import static akka.dispatch.Futures.sequence;
 
 
-class SudokuFunc extends ScavengerFunction<Location> implements java.io.Serializable
+class FindPossibleValues extends ScavengerFunction<Location>
 {
     private List<List<Integer>> board;
     
     /**
      *
      */
-    public SudokuFunc(List<List<Integer>> board)
+    public FindPossibleValues(List<List<Integer>> board)
     {
         this.board = board;
+    }
+    
+    public void setValue(Location loc)
+    {
+        value = loc;
     }
 
     /**

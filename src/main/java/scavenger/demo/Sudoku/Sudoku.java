@@ -85,7 +85,7 @@ class Sudoku extends ScavengerAppJ
             for (List<List<Integer>> newBoard : possibleBoards)
             {
                 System.out.println("making RunSudoku");
-                ScavengerFunction<List<List<Integer>>> run = new RunSudoku();//this.scavengerContext);
+                ScavengerFunction<List<List<Integer>>> run = new FillKnowValues();
                 Algorithm<List<List<Integer>>, List<List<Integer>>> algorithm = scavengerAlgorithm.expensive("id", run).cacheGlobally();
                 Computation<List<List<Integer>>> computationData = scavengerComputation.apply("Computation_" + newBoard, newBoard).cacheGlobally();
                 futures.add(scavengerContext().submit(algorithm.apply(computationData)));
@@ -121,7 +121,7 @@ class Sudoku extends ScavengerAppJ
                 }
                 else 
                 {      
-                    Iterable<Location> locations = SudokuUtils.findPossibleValues(result, scavengerContext());
+                    Iterable<Location> locations = findPossibleValues(result);
                     
                     if(isPossible(locations))
                     {
@@ -192,6 +192,44 @@ class Sudoku extends ScavengerAppJ
             boards.add(newBoard);
         }   
         return boards;
+    }
+    
+     /**
+     * Finds all possible values for each position
+     */
+    private Iterable<Location> findPossibleValues(List<List<Integer>> board)
+    {
+        System.out.println("running findPossibleValues()");
+        
+        List<Future<Location>> futures = new ArrayList<Future<Location>>();
+        for(int i = 0; i < board.size(); i++)
+        {
+            for(int j = 0; j < board.get(i).size(); j++)
+            {
+                if(board.get(i).get(j) == 0)
+                {
+                    ScavengerFunction<Location> fillLocation = new FindPossibleValues(board);
+                    Algorithm<Location, Location> algorithm = scavengerAlgorithm.expensive("id", fillLocation).cacheGlobally();
+                    Location loc = new Location(i, j, board.get(i).get(j));
+                    Computation<Location> computationData = scavengerComputation.apply("Computation_" + i + j, loc).cacheGlobally();
+                    futures.add(scavengerContext().submit(algorithm.apply(computationData)));
+                }
+            }
+        }
+        
+        Future<Iterable<Location>> allTogether = Futures.sequence(futures, scavengerContext().executionContext());
+        
+        Iterable<Location> results = new ArrayList<Location>();
+        try
+        {
+            System.out.println("findPossibleValues : Waiting for results");
+            results = (Iterable<Location>)Await.result(allTogether, (new Timeout(Duration.create(60, "seconds")).duration()));
+        }
+        catch(Exception e) 
+        { 
+            e.printStackTrace(); 
+        }        
+        return results;
     }
         
     /**

@@ -1,7 +1,7 @@
 package scavenger.demo;
 
 import scavenger.*;
-import scavenger.app.ScavengerAppJ;
+import scavenger.app.ScavengerAppJ; //LocalScavengerAppJ
 
 import java.util.function.Function;
 import java.util.ArrayList;
@@ -27,8 +27,6 @@ import static akka.dispatch.Futures.sequence;
 
 class Sudoku extends ScavengerAppJ
 {
-    //List<List<Integer>> board;
-    //int BOARD_SIZE = 9;
     boolean solved = false;
     
     public Sudoku(int numWorkers)
@@ -218,7 +216,6 @@ class Sudoku extends ScavengerAppJ
         }
         
         Future<Iterable<Location>> allTogether = Futures.sequence(futures, scavengerContext().executionContext());
-        
         Iterable<Location> results = new ArrayList<Location>();
         try
         {

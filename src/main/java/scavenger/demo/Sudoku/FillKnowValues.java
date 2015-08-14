@@ -27,9 +27,6 @@ import static akka.dispatch.Futures.sequence;
 
 class FillKnowValues extends ScavengerFunction<List<List<Integer>>>
 {
-    protected package$ scavengerAlgorithm = package$.MODULE$;
-    protected Computation$ scavengerComputation = Computation$.MODULE$;
-    private Context scavengerContext;
     protected List<List<Integer>> board;
     
     /**

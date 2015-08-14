@@ -93,7 +93,7 @@ class Sudoku extends ScavengerAppJ
             // Wait for the results
             possibleBoards = new ArrayList<List<List<Integer>>>();
             Iterable<List<List<Integer>>> results = new ArrayList<List<List<Integer>>>();
-            try
+            try // TODO would be better if we didn't wait for all jobs to return, and just had a stack of boards that keep being submitted as jobs
             {                
                 results = (Iterable<List<List<Integer>>>)Await.result(allTogether, (new Timeout(Duration.create(360, "seconds")).duration()));
             }

@@ -13,11 +13,18 @@ import scavenger.util.*;
   */
 class WorkerMainJ extends ScavengerNodeJ 
 {    
+    /**
+     * Gets the worker's configuration from the config file
+     */
     public Config extractNodeConfig(Config generalConfig)
     {
         return generalConfig.getConfig("worker").withFallback(generalConfig);
     }
     
+    /**
+     * Gets the seed's configuration from the config file
+     * Creates a new Worker actor within the ActorSystem. 
+     */
     public void initializeActors(ActorSystem system, Config generalConfig)
     {                
         ActorPath seedPath = extractSeedPath(generalConfig);

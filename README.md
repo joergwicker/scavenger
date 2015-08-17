@@ -28,3 +28,32 @@ sbt clean compile
 
 to build scavenger.
 
+
+Clean and Compile
+=================
+
+To create jar file run :
+
+```
+sbt assembly
+```
+
+To run a seed from the jar run :
+
+```
+java -cp target/scala-2.10/scavenger-assembly-2.1.jar scavenger.app.SeedMain
+```
+
+To run a worker from the jar run :
+
+```
+java -cp target/scala-2.10/scavenger-assembly-2.1.jar scavenger.app.WorkerMain
+```
+
+For the Sudoku demo run :
+
+```
+java -cp target/scala-2.10/scavenger-assembly-2.1.jar scavenger.demo.Sudoku
+```
+
+For running on Mogon see : scavenger/mogonJobScripts/Sudoku

@@ -21,6 +21,10 @@ import akka.util.Timeout;
 import static akka.dispatch.Futures.future;
 import static akka.dispatch.Futures.sequence;
 
+
+/**
+ * A basic example of how to create a Scavenger Java application.
+ */
 class DemoJ extends ScavengerAppJ
 {
     
@@ -47,6 +51,9 @@ class DemoJ extends ScavengerAppJ
         super();        
     }    
     
+    /**
+     * Applys f0 to the data (Integer 2) twice
+     */
     public void runDemo()
     {
         Computation<Integer> computationData = scavengerComputation.apply("Computation_1", 2).cacheGlobally();
@@ -55,10 +62,12 @@ class DemoJ extends ScavengerAppJ
         Computation<Integer> computation1 = algorithm.apply(computationData);
         Computation<Integer> computation2 = algorithm.apply(computation1);
         
+        // Submit the computation to scavenger
         Future<Integer> futureS = scavengerContext().submit(computation1);
         Future<Integer> futureS2 = scavengerContext().submit(computation2);
         
         
+        // Combind all the futures into one
         List<Future<Integer>> futures = new ArrayList<Future<Integer>>();
         futures.add(futureS);
         futures.add(futureS2);
@@ -67,6 +76,7 @@ class DemoJ extends ScavengerAppJ
         
         System.out.println(scavengerContext().dumpCacheKeys());
         
+        // Wait for the futures to finish
         //allTogether.onSuccess(new PrintResults<Iterable<Integer>>(), scavengerContext().executionContext());
         try
         {
@@ -80,6 +90,7 @@ class DemoJ extends ScavengerAppJ
         { 
             e.printStackTrace(); 
         }
+        
         scavengerShutdown(); 
     }
     

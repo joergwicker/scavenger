@@ -24,29 +24,38 @@ import akka.util.Timeout;
 import static akka.dispatch.Futures.future;
 import static akka.dispatch.Futures.sequence;
 
-
+/**
+ * A callable class which can be passed to scavenger in order to perform a computation.
+ * Fills in all location on the board that can only be one possible value.
+ * 
+ * @see ScavengerFunction
+ * @see Sudoku
+ * @author Helen Harman
+ */
 class FillKnowValues extends ScavengerFunction<List<List<Integer>>>
 {
     protected List<List<Integer>> board;
     
     /**
-     *
+     * Keeps filling in squares that can only be one value until : the board is solved, or a guess needs to be made.
+     * @return The filled (or partially filled in) board.
      */
+    @Override
     public List<List<Integer>> call() 
     {
         board = value;
         while (!SudokuUtils.isSolved(board))
         {
-            if(!fillInKnownValues())
-            {
-                return board; 
+            if(!fillInKnownValues()) // fill in values. 
+            { 
+                return board; // no values can be filled in (without guessing), so return the board 
             }
         }
-        return board;
+        return board; // board is solved
     }
     
     /**
-     *
+     * @return false if no values have been filled in, otherwise true is returned
      */
     private boolean fillInKnownValues()
     {
@@ -67,6 +76,9 @@ class FillKnowValues extends ScavengerFunction<List<List<Integer>>>
     
     /**
      *
+     * Finds all possible locations for the squares that have not been filled in.
+     * 
+     * @return The locations containing the the posssible values (@see Location)
      */
     private List<Location> findValues()
     {

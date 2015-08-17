@@ -24,7 +24,14 @@ import akka.util.Timeout;
 import static akka.dispatch.Futures.future;
 import static akka.dispatch.Futures.sequence;
 
-
+/**
+ * A callable class which can be passed to scavenger in order to perform a computation.
+ * This computation will take a Location and remove the values that are no longer possible for that location. The location will then be returned.
+ * 
+ * @see ScavengerFunction
+ * @see Sudoku
+ * @author Helen Harman
+ */ 
 class FindPossibleValues extends ScavengerFunction<Location>
 {
     private List<List<Integer>> board;
@@ -37,14 +44,22 @@ class FindPossibleValues extends ScavengerFunction<Location>
         this.board = board;
     }
     
+    /**
+     * When using futures/jobs value is set when apply is called. This method allows the class to be usable without it having to be a job.
+     * @param loc The location to be checked
+     */
     public void setValue(Location loc)
     {
         value = loc;
     }
 
     /**
+     * This automatically gets called by scavenger. Is the computation that is performed on the value passed to apply(), see @ScavengerFunction.
      *
+     * @see checkPossibleValues()
+     * @return loc The location updated with the current possible values it can be. 
      */
+    @Override 
     public Location call() 
     {
         if (value.possibleValues.size() == 1)
@@ -56,7 +71,7 @@ class FindPossibleValues extends ScavengerFunction<Location>
     }
     
     /**
-     *
+     * Removes any values that are no longer possible from value.possibleValues
      */
     private void checkPossibleValues()
     {
@@ -70,9 +85,9 @@ class FindPossibleValues extends ScavengerFunction<Location>
             boolean add = true;
             for(int j = 0; j < BOARD_SIZE; j++)
             {
-                if ((board.get(value.x).get(j).intValue() == i.intValue()) || 
-                    (board.get(j).get(value.y).intValue() == i.intValue()) || 
-                    (board.get((offSetRow + (j / BOARD_SECTION_SIZE))).get((offSetCol + (j % BOARD_SECTION_SIZE))).intValue() == i.intValue())
+                if ((board.get(value.x).get(j).intValue() == i.intValue()) ||  // check row
+                    (board.get(j).get(value.y).intValue() == i.intValue()) ||  //check column
+                    (board.get((offSetRow + (j / BOARD_SECTION_SIZE))).get((offSetCol + (j % BOARD_SECTION_SIZE))).intValue() == i.intValue()) // check square
                     )
                 {
                     add = false;                            
@@ -83,8 +98,7 @@ class FindPossibleValues extends ScavengerFunction<Location>
             {
                 newPossibleValues.add(i);
             }
-        }
-        
+        }        
         value.possibleValues = newPossibleValues;
     }        
 }

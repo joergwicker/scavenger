@@ -2,6 +2,9 @@ package scavenger.demo.clustering.distance;
 
 import java.util.List;
 
+/**
+ * A node within the cluster hierarchy.
+ */
 class TreeNode<T>
 {
     private List<DataItem<T>> data;
@@ -9,28 +12,48 @@ class TreeNode<T>
     private TreeNode childLeft = null;
     private TreeNode childRight = null;
 
+    /**
+     * Constructor for the root node.
+     *
+     * @param data The DataItems being clustered
+     */
     public TreeNode(List<DataItem<T>> data)
     {
         this.data = data;
     }
     
+    /**
+     * Constructor for all none root nodes.
+     * 
+     * @param data The DataItems being clustered
+     * @param parent
+     */
     public TreeNode(List<DataItem<T>> data, TreeNode parent)
     {
         this.data = data;
         this.parent = parent;
     }
     
+    /**
+     * @return 
+     */ 
     public List<DataItem<T>> getData()
     {
         return data;
     }
     
+    /**
+     *
+     * @param childLeft 
+     * @param childRight
+     */
     public void setChildren(TreeNode childLeft, TreeNode childRight)
     {
         this.childLeft = childLeft;
         this.childRight = childRight;
     }
     
+    //// Getters //// 
     
     public TreeNode getChildLeft()
     {
@@ -46,6 +69,7 @@ class TreeNode<T>
     {
         return parent;
     }
+    
     
     public void print() 
     {

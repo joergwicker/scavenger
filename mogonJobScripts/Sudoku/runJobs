@@ -1,0 +1,10 @@
+
+# Run 3 workers and the master as jobs on LSF
+#
+
+module load Java/jdk1.8.0_25
+
+bsub -K < jobWorker &
+bsub -K < jobWorker &
+bsub -K < jobWorker &
+sleep 20; bsub -K < jobMaster; 

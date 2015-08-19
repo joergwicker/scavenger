@@ -5,21 +5,39 @@ import java.util.List;
 import java.util.HashMap;
 import java.util.Iterator;
 
-class DataInformation
+/**
+ * Allows different distance measures with different weightings to be used. 
+ * 
+ * @see DataItem
+ */
+class DistanceMeasureSelection
 {
-    private String id;
-    private List<String> ids = null;
+    private String id; // Same as Key in data HashMap, which is found in DataItem.
+    private List<String> ids = null; // Allows the same DistanceMeasure and weighting to be used for multiple values/features
     private DistanceMeasure distanceMeasure;
     private double weight = 1; // should be between 0 and 1
 
-    public DataInformation(String id, DistanceMeasure distanceMeasure, double weight)
+
+    /**
+     *
+     * @param id Used to identify the feature/value this distance measure and weight will be used on.
+     * @param distanceMeasure
+     * @param weight
+     */
+    public DistanceMeasureSelection(String id, DistanceMeasure distanceMeasure, double weight)
     {
         this.id = id;
         this.distanceMeasure = distanceMeasure;
         this.weight = weight;
     }
     
-    public DataInformation(Iterator<String> id, DistanceMeasure distanceMeasure, double weight)
+    /**
+     *
+     * @param ids Used to identify the features/values this distance measure and weight will be used on.
+     * @param distanceMeasure
+     * @param weight
+     */
+    public DistanceMeasureSelection(Iterator<String> id, DistanceMeasure distanceMeasure, double weight)
     {
         this.ids = ids;
         this.distanceMeasure = distanceMeasure;
@@ -37,7 +55,9 @@ class DataInformation
         return id;
     }
     
-    
+    /**
+     * @return the id(s) as a list
+     */
     public List<String> getIds()
     {
         if((ids == null) || (ids.size() == 0))

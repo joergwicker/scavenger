@@ -1,0 +1,13 @@
+#!/bin/tcsh
+#
+# LSF batch script to run an MPI application
+#
+#BSUB -J job_name            # job name
+#BSUB -o output/job_name.%J.out     # output file name in which %J is replaced by the job ID
+#BSUB -e output/job_name.%J.err    
+#BSUB -N 
+#BSUB -i ../../scavenger.conf
+
+module load Java/jdk1.8.0_25
+java -cp ../../target/scala-2.10/scavenger-assembly-2.1.jar scavenger.app.WorkerMain 
+

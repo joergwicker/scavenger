@@ -9,14 +9,18 @@ import java.net.URL;
 import java.util.Scanner;
 import java.io.IOException;
 
+/**
+ * A basic example of using Euclidean distance, when performing Diana clustering.
+ *
+ */
 class SimpleExample
 {   
     public SimpleExample()
     {
-        List<DataInformation> dataInformationList = new ArrayList<DataInformation>();
-        
+        // 1. Create distance measure
         DistanceMeasure<List<Double>> distanceMeasure = new EuclideanDistance(10.0);
         
+        // 2. Load data
         List list1 = new ArrayList<Double>() 
             {{
                 add(5.0);
@@ -63,6 +67,7 @@ class SimpleExample
         DataItem<Integer> item5 = new DataItem<Integer>("5", list5);
         DataItem<Integer> item6 = new DataItem<Integer>("6", list6);
         
+        // 3. Create root node
         List<DataItem<Integer>> data = new ArrayList<DataItem<Integer>>();
         data.add(item1);
         data.add(item2);
@@ -71,11 +76,14 @@ class SimpleExample
         data.add(item5);
         data.add(item6);
         
+        // 4. Perform clustering
         TreeNode<Integer> input = new TreeNode<Integer>(data);
         Diana<Integer> diana = new Diana<Integer>(distanceMeasure); 
         TreeNode<Integer> node = diana.runClustering(input, 3);
+        diana.endClustering();
+        
+        // 5. Print results
         printTree(node);
-         
     }
     
     private void printTree(TreeNode<Integer> node)

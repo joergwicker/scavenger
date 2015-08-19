@@ -5,21 +5,35 @@ import java.util.List;
 import java.util.HashMap;
 import java.util.Iterator;
 
+import scavenger.app.LocalScavengerAppJ;//ScavengerAppJ
 
-abstract class DianaDistanceFunctions<T>
+
+/**
+ *  Holds the average and diameter calculations for Diana.
+ *
+ */
+abstract class DianaDistanceFunctions<T>  extends LocalScavengerAppJ
 {
-    protected DataInformation[] dataInfo;
+    protected DistanceMeasureSelection[] dataInfo;
+    
+    protected DianaDistanceFunctions()
+    {
+        super(3);
+    }
     
     /**
      * Max distance between two elements in a cluster
+     * 
+     * @param cluster The cluster who's diameter is to be calculated
+     * @return the diameter of the cluster
      */
-    protected double calculateClusterDiameter(List<DataItem<T>> data)
+    protected double calculateClusterDiameter(List<DataItem<T>> cluster)
     {
         double maxDistance = 0.0;
         
-        for (int i = 0; i < data.size(); i++)
+        for (int i = 0; i < cluster.size(); i++)
         {
-            double distance = calculateAverage(data, i);
+            double distance = calculateAverage(cluster, i);
 
             if (distance > maxDistance)
             {
@@ -31,7 +45,11 @@ abstract class DianaDistanceFunctions<T>
 
     
     /**
+     * 
      * The node returned will start the new cluster
+     *
+     * @param cluster 
+     * @return The index of the item with the highest average distance
      */
     protected int getIndexWithHighestAverageIndex(List<DataItem<T>> cluster)
     {
@@ -50,44 +68,52 @@ abstract class DianaDistanceFunctions<T>
     }
     
     /**
-     * Runs the correct calculateAverage function
+     * Runs calculateAverageSimple if only on distance measure is being used; else runs calculateAverageComplex
      */ 
-    protected double calculateAverage(List<DataItem<T>> data, int index)
+    protected double calculateAverage(List<DataItem<T>> cluster, int index)
     {
         if (dataInfo.length == 1 )
         {
-            return calculateAverageSimple(data, index); 
+            return calculateAverageSimple(cluster, index); 
         }
         else
         {
-            return calculateAverageComplex(data, index);
+            return calculateAverageComplex(cluster, index);
         }            
     }
     
     /**
-     * Single distance measure being used
+     * Calculates the average distance, when one distance measure is being used.
+     *
+     * @param cluster
+     * @param index The index of the item, who's average distance is being calculated
+     * @return The average distance
      */
-    private double calculateAverageSimple(List<DataItem<T>> data, int index)
+    private double calculateAverageSimple(List<DataItem<T>> cluster, int index)
     {
         double total = 0;
-        for(int i = 0; i < data.size(); i++)
+        for(int i = 0; i < cluster.size(); i++)
         {
             if (index == i) 
             {
                 continue;
             }
-            total = total + dataInfo[0].getDistanceMeasure().getDistance(data.get(index).getData(), data.get(i).getData());            
+            total = total + dataInfo[0].getDistanceMeasure().getDistance(cluster.get(index).getData(), cluster.get(i).getData());            
         }
-        return total / data.size();
+        return total / cluster.size();
     }
     
     /**
-     * Multiple distance measures being used
+     * Calculates the average distance, when multiple distance measure is being used.
+     *
+     * @param cluster
+     * @param index The index of the item, who's average distance is being calculated
+     * @return The average distance
      */
-    private double calculateAverageComplex(List<DataItem<T>> data, int index)
+    private double calculateAverageComplex(List<DataItem<T>> cluster, int index)
     {
         double total = 0;
-        for(int i = 0; i < data.size(); i++)
+        for(int i = 0; i < cluster.size(); i++)
         {
             double subTotal = 0;
             int numberOfItems = 0;
@@ -95,13 +121,13 @@ abstract class DianaDistanceFunctions<T>
             {
                 continue;
             }
-            for(DataInformation info : dataInfo)
+            for(DistanceMeasureSelection distanceMeasure : dataInfo)
             {
-                for(String id : info.getIds())
+                for(String id : distanceMeasure.getIds())
                 {
                     try
                     {
-                        subTotal = subTotal + (info.getDistanceMeasure().getDistance(data.get(index).getHashMap().get(id), data.get(i).getHashMap().get(id)) * info.getWeight());
+                        subTotal = subTotal + (distanceMeasure.getDistanceMeasure().getDistance(cluster.get(index).getHashMap().get(id), cluster.get(i).getHashMap().get(id)) * distanceMeasure.getWeight());
                         numberOfItems = numberOfItems + 1;
                     }
                     catch(Exception ex) 
@@ -112,7 +138,7 @@ abstract class DianaDistanceFunctions<T>
             }
             total = total + (subTotal / numberOfItems);
         }
-        return total / data.size();
+        return total / cluster.size();
     }
 }
 

@@ -26,9 +26,6 @@ brew install sbt
 ```
 For other operating systems see : http://www.scala-sbt.org/download.html
 
-Build
-------
-
 The following command can be used to clean compile and run scavenger :
 
 ```
@@ -36,8 +33,8 @@ sbt clean compile run
 ```
 
 
-Compile and run
------------------
+Create and run JAR file
+-----------------------
 
 In order to run scavenger on mogon a jar file is required. 
 

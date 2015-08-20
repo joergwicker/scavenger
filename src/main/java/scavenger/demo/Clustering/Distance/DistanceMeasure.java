@@ -1,7 +1,9 @@
 package scavenger.demo.clustering.distance;
 
 
-
+/**
+ * All distance measures should implement DistanceMeasure
+ */
 interface DistanceMeasure<T>
 {
     

@@ -13,4 +13,4 @@ Open a new Command window (in the same directory) and run :
 ./runJobs
 ```
 
-Note : The scavenger.conf in this directory has the correct IP address for running from mogon.
+Note : The scavenger.conf in this directory has the correct IP address for running on mogon.

@@ -5,20 +5,38 @@ import java.util.List;
 import java.util.ArrayList;
 import java.lang.Math;
 
+
+/**
+ * Used to calculate the euclidean distance between two lists
+ */
 class EuclideanDistance implements DistanceMeasure<List<Double>>
 {
     private double maxDifference; // The maximum difference between two values
     
+    /**
+     * maxDifference is set to default value (1).
+     */
     public EuclideanDistance()
     {
         this.maxDifference = 1;
     }
     
+    /**
+     *
+     * @param maxDifference
+     */
     public EuclideanDistance(double maxDifference)
     {
         this.maxDifference = maxDifference;
     }
     
+    /**
+     *
+     * @param value1
+     * @param value2
+     *
+     * @return the euclidean distance between value1 and value2, normalised (between 0 and 1).
+     */
     public double getDistance(List<Double> value1, List<Double> value2)
     {
         if (value1.size() != value2.size())
@@ -33,7 +51,11 @@ class EuclideanDistance implements DistanceMeasure<List<Double>>
         return (Math.sqrt(total) / Math.sqrt(value1.size()) / maxDifference);
     }
     
-    public static void main(final String[] args)
+    
+    /**
+     * For testing
+     */
+   /* public static void main(final String[] args)
     {
         List list1 = new ArrayList<Double>() 
             {{
@@ -48,7 +70,7 @@ class EuclideanDistance implements DistanceMeasure<List<Double>>
             }};     
        EuclideanDistance e = new EuclideanDistance(10.0);
        System.out.println(e.getDistance(list1, list2));
-    }
+    }*/
 }
 
 

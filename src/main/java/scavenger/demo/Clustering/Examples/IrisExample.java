@@ -13,7 +13,7 @@ import java.io.IOException;
  * Example use of Diana 
  * 
  */
-class IrisExample
+class IrisExample implements java.io.Serializable
 {   
     public IrisExample()
     {        

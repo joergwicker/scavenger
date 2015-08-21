@@ -10,7 +10,7 @@ import java.util.Iterator;
  * 
  * @see DataItem
  */
-class DistanceMeasureSelection
+class DistanceMeasureSelection implements java.io.Serializable
 {
     private String id; // Same as Key in data HashMap, which is found in DataItem.
     private List<String> ids = null; // Allows the same DistanceMeasure and weighting to be used for multiple values/features

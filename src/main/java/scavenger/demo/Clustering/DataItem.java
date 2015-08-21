@@ -12,7 +12,7 @@ import java.util.HashMap;
  *
  * @author Helen Harman
  */
-class DataItem<T>
+class DataItem<T> implements java.io.Serializable
 {
     private String id = "not_set";
     private List<T> dataList = null;

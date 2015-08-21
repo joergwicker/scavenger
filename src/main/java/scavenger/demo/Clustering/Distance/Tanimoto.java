@@ -5,7 +5,7 @@ import java.util.BitSet;
 /**
  * Used to calculate the Tanimoto distance between two BitSets
  */
-class Tanimoto implements DistanceMeasure<BitSet>
+class Tanimoto extends DistanceMeasure<BitSet>
 {
     // Edited version of : http://showme.physics.drexel.edu/usefulchem/Software/Drexel/Cheminformatics/Java/cdk/src/org/openscience/cdk/similarity/Tanimoto.java
     /**
@@ -14,7 +14,7 @@ class Tanimoto implements DistanceMeasure<BitSet>
      * @param value2
      * @return Tanimoto distance between value1 and value2
      */
-    public double getDistance(BitSet value1, BitSet value2)
+    public double calculateDistance(BitSet value1, BitSet value2)
     {
         if (value1.size() != value2.size()) 
         {

@@ -21,7 +21,9 @@ import akka.util.Timeout;
 import static akka.dispatch.Futures.future;
 import static akka.dispatch.Futures.sequence;
 
-
+/**
+ * A basic example of how to create a Local Scavenger Java application.
+ */
 class LocalDemoJ extends LocalScavengerAppJ
 {
     ScavengerFunction<Integer> f0 = new ScavengerFunction<Integer>()
@@ -52,11 +54,15 @@ class LocalDemoJ extends LocalScavengerAppJ
     {
         Computation<Integer> computationData = scavengerComputation.apply("Computation_1", 2).cacheGlobally();
         Algorithm<Integer, Integer> algorithm = scavengerAlgorithm.expensive("id", f0).cacheGlobally();
+        
         Computation<Integer> computation1 = algorithm.apply(computationData);
+        Computation<Integer> computation2 = algorithm.apply(computation1);
         
+        // Submit the computations to scavenger
         Future<Integer> futureS = scavengerContext().submit(computation1);
-        Future<Integer> futureS2 = scavengerContext().submit(algorithm.apply(computation1));
+        Future<Integer> futureS2 = scavengerContext().submit(computation2);
         
+        // Combind all the futures into one
         List<Future<Integer>> futures = new ArrayList<Future<Integer>>();
         futures.add(futureS);
         futures.add(futureS2);

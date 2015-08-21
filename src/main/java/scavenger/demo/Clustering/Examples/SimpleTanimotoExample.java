@@ -14,7 +14,7 @@ import java.util.BitSet;
  * A basic example of using Tanimoto distance, when performing Diana clustering.
  *
  */
-class SimpleTanimotoExample
+class SimpleTanimotoExample implements java.io.Serializable
 {   
     public SimpleTanimotoExample()
     {

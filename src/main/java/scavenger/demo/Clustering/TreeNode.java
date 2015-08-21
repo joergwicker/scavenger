@@ -5,7 +5,7 @@ import java.util.List;
 /**
  * A node within the cluster hierarchy.
  */
-class TreeNode<T>
+class TreeNode<T> implements java.io.Serializable
 {
     private List<DataItem<T>> data;
     private TreeNode parent;

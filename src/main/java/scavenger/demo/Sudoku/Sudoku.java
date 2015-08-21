@@ -312,7 +312,7 @@ class Sudoku extends ScavengerAppJ //LocalScavengerAppJ
                     ScavengerFunction<Location> fillLocation = new FindPossibleValues(board);
                     Algorithm<Location, Location> algorithm = scavengerAlgorithm.expensive("id", fillLocation).cacheGlobally();
                     Location loc = new Location(i, j, board.get(i).get(j));
-                    Computation<Location> computationData = scavengerComputation.apply("Computation_" + i + j, loc).cacheGlobally();
+                    Computation<Location> computationData = scavengerComputation.apply("Computation_" + i + j + board, loc).cacheGlobally();
                     futures.add(scavengerContext().submit(algorithm.apply(computationData)));
                 }
             }

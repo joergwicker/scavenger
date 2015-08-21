@@ -9,7 +9,7 @@ import java.lang.Math;
 /**
  * Used to calculate the euclidean distance between two lists
  */
-class EuclideanDistance implements DistanceMeasure<List<Double>>
+class EuclideanDistance extends DistanceMeasure<List<Double>>
 {
     private double maxDifference; // The maximum difference between two values
     
@@ -37,7 +37,7 @@ class EuclideanDistance implements DistanceMeasure<List<Double>>
      *
      * @return the euclidean distance between value1 and value2, normalised (between 0 and 1).
      */
-    public double getDistance(List<Double> value1, List<Double> value2)
+    public double calculateDistance(List<Double> value1, List<Double> value2)
     {
         if (value1.size() != value2.size())
         {

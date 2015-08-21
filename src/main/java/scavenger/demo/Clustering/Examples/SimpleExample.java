@@ -13,7 +13,7 @@ import java.io.IOException;
  * A basic example of using Euclidean distance, when performing Diana clustering.
  *
  */
-class SimpleExample
+class SimpleExample implements java.io.Serializable
 {   
     public SimpleExample()
     {

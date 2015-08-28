@@ -1,5 +1,5 @@
-package scavenger.demo.clustering.distance;
-
+package scavenger.demo.clustering;
+import scavenger.demo.clustering.distance.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.HashMap;
@@ -10,7 +10,7 @@ import java.util.Iterator;
  * 
  * @see DataItem
  */
-class DistanceMeasureSelection implements java.io.Serializable
+public class DistanceMeasureSelection implements java.io.Serializable
 {
     private String id; // Same as Key in data HashMap, which is found in DataItem.
     private List<String> ids = null; // Allows the same DistanceMeasure and weighting to be used for multiple values/features

@@ -19,8 +19,9 @@ import java.util.concurrent.Callable;
 public abstract class ScavengerFunction<X> extends AbstractFunction2<X, Context, Future<X>> implements java.io.Serializable, Callable<X>
 {
     protected X value; // what the computation will be performed on
-    protected Context ctx; // the context to submit jobs and futures to
-    
+    protected transient Context ctx; // the context to submit jobs and futures to
+    protected package$ scavengerAlgorithm = package$.MODULE$; // @see ScavengerAppJ                                                              
+    protected Computation$ scavengerComputation = Computation$.MODULE$;
     /**
      * Creates the Future which is submitted to scavenger
      * 

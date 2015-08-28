@@ -1,11 +1,11 @@
 package scavenger.demo.clustering.distance;
-
+import scavenger.demo.clustering.*;
 import java.util.BitSet;
 
 /**
  * Used to calculate the Tanimoto distance between two BitSets
  */
-class Tanimoto extends DistanceMeasure<BitSet>
+public class Tanimoto extends DistanceMeasure<BitSet>
 {
     // Edited version of : http://showme.physics.drexel.edu/usefulchem/Software/Drexel/Cheminformatics/Java/cdk/src/org/openscience/cdk/similarity/Tanimoto.java
     /**

@@ -1,9 +1,10 @@
-package scavenger.demo.clustering.distance;
-
+package scavenger.demo.clustering;
+import scavenger.demo.clustering.distance.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Comparator;
 
 import scavenger.app.ScavengerAppJ;
 
@@ -26,16 +27,54 @@ import static akka.dispatch.Futures.future;
 import static akka.dispatch.Futures.sequence;
 
 /**
- *  Holds the average and diameter calculations for Diana.
+ *  Holds the average and diameter calculations. (Methods that both Diana and CreateNextSplinter might use)
  *
  */
-abstract class DianaDistanceFunctions<T>  extends ScavengerAppJ implements java.io.Serializable
+public class DianaDistanceFunctions<T> implements java.io.Serializable
 {
-    protected DistanceMeasureSelection[] dataInfo;
+    private DistanceMeasureSelection[] dataInfo;
+    private int numberOfStartSplitNodes = 0;
     
-    protected DianaDistanceFunctions()
+    private DiameterMeasure distanceDiameter = DiameterMeasure.TRIMMED_MEAN;
+    private int trimmedMeanPercent = 10;
+    
+    
+    /**
+     *
+     * @param dataInfo
+     * @param numberOfStartSplitNodes
+     * @param distanceDiameter
+     */
+    public DianaDistanceFunctions(DistanceMeasureSelection[] dataInfo, int numberOfStartSplitNodes, DiameterMeasure distanceDiameter )
     {
-        super();
+        this.dataInfo = dataInfo;
+        this.numberOfStartSplitNodes = numberOfStartSplitNodes;
+        this.distanceDiameter = distanceDiameter;
+    }
+    
+    /**
+     * Finds the cluster with the largest diameter 
+     * 
+     * @param clusters A list of the TreeNodes who's diameter will be checked
+     * @return index of the cluster with the largest diameter
+     */
+    public int getClusterIndexWithLargestDiameter(List<TreeNode<T>> clusters)
+    {
+        double largestDiameter = 0.0;
+        int largestDiameterIndex = 0;
+        
+        List<Double> diameters = calculateClusterDiameters(clusters);
+        for(int j = 0; j < diameters.size(); j++)
+        {
+            double diameter = diameters.get(j);
+            if (diameter > largestDiameter)
+            {
+                largestDiameter = diameter;
+                largestDiameterIndex = j;
+            }
+        }
+        //System.out.println("largestDiameterIndex : " + largestDiameterIndex);
+        return largestDiameterIndex;
     }
     
     /**
@@ -45,61 +84,71 @@ abstract class DianaDistanceFunctions<T>  extends ScavengerAppJ implements java.
      * @param clusters The clusters who's diameters are to be calculated
      * @return the diameters of the clusters
      */
-    protected List<Double> calculateClusterDiameters(List<TreeNode<T>> clusters)
+    public List<Double> calculateClusterDiameters(List<TreeNode<T>> clusters)
     {
-        System.out.println("calculateClusterDiameter : make future" );
         List<Double> distances = new ArrayList<Double>(clusters.size());
         
-        List<Future<Double>> futures = new ArrayList<Future<Double>>();
         for(int j = 0; j < clusters.size(); j++)
         {
-            Double distance = 0.0;
-            // create the scavenger algorithm
-            ScavengerFunction<Double> run = new ClusterDiameter(clusters.get(j).getData());
-            Algorithm<Double, Double> algorithm = scavengerAlgorithm.expensive("ClusterDiameter", run).cacheGlobally();
-            
-            // create the scavenger computation (data) that will be passed to the algorithm
-            Computation<Double> computationData = scavengerComputation.apply("distance"+clusters.get(j).getData(), distance).cacheGlobally();        
-            
-            // tell scavenger that we want to apply to algorithm to the computation (data)
-            Computation<Double> computation1 = algorithm.apply(computationData);
-            
-            // submit the job to scavenger
-            Future<Double> future = scavengerContext().submit(computation1);
-            futures.add(future);
-        }
-        
-        // wait for all the diameters to be calculated. 
-        Future<Iterable<Double>> allTogether = Futures.sequence(futures, scavengerContext().executionContext());
-        try
-        {
-            distances = (List<Double>)Await.result(allTogether, (new Timeout(Duration.create(40, "seconds")).duration()));
-        }
-        catch(Exception e) 
-        { 
-            e.printStackTrace(); 
-        }
-        
+            distances.add(calculateClusterDiameter(clusters.get(j).getData()));
+        }        
         return distances;    
     }
     
-    /**
-     * Calculates the diameter of a cluster. 
-     * The diameter of a cluster is the largest average distance between a DataItem and the other DataItems in the cluster. 
+    /** 
+     * Gets a list of all nodes, which are not leaf nodes.
+     * These are the nodes at which a decision has been made
      *
-     * @see calculateClusterDiameters(List<TreeNode<T>> clusters)
+     * @param root
+     * @return list of tree nodes
      */
-    class ClusterDiameter extends ScavengerFunction<Double> 
+    public List<TreeNode<T>> getNodeListWithoutLeafNodes(TreeNode<T> root)
     {
-        private List<DataItem<T>> cluster;
-        public ClusterDiameter(List<DataItem<T>> cluster)
-        {
-            this.cluster = cluster;
-        }
+        List<TreeNode<T>> noneLeafNodes = new ArrayList<TreeNode<T>>();
         
-        public Double call()
-        { 
-            System.out.println("ClusterDiameter : run future" );
+        if (root.getChildLeft() != null)
+        {            
+            noneLeafNodes.addAll(getNodeListWithoutLeafNodes(root.getChildLeft()));
+            noneLeafNodes.addAll(getNodeListWithoutLeafNodes(root.getChildRight()));
+            noneLeafNodes.add(root);
+        }
+        return noneLeafNodes;
+    }
+    
+    /**
+     *
+     * @param tree Initially should be the root node
+     *
+     * @return The leaf nodes
+     */
+    public List<TreeNode<T>> findLeafNodes(TreeNode<T> tree) 
+    {
+        List<TreeNode<T>> leaves = new ArrayList<TreeNode<T>>();
+        
+        if (tree.getChildLeft() == null)
+        {
+            leaves.add(tree);
+        }
+        else
+        {
+            leaves.addAll(findLeafNodes(tree.getChildLeft()) );
+            leaves.addAll(findLeafNodes(tree.getChildRight()) );
+        }
+        return leaves;
+    }
+    
+    /**
+     * Max distance between two elements in a cluster
+     * Uses scavenger. Means that if the diameter of a cluster has already been calculated it is not re-calculated.
+     * 
+     * @param cluster The cluster who's diameter is to be calculated
+     * @return the diameter of the cluster
+     */
+    public double calculateClusterDiameter(List<DataItem<T>> cluster)
+    {
+        if(distanceDiameter == DiameterMeasure.LARGEST_AVERAGE_DISTANCE)
+        {
+            // This calculates the max average distance
             double maxDistance = 0.0;
             
             for (int i = 0; i < cluster.size(); i++)
@@ -112,53 +161,35 @@ abstract class DianaDistanceFunctions<T>  extends ScavengerAppJ implements java.
                 }
             }    
             return maxDistance;
-        }        
-    }
-    
-    /**
-     * Max distance between two elements in a cluster
-     * Uses scavenger. Means that if the diameter of a cluster has already been calculated it is not re-calculated.
-     * 
-     * @param cluster The cluster who's diameter is to be calculated
-     * @return the diameter of the cluster
-     */
-    /*protected double calculateClusterDiameter(List<DataItem<T>> cluster)
-    {
-        System.out.println("calculateClusterDiameter : make future" );
-        double distance = 0.0;
-        ScavengerFunction<Double> run = new ClusterDiameter(cluster);
-        Computation<Double> computationData = scavengerComputation.apply("distance"+cluster, distance).cacheGlobally();
-        Algorithm<Double, Double> algorithm = scavengerAlgorithm.expensive("ClusterDiameter", run).cacheGlobally();
-        Computation<Double> computation1 = algorithm.apply(computationData);
-        Future<Double> future = scavengerContext().submit(computation1);
-        
-        try
-        {
-            distance = (Double)Await.result(future, (new Timeout(Duration.create(40, "seconds")).duration()));
         }
-        catch(Exception e) 
-        { 
-            e.printStackTrace(); 
-        }
-        return distance;
-        
-        /
-        double maxDistance = 0.0;
-        
-        for (int i = 0; i < cluster.size(); i++)
-        {
-            double distance = calculateAverage(cluster, i);
-
-            if (distance > maxDistance)
+        else //if(distanceDiameter == DiameterMeasure.TRIMMED_MEAN)
+        {            
+            // calculates the trimmed mean
+            //System.out.println("calculateClusterDiameter cluster.size() : " + cluster.size());
+            List<Double> allAverages = new ArrayList<Double>();        
+            for (int i = 0; i < cluster.size(); i++)
             {
-                maxDistance = distance;
+                double average = calculateAverage(cluster, i); 
+                // insert the average using binarySearch (allAverages is a sorted list) 
+                int index = java.lang.Math.abs(java.util.Collections.binarySearch(allAverages, average))-1;
+                if (index < 0)
+                {
+                    index = 0;
+                }
+                allAverages.add(index, average);
             }
-        }    
-        return maxDistance;/
-    }*/
-    
-    
-    
+            if(allAverages.size() > 1)
+            {
+                allAverages = allAverages.subList(0, (allAverages.size()/trimmedMeanPercent)+1);
+            }
+            double totalDistance = 0.0;
+            for (Double distance : allAverages)
+            {
+                totalDistance = totalDistance + distance;
+            }
+            return totalDistance/allAverages.size();
+        }
+    }
 
     
     /**
@@ -168,7 +199,7 @@ abstract class DianaDistanceFunctions<T>  extends ScavengerAppJ implements java.
      * @param cluster 
      * @return The index of the item with the highest average distance
      */
-    protected int getIndexWithHighestAverageIndex(List<DataItem<T>> cluster)
+    public int getIndexWithHighestAverageIndex(List<DataItem<T>> cluster)
     {
         int indexOfHighestAverage = 0;
         double highestAverege = 0;
@@ -184,6 +215,11 @@ abstract class DianaDistanceFunctions<T>  extends ScavengerAppJ implements java.
         return indexOfHighestAverage;
     }
     
+    
+    
+    
+    
+    
     /**
      * Runs calculateAverageSimple if only one distance measure is being used; else runs calculateAverageComplex
      * 
@@ -191,7 +227,7 @@ abstract class DianaDistanceFunctions<T>  extends ScavengerAppJ implements java.
      * @param index The index of the item, who's average distance is being calculated
      * @return The average distance
      */ 
-    protected double calculateAverage(List<DataItem<T>> cluster, int index)
+    public double calculateAverage(List<DataItem<T>> cluster, int index)
     {
         if (dataInfo.length == 1 )
         {
@@ -219,11 +255,12 @@ abstract class DianaDistanceFunctions<T>  extends ScavengerAppJ implements java.
             {
                 continue;
             }
-            //dataInfo[0].getDistanceMeasure().setScavengerContext(scavengerContext());//TODO rm, use singleton
-            total = total + dataInfo[0].getDistanceMeasure().getDistance(cluster.get(index).getData(), cluster.get(i).getData());            
+            total = total + dataInfo[0].getDistanceMeasure().getDistance(cluster.get(index).getData(), cluster.get(i).getData()); 
+            //total = total + getDistance(cluster.get(index).getData(), cluster.get(i).getData(), dataInfo[0].getDistanceMeasure());            
         }
         return total / cluster.size();
     }
+    
     
     /**
      * Calculates the average distance, when multiple distance measure is being used.
@@ -234,11 +271,14 @@ abstract class DianaDistanceFunctions<T>  extends ScavengerAppJ implements java.
      */
     private double calculateAverageComplex(List<DataItem<T>> cluster, int index)
     {
+        //System.out.println("calculateAverageComplex called");
         double total = 0;
+        int numberOfItems = 0;
+        List<Future<Double>> futures = new ArrayList<Future<Double>>();
         for(int i = 0; i < cluster.size(); i++)
         {
             double subTotal = 0;
-            int numberOfItems = 0;
+            numberOfItems = 0;
             if (index == i) 
             {
                 continue;
@@ -249,8 +289,9 @@ abstract class DianaDistanceFunctions<T>  extends ScavengerAppJ implements java.
                 {
                     try
                     {
-                        //distanceMeasure.getDistanceMeasure().setScavengerContext(scavengerContext());//TODO rm, use singleton
+                    
                         subTotal = subTotal + (distanceMeasure.getDistanceMeasure().getDistance(cluster.get(index).getHashMap().get(id), cluster.get(i).getHashMap().get(id)) * distanceMeasure.getWeight());
+                       // subTotal = subTotal + getDistance(cluster.get(index).getHashMap().get(id), cluster.get(i).getHashMap().get(id), distanceMeasure.getDistanceMeasure()) * distanceMeasure.getWeight();
                         numberOfItems = numberOfItems + 1;
                     }
                     catch(Exception ex) 
@@ -261,8 +302,106 @@ abstract class DianaDistanceFunctions<T>  extends ScavengerAppJ implements java.
             }
             total = total + (subTotal / numberOfItems);
         }
+        
         return total / cluster.size();
     }
-}
 
+    /**
+     * Used by getIndexFurthestPoints() to create an ordered list of pairs
+     */
+    class DistanceData 
+    {
+        protected DistanceData(Double distance, Integer index)
+        {
+            this.distance = distance;
+            this.index = index;
+        }
+        Double distance;
+        Integer index;
+    }
+    
+    /**
+     *
+     * @param cluster
+     * @return The points with the largest average distance
+     */  
+    public List<Integer> getIndexFurthestPoints(TreeNode<T> cluster)
+    {
+        List<Integer> indexesOfHighestAverage = new ArrayList<Integer>();
+        List<Double> highestAverages = new ArrayList<Double>();
+        System.out.println("getIndexFurthestPoints cluster.getData() : " + cluster.getData().size());
+        List<DistanceData> allAverages = new ArrayList<DistanceData>();
+        for (int i = 0; i < cluster.getData().size(); i++)
+        {
+            
+            double average = calculateAverage(cluster.getData(), i); 
+            if (allAverages.size() == 0) 
+            {
+                allAverages.add(new DistanceData(average, i));
+            } 
+            else if (allAverages.get(0).distance > average) 
+            {
+                allAverages.add(0, new DistanceData(average, i));
+            } 
+            else if (allAverages.get(allAverages.size() - 1).distance < average) 
+            {
+                allAverages.add(allAverages.size(), new DistanceData(average, i));
+            } 
+            else 
+            {
+                int j = 0;
+                while (allAverages.get(j).distance < average) //TODO make more efficent
+                {
+                    j++;
+                }
+                allAverages.add(j, new DistanceData(average, i));
+            }
+        }
+        for (int i = 0; (i < numberOfStartSplitNodes) && (i < allAverages.size()); i++)
+        {
+            indexesOfHighestAverage.add(allAverages.get(i).index);    
+        }        
+        return indexesOfHighestAverage;
+    }
+    
+    
+    
+    //// Distance calculated using scavenger (so results can be cached). Currently to unreliable
+   /* protected transient Context scavengerContext;
+    protected package$ scavengerAlgorithm = package$.MODULE$; // @see ScavengerAppJ                                                              
+    protected Computation$ scavengerComputation = Computation$.MODULE$;
+    public void setScavengerContext(Context scavengerContext)
+    {
+        this.scavengerContext = scavengerContext;
+    }
+    public double getDistance(Object value1, Object value2, DistanceMeasure distanceMeasure)
+    {
+        //System.out.println("getDistance()");
+        double distance = 0.0;
+
+        distanceMeasure.setValues(value1, value2);
+        Computation<Double> computationData = scavengerComputation.apply("Values_"+value1 + "_" + value2, distance);//.cacheLocally().backUp();
+        Algorithm<Double, Double> algorithm = scavengerAlgorithm.cheap("calculateDistance", distanceMeasure);
+        Computation<Double> computation = algorithm.apply(computationData).cacheLocally();//cacheGlobally(); 
+                                                                            // at the moment cacheGlobally() caches on the Master,
+                                                                            // worker nodes do not have access to the master's cache.
+                                                                            // So, currently (in worst case) every worker will calculate 
+                                                                            // the distance between two values once.
+        Future<Double> future = scavengerContext.submit(computation);
+        
+        try
+        {
+            distance = (Double)Await.result(future, (new Timeout(Duration.create(40, "seconds")).duration()));
+        }
+        catch(Exception e) 
+        { 
+            e.printStackTrace(); 
+        }
+        
+        //System.out.println("getDistance() distance : " + distance);
+        return distance;
+    }*/
+    
+    
+}
 

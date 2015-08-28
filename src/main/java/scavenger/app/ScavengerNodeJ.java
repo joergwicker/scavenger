@@ -1,10 +1,12 @@
 package scavenger.app;
 
-import akka.actor.*;
+import akka.actor.ActorSystem;
+import akka.actor.ActorPath;
 import com.typesafe.config.Config;
 import scavenger.backend.seed.Seed;
 import scavenger.backend.seed.*;
 import scavenger.backend.worker.*;
+import scavenger.*;
 /** 
   * Allows a ScanvengerNode to be created in Java
   * Used for the general Worker, Seed and Master code.
@@ -20,6 +22,8 @@ abstract class ScavengerNodeJ implements ScavengerNode {
     private ActorSystem actorSystem;
     Worker$ worker = Worker$.MODULE$;
     Seed$ seed = Seed$.MODULE$; 
+    //protected package$ scavengerAlgorithm = package$.MODULE$; // @see ScavengerAppJ                                                              
+    //protected Computation$ scavengerComputation = Computation$.MODULE$; 
     
     /**
      * Overrides the = operator for ScavengerNode.actorSystem

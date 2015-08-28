@@ -1,5 +1,5 @@
-package scavenger.demo.clustering.distance;
-
+package scavenger.demo.clustering;
+import scavenger.demo.clustering.distance.*;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -12,7 +12,7 @@ import java.util.HashMap;
  *
  * @author Helen Harman
  */
-class DataItem<T> implements java.io.Serializable
+public class DataItem<T> implements java.io.Serializable
 {
     private String id = "not_set";
     private List<T> dataList = null;

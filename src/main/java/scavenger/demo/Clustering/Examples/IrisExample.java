@@ -1,4 +1,7 @@
-package scavenger.demo.clustering.distance;
+package scavenger.demo.clustering.example;
+
+import scavenger.demo.clustering.distance.*;
+import scavenger.demo.clustering.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,6 +15,8 @@ import java.io.IOException;
 /**
  * Example use of Diana 
  * 
+ * 
+ * https://archive.ics.uci.edu/ml/machine-learning-databases/iris/iris.names
  */
 class IrisExample implements java.io.Serializable
 {   

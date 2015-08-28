@@ -1,5 +1,7 @@
-package scavenger.demo.clustering.distance;
+package scavenger.demo.clustering.example;
 
+import scavenger.demo.clustering.distance.*;
+import scavenger.demo.clustering.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;

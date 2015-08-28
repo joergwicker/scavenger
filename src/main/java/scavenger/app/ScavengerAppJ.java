@@ -25,15 +25,25 @@ public abstract class ScavengerAppJ extends DistributedScavengerApp
     {
         super();
         
-        scavengerInit();
-        try // must sleep after scavengerInit() is called.
+        
+    }
+    
+    protected boolean scavengerStarted = false;
+    public void startScavenger()
+    {
+        if (!scavengerStarted)
         {
-            Thread.sleep(3000);
+            scavengerInit();
+            try // must sleep after scavengerInit() is called.
+            {
+                Thread.sleep(3000);
+            }
+            catch (Exception e) 
+            { 
+                e.printStackTrace();
+            } 
+            scavengerStarted = true;
         }
-        catch (Exception e) 
-        { 
-            e.printStackTrace();
-        } 
     }
 }
 

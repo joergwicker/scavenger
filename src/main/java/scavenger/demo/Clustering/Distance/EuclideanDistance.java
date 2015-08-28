@@ -1,5 +1,5 @@
 package scavenger.demo.clustering.distance;
-
+import scavenger.demo.clustering.*;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ArrayList;
@@ -9,7 +9,7 @@ import java.lang.Math;
 /**
  * Used to calculate the euclidean distance between two lists
  */
-class EuclideanDistance extends DistanceMeasure<List<Double>>
+public class EuclideanDistance extends DistanceMeasure<List<Double>>
 {
     private double maxDifference; // The maximum difference between two values
     

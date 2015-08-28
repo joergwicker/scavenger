@@ -1,5 +1,5 @@
 package scavenger.demo.clustering.distance;
-
+import scavenger.demo.clustering.*;
 import scavenger.*;
 
 import java.util.concurrent.ExecutorService;
@@ -20,52 +20,30 @@ import static akka.dispatch.Futures.sequence;
 /**
  * All distance measures should implement DistanceMeasure
  */
-abstract class DistanceMeasure<T> implements java.io.Serializable// extends ScavengerFunction<Double>
+public abstract class DistanceMeasure<T> implements java.io.Serializable//extends ScavengerFunction<Double>//implements java.io.Serializable//
 {
     public double getDistance(T value1, T value2)
     {
         return calculateDistance(value1, value2);
     }
+    
+    
     public abstract double calculateDistance(T value1, T value2);
-    
-    
     
     // experimented with using scavenger to calculate the distance. TODO rm and change this back to interface.
    /* private T value1;
     private T value2;
-    private package$ scavengerAlgorithm = package$.MODULE$;
-    private Computation$ scavengerComputation = Computation$.MODULE$;
-    private Context scavengerContext = null;
     
-    public void setScavengerContext(Context scavengerContext)
-    {
-        this.scavengerContext = scavengerContext;
-    }
     
-    public double getDistance(T value1, T value2)
+    public void setValues(T value1, T value2)
     {
-        double distance = 0.0;
         this.value1 = value1;
         this.value2 = value2;
-        //ScavengerFunction<Double> run = new CreateNewSpliter<T>();
-        Computation<Double> computationData = scavengerComputation.apply("Values_"+value1 + "_" + value2, distance).cacheGlobally();
-        Algorithm<Double, Double> algorithm = scavengerAlgorithm.expensive("calculateDistance", this).cacheGlobally();
-        Computation<Double> computation1 = algorithm.apply(computationData);
-        Future<Double> future = scavengerContext.submit(computation1);
-        
-        try
-        {
-            distance = (Double)Await.result(future, (new Timeout(Duration.create(40, "seconds")).duration()));
-        }
-        catch(Exception e) 
-        { 
-            e.printStackTrace(); 
-        }
-        return distance;
     }
     
     public Double call()
     {
+        System.out.println("calculateDistance called");
         return calculateDistance(value1, value2);
     }*/
     

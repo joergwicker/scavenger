@@ -1,5 +1,7 @@
-package scavenger.demo.clustering.distance;
+package scavenger.demo.clustering.example;
 
+import scavenger.demo.clustering.distance.*;
+import scavenger.demo.clustering.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
@@ -24,21 +26,21 @@ class SimpleExample implements java.io.Serializable
         List list1 = new ArrayList<Double>() 
             {{
                 add(5.0);
-                add(8.0);
+                add(7.0);
                 add(6.0);
             }};
                 
         List list2 = new ArrayList<Double>() 
             {{
                 add(2.0);
-                add(9.0);
+                add(6.0);
                 add(3.0);
             }};
             
         List list3 = new ArrayList<Double>() 
             {{
                 add(4.0);
-                add(9.0);
+                add(4.0);
                 add(5.0);
             }};
         List list4 = new ArrayList<Double>() 
@@ -55,9 +57,15 @@ class SimpleExample implements java.io.Serializable
             }};
         List list6 = new ArrayList<Double>() 
             {{
-                add(9.0);
+                add(5.0);
                 add(7.0);
                 add(3.0);
+            }};
+        List list7 = new ArrayList<Double>() 
+            {{
+                add(9.0);
+                add(9.0);
+                add(9.0);
             }};
             
         DataItem<Integer> item1 = new DataItem<Integer>("1", list1);
@@ -76,9 +84,16 @@ class SimpleExample implements java.io.Serializable
         data.add(item5);
         data.add(item6);
         
-        // 4. Perform clustering
+        // 4.1 Set the root and diana
         TreeNode<Integer> input = new TreeNode<Integer>(data);
-        Diana<Integer> diana = new Diana<Integer>(distanceMeasure); 
+        Diana<Integer> diana = new Diana<Integer>(distanceMeasure);
+        
+        // 4.2 change the defaults
+        diana.setErrorCalculation(new SimpleErrorCalculation(0.04));
+        diana.setNumberOfStartSplitNodes(4);
+        diana.setDiameterMeasure(DiameterMeasure.LARGEST_AVERAGE_DISTANCE);
+        
+        // 5. Perform the clustering
         TreeNode<Integer> node = diana.runClustering(input, 3);
         diana.endClustering();
         

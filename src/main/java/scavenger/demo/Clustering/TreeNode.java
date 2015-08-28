@@ -18,11 +18,6 @@ public class TreeNode<T> implements java.io.Serializable
     private int splitNumber;    
     private List<Integer> toBeSplitOn = new ArrayList<Integer>(); // indexes of items
 
-    public int getSplitNumber()
-    {
-        return splitNumber;
-    }
-
     /**
      * Constructor for the root node.
      *
@@ -31,8 +26,7 @@ public class TreeNode<T> implements java.io.Serializable
     public TreeNode(List<DataItem<T>> data)
     {
         this.data = data;
-        splitNumber = 0;
-        
+        splitNumber = 0;        
     }
     
     /**
@@ -47,9 +41,10 @@ public class TreeNode<T> implements java.io.Serializable
         this.parent = parent;
     }
     
-    public void setToBeSplitOn(List<Integer> toBeSplitOn)
+    public void setUpSplinterInfo(List<Integer> toBeSplitOn)
     {
         this.toBeSplitOn = toBeSplitOn;
+        splitNumber = countSplits(getRoot());
     }
     
     public int countSplits(TreeNode<T> root)
@@ -65,44 +60,6 @@ public class TreeNode<T> implements java.io.Serializable
         return count;
     }
     
-    public TreeNode<T> getRoot()
-    {
-        TreeNode<T> node = this;
-        while (node.getParent() != null)
-        {
-            node = node.getParent();
-        }
-        return node;    
-    }
-    
-    public void removeHigherSplitNodes(TreeNode<T> root)
-    {
-        System.out.println("removeHigherSplitNodes");
-        if ((root.getChildLeft() != null) && (root.getChildLeft().getSplitNumber() > this.splitNumber))
-        {
-            System.out.println("Set null");
-            root.setChildren(null, null);
-        }
-        else if (root.getChildLeft() != null)
-        {
-            System.out.println("call removeHigherSplitNodes");
-            removeHigherSplitNodes(root.getChildLeft());
-            removeHigherSplitNodes(root.getChildRight());
-        }
-    }
-    
-    /**
-     * @return 
-     */ 
-    public List<DataItem<T>> getData()
-    {
-        return data;
-    }
-    
-    public void calculateSplits()
-    {
-        splitNumber = countSplits(getRoot());
-    }
     
     /**
      *
@@ -113,6 +70,11 @@ public class TreeNode<T> implements java.io.Serializable
     {
         this.childLeft = childLeft;
         this.childRight = childRight;
+    }
+    
+    public void setToBeSplitOn(List<Integer> toBeSplitOn)
+    {
+        this.toBeSplitOn = toBeSplitOn;
     }
     
     //// Getters //// 
@@ -138,6 +100,32 @@ public class TreeNode<T> implements java.io.Serializable
         return toBeSplitOn;
     }
     
+    /**
+     * Finds and returns the root node
+     */
+    public TreeNode<T> getRoot()
+    {
+        TreeNode<T> node = this;
+        while (node.getParent() != null)
+        {
+            node = node.getParent();
+        }
+        return node;    
+    }    
+    
+    /**
+     * @return 
+     */ 
+    public List<DataItem<T>> getData()
+    {
+        return data;
+    }
+    
+    public int getSplitNumber()
+    {
+        return splitNumber;
+    }
+    
     /////////////////
     
     public void print() 
@@ -149,4 +137,19 @@ public class TreeNode<T> implements java.io.Serializable
         System.out.println(" : " + splitNumber);
     }
     
+    
+    
+    /* public void removeHigherSplitNodes(TreeNode<T> root)
+    {
+        if ((root.getChildLeft() != null) && (root.getChildLeft().getSplitNumber() > this.splitNumber))
+        {
+            System.out.println("Set null");
+            root.setChildren(null, null);
+        }
+        else if (root.getChildLeft() != null)
+        {
+            removeHigherSplitNodes(root.getChildLeft());
+            removeHigherSplitNodes(root.getChildRight());
+        }
+    }*/    
 }

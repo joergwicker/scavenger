@@ -1,12 +1,15 @@
-package scavenger.demo.clustering.distance;
+package scavenger.demo.clustering.errorCalculation;
+
 import scavenger.demo.clustering.*;
+import scavenger.demo.clustering.distance.*;
+
 import java.util.List;
 import java.util.ArrayList;
 import java.util.HashMap;
 
 
 /**
- * 
+ * Used to check if the highest cluster diameter is above the given (maxDiameterThreshold) threshold.
  *
  * @author Helen Harman
  */
@@ -20,6 +23,11 @@ public class SimpleErrorCalculation<T> implements ErrorCalculation<T>, java.io.S
         this.maxDiameterThreshold = maxDiameterThreshold;
     }
     
+    /**
+     *
+     * @param clusters List of the leaf clusters
+     * @param dianaDistanceFunctions Contains the diameter and average distance calculations
+     */
     @Override
     public boolean isClustered(List<TreeNode<T>> clusters, DianaDistanceFunctions diana)
     {
@@ -33,6 +41,11 @@ public class SimpleErrorCalculation<T> implements ErrorCalculation<T>, java.io.S
         }
     }
     
+    /**
+     *
+     * @param clusters List of the leaf clusters
+     * @param dianaDistanceFunctions Contains the diameter and average distance calculations
+     */
     public double calculateError(List<TreeNode<T>> clusters, DianaDistanceFunctions diana)
     {
         maxClusterDiameter = 0;

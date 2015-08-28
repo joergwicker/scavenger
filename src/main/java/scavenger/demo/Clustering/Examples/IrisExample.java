@@ -1,4 +1,4 @@
-package scavenger.demo.clustering.example;
+package scavenger.demo.clustering.examples;
 
 import scavenger.demo.clustering.distance.*;
 import scavenger.demo.clustering.*;
@@ -53,7 +53,7 @@ class IrisExample implements java.io.Serializable
             while (scan.hasNext())
             {
                 String temp = scan.next();
-                String[] splitString = temp.split(",");
+                final String[] splitString = temp.split(",");
                 HashMap<String, List<Double>> map = new HashMap<String, List<Double>>(); // create a HashMap
                 
                 List<Double> list1 = new ArrayList<Double>()
@@ -99,26 +99,7 @@ class IrisExample implements java.io.Serializable
         diana.endClustering();
         
         // 5. Print the results
-        this.printTree(node); 
-    }
-    
-    /**
-     * 
-     */
-    private void printTree(TreeNode<List<Double>> node)
-    {
-        Queue<TreeNode> queue = new LinkedList<TreeNode>();
-        queue.add(node);
-        while(!queue.isEmpty())
-        {
-            TreeNode r = queue.remove(); 
-            r.print();
-            if (r.getChildLeft() != null)
-            {
-                queue.add(r.getChildLeft());
-                queue.add(r.getChildRight());
-            }
-        }
+        diana.printTree(node); 
     }
     
     public static void main(final String[] args)

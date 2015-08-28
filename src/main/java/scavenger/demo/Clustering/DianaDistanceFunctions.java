@@ -1,17 +1,17 @@
 package scavenger.demo.clustering;
+
 import scavenger.demo.clustering.distance.*;
+import scavenger.demo.clustering.enums.*;
+import scavenger.app.ScavengerAppJ;
+import scavenger.*;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Comparator;
 
-import scavenger.app.ScavengerAppJ;
-
-
-import scavenger.*;
-
-import java.util.concurrent.ExecutorService;
+/*import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.Callable;
@@ -24,16 +24,16 @@ import scala.concurrent.Future;
 import akka.dispatch.Futures;
 import akka.util.Timeout;
 import static akka.dispatch.Futures.future;
-import static akka.dispatch.Futures.sequence;
+import static akka.dispatch.Futures.sequence;*/
 
 /**
- *  Holds the average and diameter calculations. (Methods that both Diana and CreateNextSplinter might use)
+ *  Holds the average and diameter calculations. (Methods that both Diana and CreateNextSplinter are likely to use)
  *
  */
 public class DianaDistanceFunctions<T> implements java.io.Serializable
 {
     private DistanceMeasureSelection[] dataInfo;
-    private int numberOfStartSplitNodes = 0;
+    private int numberOfStartSplinterNodes = 0;
     
     private DiameterMeasure distanceDiameter = DiameterMeasure.TRIMMED_MEAN;
     private int trimmedMeanPercent = 10;
@@ -42,14 +42,19 @@ public class DianaDistanceFunctions<T> implements java.io.Serializable
     /**
      *
      * @param dataInfo
-     * @param numberOfStartSplitNodes
+     * @param numberOfStartSplinterNodes
      * @param distanceDiameter
      */
-    public DianaDistanceFunctions(DistanceMeasureSelection[] dataInfo, int numberOfStartSplitNodes, DiameterMeasure distanceDiameter )
+    public DianaDistanceFunctions(DistanceMeasureSelection[] dataInfo, int numberOfStartSplinterNodes, DiameterMeasure distanceDiameter )
     {
         this.dataInfo = dataInfo;
-        this.numberOfStartSplitNodes = numberOfStartSplitNodes;
+        this.numberOfStartSplinterNodes = numberOfStartSplinterNodes;
         this.distanceDiameter = distanceDiameter;
+    }
+    
+    public void setTrimmedMeanPercent(int trimmedMeanPercent)
+    {
+        this.trimmedMeanPercent = trimmedMeanPercent;
     }
     
     /**
@@ -193,7 +198,6 @@ public class DianaDistanceFunctions<T> implements java.io.Serializable
 
     
     /**
-     * 
      * The node returned will start the new cluster
      *
      * @param cluster 
@@ -214,10 +218,6 @@ public class DianaDistanceFunctions<T> implements java.io.Serializable
         }
         return indexOfHighestAverage;
     }
-    
-    
-    
-    
     
     
     /**
@@ -267,14 +267,12 @@ public class DianaDistanceFunctions<T> implements java.io.Serializable
      *
      * @param cluster
      * @param index The index of the item, who's average distance is being calculated
-     * @return The average distance
+     * @return The average distance 
      */
     private double calculateAverageComplex(List<DataItem<T>> cluster, int index)
     {
-        //System.out.println("calculateAverageComplex called");
         double total = 0;
         int numberOfItems = 0;
-        List<Future<Double>> futures = new ArrayList<Future<Double>>();
         for(int i = 0; i < cluster.size(); i++)
         {
             double subTotal = 0;
@@ -285,25 +283,24 @@ public class DianaDistanceFunctions<T> implements java.io.Serializable
             }
             for(DistanceMeasureSelection distanceMeasure : dataInfo)
             {
-                for(String id : distanceMeasure.getIds())
+                for(String id : distanceMeasure.getIds()) 
                 {
                     try
                     {
-                    
                         subTotal = subTotal + (distanceMeasure.getDistanceMeasure().getDistance(cluster.get(index).getHashMap().get(id), cluster.get(i).getHashMap().get(id)) * distanceMeasure.getWeight());
                        // subTotal = subTotal + getDistance(cluster.get(index).getHashMap().get(id), cluster.get(i).getHashMap().get(id), distanceMeasure.getDistanceMeasure()) * distanceMeasure.getWeight();
                         numberOfItems = numberOfItems + 1;
                     }
                     catch(Exception ex) 
                     {
+                        System.out.println("WARNING : Likely that DistanceMeasureSelection contains a key which is not found in the HashMap of DataItems");
                         ex.printStackTrace();
                     }
                 }
             }
             total = total + (subTotal / numberOfItems);
-        }
-        
-        return total / cluster.size();
+        }        
+        return total / cluster.size(); 
     }
 
     /**
@@ -357,7 +354,7 @@ public class DianaDistanceFunctions<T> implements java.io.Serializable
                 allAverages.add(j, new DistanceData(average, i));
             }
         }
-        for (int i = 0; (i < numberOfStartSplitNodes) && (i < allAverages.size()); i++)
+        for (int i = 0; (i < numberOfStartSplinterNodes) && (i < allAverages.size()); i++)
         {
             indexesOfHighestAverage.add(allAverages.get(i).index);    
         }        
@@ -366,7 +363,7 @@ public class DianaDistanceFunctions<T> implements java.io.Serializable
     
     
     
-    //// Distance calculated using scavenger (so results can be cached). Currently to unreliable
+    //// Distance calculated using scavenger (so results can be cached). Currently too unreliable
    /* protected transient Context scavengerContext;
     protected package$ scavengerAlgorithm = package$.MODULE$; // @see ScavengerAppJ                                                              
     protected Computation$ scavengerComputation = Computation$.MODULE$;

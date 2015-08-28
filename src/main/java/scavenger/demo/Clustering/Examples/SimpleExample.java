@@ -1,12 +1,16 @@
-package scavenger.demo.clustering.example;
+package scavenger.demo.clustering.examples;
 
+import scavenger.demo.clustering.errorCalculation.*;
 import scavenger.demo.clustering.distance.*;
+import scavenger.demo.clustering.enums.*;
 import scavenger.demo.clustering.*;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
 import java.util.LinkedList;
 import java.util.HashMap;
+
 import java.net.URL;
 import java.util.Scanner;
 import java.io.IOException;
@@ -90,7 +94,8 @@ class SimpleExample implements java.io.Serializable
         
         // 4.2 change the defaults
         diana.setErrorCalculation(new SimpleErrorCalculation(0.04));
-        diana.setNumberOfStartSplitNodes(4);
+        diana.setNumberOfSplinters(4);
+        diana.setNumberOfStartSplinterNodes(2);
         diana.setDiameterMeasure(DiameterMeasure.LARGEST_AVERAGE_DISTANCE);
         
         // 5. Perform the clustering
@@ -98,23 +103,7 @@ class SimpleExample implements java.io.Serializable
         diana.endClustering();
         
         // 5. Print results
-        printTree(node);
-    }
-    
-    private void printTree(TreeNode<Integer> node)
-    {
-        Queue<TreeNode> queue = new LinkedList<TreeNode>();
-        queue.add(node);
-        while(!queue.isEmpty())
-        {
-            TreeNode r = queue.remove(); 
-            r.print();
-            if (r.getChildLeft() != null)
-            {
-                queue.add(r.getChildLeft());
-                queue.add(r.getChildRight());
-            }
-        }
+        diana.printTree(node);
     }
     
     public static void main(final String[] args)

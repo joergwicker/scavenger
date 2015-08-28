@@ -1,4 +1,4 @@
-package scavenger.demo.clustering;
+package scavenger.demo.clustering.enums;
 
 public enum DiameterMeasure 
     {

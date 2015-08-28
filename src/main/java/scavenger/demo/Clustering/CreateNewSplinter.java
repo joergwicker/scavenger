@@ -34,23 +34,28 @@ import static akka.dispatch.Futures.sequence;
  */
 public class CreateNewSplinter<T> extends ScavengerFunction<TreeNode<T>> 
 {
-    protected DianaDistanceFunctions dianaDistanceFunctions;
-    private int splinterStart;
-    private int numberOfStartSplitNodes;
-    public CreateNewSplinter(int splinterStart, int numberOfStartSplitNodes, DianaDistanceFunctions dianaDistanceFunctions)
+    private DianaDistanceFunctions dianaDistanceFunctions;
+    private int splinterStartNode;
+    
+    /**
+     *
+     * @param splinterStartNode
+     * @param dianaDistanceFunctions
+     */
+    public CreateNewSplinter(int splinterStartNode, DianaDistanceFunctions dianaDistanceFunctions)
     {
-        this.splinterStart = splinterStart;
-        this.numberOfStartSplitNodes = numberOfStartSplitNodes;
+        this.splinterStartNode = splinterStartNode;
         this.dianaDistanceFunctions = dianaDistanceFunctions;
     }
+    
+    
     public TreeNode<T> call()
     { 
         //dianaDistanceFunctions.setScavengerContext(ctx);
         
         TreeNode parent = value;
         
-        
-        System.out.println("CreateNewSplinter.call() called");
+        //System.out.println("CreateNewSplinter.call() called");
         List<DataItem<T>> data = parent.getData();
         
         List<DataItem<T>> leftLeaf = new ArrayList<DataItem<T>>();
@@ -61,11 +66,10 @@ public class CreateNewSplinter<T> extends ScavengerFunction<TreeNode<T>>
         }
         
         // find object with highest average distance        
-        int indexOfHighestAverage = splinterStart;//parent.getNextSpilt();//getIndexWithHighestAverageIndex(rightLeaf);
-        
+        //int indexOfHighestAverage = splinterStartNode;        
         
         // add indexOfHighestAverage to leftLeaf and rm from rightLeaf
-        leftLeaf.add(rightLeaf.remove(indexOfHighestAverage));
+        leftLeaf.add(rightLeaf.remove(splinterStartNode));
         
         // for all items in rightLeaf see if closer to leftLeaf
         for (int i = 0; i < data.size()-1; i++)
@@ -88,10 +92,8 @@ public class CreateNewSplinter<T> extends ScavengerFunction<TreeNode<T>>
         TreeNode<T> leftTreeNode = new TreeNode<T>(leftLeaf, parent);
         TreeNode<T> rightTreeNode = new TreeNode<T>(rightLeaf, parent);
         parent.setChildren(leftTreeNode, rightTreeNode);
-        leftTreeNode.calculateSplits();
-        rightTreeNode.calculateSplits();
-        leftTreeNode.setToBeSplitOn(dianaDistanceFunctions.getIndexFurthestPoints(leftTreeNode));
-        rightTreeNode.setToBeSplitOn(dianaDistanceFunctions.getIndexFurthestPoints(rightTreeNode));
+        leftTreeNode.setUpSplinterInfo(dianaDistanceFunctions.getIndexFurthestPoints(leftTreeNode));
+        rightTreeNode.setUpSplinterInfo(dianaDistanceFunctions.getIndexFurthestPoints(rightTreeNode));
         //System.out.println("createNewSplinter : leftTreeNode " + leftLeaf.size() + " rightTreeNode " + rightLeaf.size());            
         
         List<TreeNode<T>> leafNodes = dianaDistanceFunctions.findLeafNodes(parent.getRoot());//dianaDistanceFunctions.findRoot(parent));

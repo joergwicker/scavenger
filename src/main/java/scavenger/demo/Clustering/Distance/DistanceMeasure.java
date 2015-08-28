@@ -30,7 +30,7 @@ public abstract class DistanceMeasure<T> implements java.io.Serializable//extend
     
     public abstract double calculateDistance(T value1, T value2);
     
-    // experimented with using scavenger to calculate the distance. TODO rm and change this back to interface.
+    // experimented with using scavenger to calculate the distance. 
    /* private T value1;
     private T value2;
     

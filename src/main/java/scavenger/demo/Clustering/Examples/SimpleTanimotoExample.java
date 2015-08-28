@@ -1,4 +1,4 @@
-package scavenger.demo.clustering.example;
+package scavenger.demo.clustering.examples;
 
 import scavenger.demo.clustering.distance.*;
 import scavenger.demo.clustering.*;
@@ -82,27 +82,9 @@ class SimpleTanimotoExample implements java.io.Serializable
         diana.endClustering();
         
         // 5. Print results 
-        printTree(node);         
+        diana.printTree(node);         
     }
     
-    /**
-     *
-     */
-    private void printTree(TreeNode<BitSet> node)
-    {
-        Queue<TreeNode> queue = new LinkedList<TreeNode>();
-        queue.add(node);
-        while(!queue.isEmpty())
-        {
-            TreeNode r = queue.remove(); 
-            r.print();
-            if (r.getChildLeft() != null)
-            {
-                queue.add(r.getChildLeft());
-                queue.add(r.getChildRight());
-            }
-        }
-    }
     
     public static void main(final String[] args)
     {

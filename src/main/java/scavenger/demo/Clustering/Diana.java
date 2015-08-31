@@ -41,6 +41,8 @@ public class Diana<T> extends ScavengerAppJ
     private double smallestError = Double.MAX_VALUE;
     private boolean isClustered = false;
     
+    private int timeoutSeconds = 60;
+    
     /////// Constructors ///////
     
     /**
@@ -96,6 +98,11 @@ public class Diana<T> extends ScavengerAppJ
         this.numberOfStartSplinterNodes = numberOfStartSplinterNodes;
     }
     
+    public void setTimeoutSeconds(int timeoutSeconds)
+    {
+        this.timeoutSeconds = timeoutSeconds;
+    }
+    
     ///////////////////////////
     
     
@@ -132,7 +139,7 @@ public class Diana<T> extends ScavengerAppJ
         if (diameterMeasure == null)
         {
             System.out.println("diameterMeasure has not been set using default (DiameterMeasure.TRIMMED_MEAN)");
-            diameterMeasure = DiameterMeasure.LARGEST_AVERAGE_DISTANCE; 
+            diameterMeasure = DiameterMeasure.TRIMMED_MEAN; 
         }
         
         startScavenger();
@@ -178,7 +185,7 @@ public class Diana<T> extends ScavengerAppJ
             Future<Iterable<TreeNode<T>>> allTogether = Futures.sequence(futures, scavengerContext().executionContext());            
             try
             {
-                results = (List<TreeNode<T>>)Await.result(allTogether, (new Timeout(Duration.create(40, "seconds")).duration()));
+                results = (List<TreeNode<T>>)Await.result(allTogether, (new Timeout(Duration.create(timeoutSeconds, "seconds")).duration()));
             }
             catch(Exception e) 
             { 

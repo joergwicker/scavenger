@@ -9,4 +9,4 @@
 
 module load Java/jdk1.8.0_25
 
-java -cp ../../target/scala-2.10/scavenger-assembly-2.1.jar scavenger.app.SeedMain
+java -cp ../target/scala-2.10/scavenger-assembly-2.1.jar scavenger.app.SeedMain

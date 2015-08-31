@@ -11,9 +11,7 @@ lazy val root = (project in file(".")).
       "com.typesafe" % "config" % "1.3.0-M1"
     ),
     scalacOptions ++= Seq("-feature"),
-    scalacOptions in (Compile,doc) ++= Seq("-groups", "-implicits")//,
-
-	//excludeFilter in unmanagedSources := HiddenFileFilter || "*Sudoku*"
+    scalacOptions in (Compile,doc) ++= Seq("-groups", "-implicits")
   )
 
 
@@ -23,4 +21,3 @@ val buildSettings = Defaults.defaultSettings ++ Seq(
   //…
 )
 
-//javacOptions ++= Seq("-source", "1.7")

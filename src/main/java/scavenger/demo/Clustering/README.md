@@ -14,4 +14,4 @@ Normally, a new cluster is started using the data item furthest from the other i
 
 New distance measures can be added by extending *scavenger.demo.clustering.distance.DistanceMeasure*. For an example see *scavenger.demo.clustering.distance.EuclideanDistance*.
 
-A different error calculation can be used by extending *scavenger.demo.clustering.errorCalculation.ErrorCalculation* and passing an instance of this to *Diana.setErrorCalculation()*.
+A different error calculation can be used by extending *scavenger.demo.clustering.errorCalculation.ErrorCalculation* and passing an instance of *ErrorCalculation* to *Diana.setErrorCalculation()*.

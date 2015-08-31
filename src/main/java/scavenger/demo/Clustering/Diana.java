@@ -246,6 +246,7 @@ public class Diana<T> extends ScavengerAppJ
     
     /**
      *
+     * @param node The root tree node
      */
     public void printTree(TreeNode<T> node)
     {

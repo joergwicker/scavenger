@@ -52,6 +52,7 @@ class LocalDemoJ extends LocalScavengerAppJ
     
     public void runDemo()
     {
+        startScavenger()
         Computation<Integer> computationData = scavengerComputation.apply("Computation_1", 2).cacheGlobally();
         Algorithm<Integer, Integer> algorithm = scavengerAlgorithm.expensive("id", f0).cacheGlobally();
         

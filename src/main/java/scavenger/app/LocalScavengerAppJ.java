@@ -20,15 +20,24 @@ public abstract class LocalScavengerAppJ extends LocalScavengerApp
     public LocalScavengerAppJ(int numWorkers)
     {
         super(numWorkers);   
-        scavengerInit();
-        try
-        { // must sleep after calling scavengerInit()
-            Thread.sleep(10000);
-        }
-        catch (Exception e) 
-        { 
-                e.printStackTrace();
-        }      
     } 
+    
+    protected boolean scavengerStarted = false;
+    public void startScavenger()
+    {
+        if (!scavengerStarted)
+        {
+            scavengerInit();
+            try // must sleep after scavengerInit() is called.
+            {
+                Thread.sleep(3000);
+            }
+            catch (Exception e) 
+            { 
+                e.printStackTrace();
+            } 
+            scavengerStarted = true;
+        }
+    }
 }
 

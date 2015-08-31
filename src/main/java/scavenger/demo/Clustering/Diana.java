@@ -121,13 +121,13 @@ public class Diana<T> extends ScavengerAppJ
         }
         if (numberOfSplinters == 0)
         {
-            System.out.println("numberOfSplinters has not been set using default (1)");
-            numberOfSplinters = 3; //TODO change to 1 and set in examples
+            System.out.println("numberOfSplinters has not been set using default (3)");
+            numberOfSplinters = 3; 
         }
         if (numberOfStartSplinterNodes == 0)
         {
-            System.out.println("numberOfStartSplinterNodes has not been set using default (1)");
-            numberOfStartSplinterNodes = 3; //TODO change to 1 and set in examples
+            System.out.println("numberOfStartSplinterNodes has not been set using default (3)");
+            numberOfStartSplinterNodes = 3; 
         }
         if (diameterMeasure == null)
         {

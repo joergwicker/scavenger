@@ -43,7 +43,13 @@ public class ScavengerSingleApp extends ScavengerAppJ
     {
         if(instance == null) 
         {
+            
+           /* WorkerMainJ workerMain = new WorkerMainJ();
+            workerMain.scavengerInit();
+            SeedMainJ seedMain = new SeedMainJ();
+            seedMain.scavengerInit();*/
             instance = new ScavengerSingleApp();
+            
         }
         return instance;
     } 

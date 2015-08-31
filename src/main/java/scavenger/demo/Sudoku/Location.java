@@ -14,7 +14,7 @@ class Location implements java.io.Serializable
     public int y;
     public List<Integer> possibleValues;
     
-    public Location(int x, int y, int value)
+    public Location(int x, int y, final int value)
     {
         this.x = x;
         this.y = y;

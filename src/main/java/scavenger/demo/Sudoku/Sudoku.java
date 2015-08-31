@@ -98,6 +98,7 @@ class Sudoku extends ScavengerAppJ //LocalScavengerAppJ
      */
     public void run()
     {
+        startScavenger();
         List<List<Integer>> board = createBoard();        
         List<List<List<Integer>>> possibleBoards = new ArrayList<List<List<Integer>>>();
         possibleBoards.add(board);
@@ -181,7 +182,7 @@ class Sudoku extends ScavengerAppJ //LocalScavengerAppJ
                 {
                     public void onSuccess(List<List<Integer>> result) 
                     {
-                        List<List<List<Integer>>> boards = processResult(result);
+                        List<List<List<Integer>>> boards = processResult(result); // checks if it has been solved
                         for (List<List<Integer>> newBoard : boards)
                         {
                             possibleBoards.push(newBoard);   

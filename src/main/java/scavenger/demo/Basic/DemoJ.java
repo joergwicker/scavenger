@@ -44,6 +44,23 @@ class DemoJ extends ScavengerAppJ
             return this.value*this.value;
         }
     };
+    
+    static final ScavengerFunction<Integer> f1 = new ScavengerFunction<Integer>()
+    {
+        // Value computation is being applied to can be accessed using "this.value"
+        // To submit a new job this.ctx.submit(...) can be used
+        public Integer call() 
+        {
+            try{
+                Thread.yield();
+                Thread.sleep(3000);
+            }catch (Exception e) { 
+                e.printStackTrace();
+            }  
+            System.out.println(this.toString() + " was paused");
+            return this.value*2;
+        }
+    };
 
 
     public DemoJ()
@@ -56,21 +73,25 @@ class DemoJ extends ScavengerAppJ
      */
     public void runDemo()
     {
+        startScavenger();
         Computation<Integer> computationData = scavengerComputation.apply("Computation_1", 2).cacheGlobally();
         Algorithm<Integer, Integer> algorithm = scavengerAlgorithm.expensive("id", f0).cacheGlobally();
+        Algorithm<Integer, Integer> algorithm2 = scavengerAlgorithm.expensive("id", f1).cacheGlobally();
         
         Computation<Integer> computation1 = algorithm.apply(computationData);
         Computation<Integer> computation2 = algorithm.apply(computation1);
+        Computation<Integer> computation3 = algorithm2.apply(computation2);
         
         // Submit the computation to scavenger
         Future<Integer> futureS = scavengerContext().submit(computation1);
         Future<Integer> futureS2 = scavengerContext().submit(computation2);
-        
+        Future<Integer> futureS3 = scavengerContext().submit(computation3);
         
         // Combind all the futures into one
         List<Future<Integer>> futures = new ArrayList<Future<Integer>>();
         futures.add(futureS);
         futures.add(futureS2);
+        futures.add(futureS3);
         
         Future<Iterable<Integer>> allTogether = Futures.sequence((Iterable<Future<Integer>>)futures, scavengerContext().executionContext());
         

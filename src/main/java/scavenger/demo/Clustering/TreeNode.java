@@ -17,6 +17,8 @@ public class TreeNode<T> implements java.io.Serializable
     
     private int splitNumber;    
     private List<Integer> toBeSplitOn = new ArrayList<Integer>(); // indexes of items
+    
+    private double error = 1;
 
     /**
      * Constructor for the root node.
@@ -75,6 +77,15 @@ public class TreeNode<T> implements java.io.Serializable
     public void setToBeSplitOn(List<Integer> toBeSplitOn)
     {
         this.toBeSplitOn = toBeSplitOn;
+    }
+    
+    public void setError(double error)
+    {
+        this.error = error;
+    }
+    public double getError()
+    {
+        return error;
     }
     
     //// Getters //// 

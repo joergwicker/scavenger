@@ -10,7 +10,7 @@ After compiling and copying scavenger to mogon (see README.md in the root direct
 Open a new Command window (in the same directory) and run :
 
 ```
-\<DirectoryName\>/runJobs
+<DirectoryName>/runJobs
 ```
 
 \<DirectoryName\> should be replace with, for example, *Clustering_IrisExample* or *Sudoku*.

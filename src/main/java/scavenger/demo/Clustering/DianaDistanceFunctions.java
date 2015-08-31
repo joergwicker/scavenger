@@ -299,6 +299,7 @@ public class DianaDistanceFunctions<T> implements java.io.Serializable
                 }
             }
             total = total + (subTotal / numberOfItems);
+            System.out.println("subTotal / numberOfItems " + subTotal / numberOfItems);
         }        
         return total / cluster.size(); 
     }

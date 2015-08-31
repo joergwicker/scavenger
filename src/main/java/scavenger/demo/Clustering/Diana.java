@@ -12,6 +12,9 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Queue;
+import java.util.PriorityQueue;
+import java.util.Date;
+import java.util.Calendar;
 
 import scala.concurrent.Await;
 import scala.concurrent.ExecutionContext;
@@ -22,7 +25,7 @@ import akka.dispatch.Futures;
 import akka.util.Timeout;
 import static akka.dispatch.Futures.future;
 import static akka.dispatch.Futures.sequence;
-
+import akka.dispatch.*;
 /**
  * Performs Diana (DIvisive ANAlysis) clustering using scavenger
  * Attempts to remove the issue of outliers by trying n possible nodes as the node which starts the splinter cluster.
@@ -32,7 +35,7 @@ public class Diana<T> extends ScavengerAppJ
 {
     private DianaDistanceFunctions dianaDistanceFunctions;    
     private DistanceMeasureSelection[] dataInfo;
-    private int numberOfSplinters = 0;
+    private int runTimeSeconds = 0;
     private int numberOfStartSplinterNodes = 0;
     private DiameterMeasure diameterMeasure = null;
     
@@ -83,9 +86,9 @@ public class Diana<T> extends ScavengerAppJ
         this.errorCalculation = errorCalculation;
     }
     
-    public void setNumberOfSplinters(int numberOfSplinters)
+    public void setRunTimeSeconds(int runTimeSeconds)
     {
-        this.numberOfSplinters = numberOfSplinters;
+        this.runTimeSeconds = runTimeSeconds;
     }
     
     public void setDiameterMeasure(DiameterMeasure diameterMeasure)
@@ -105,7 +108,11 @@ public class Diana<T> extends ScavengerAppJ
     
     ///////////////////////////
     
-    
+    boolean allFuturesFinished = false; 
+    public void setAllFuturesFinished(boolean allFuturesFinished)
+    {
+        this.allFuturesFinished = allFuturesFinished;
+    }
     /**
      *
      * @param root The root TreeNode that contains all the data to be clusted.
@@ -126,10 +133,10 @@ public class Diana<T> extends ScavengerAppJ
             System.out.println("ErrorCalculation has not been set using SimpleErrorCalculation");
             this.errorCalculation = new SimpleErrorCalculation(0.04);
         }
-        if (numberOfSplinters == 0)
+        if (runTimeSeconds == 0)
         {
-            System.out.println("numberOfSplinters has not been set using default (3)");
-            numberOfSplinters = 3; 
+            System.out.println("runTimeSeconds has not been set using default (30)");
+            runTimeSeconds = 30; 
         }
         if (numberOfStartSplinterNodes == 0)
         {
@@ -147,51 +154,58 @@ public class Diana<T> extends ScavengerAppJ
         //dianaDistanceFunctions.setScavengerContext(scavengerContext());      
         root.setToBeSplitOn(dianaDistanceFunctions.getIndexFurthestPoints(root));
         
-        List<TreeNode<T>> results = new ArrayList<TreeNode<T>>();
+        //List<TreeNode<T>> results = new ArrayList<TreeNode<T>>();
+        PriorityQueue<TreeNode<T>> results = new PriorityQueue<TreeNode<T>>(1, new TreeNodeComparator<T>());
         smallestError = Double.MAX_VALUE;
         isClustered = false;
         results.add(root);
         
         System.out.println("Diana.runClustering() running clustering");
         
+        
+        
         // For all results
         //      For all nodes the new splinter cluster can be started on 
         //          create a Future which performs the splitting of the cluster
         //
-        // The TreeNode returned, from the future, is the next node to be splintered (the node with the largest diameter)          
-        while (!isClustered && (results.size() > 0)) 
-        {        
-            System.out.println("Create futures");
-            List<Future<TreeNode<T>>> futures = new ArrayList<Future<TreeNode<T>>>();
-            for(TreeNode<T> result : results)
-            {                
-                if (enoughSplits(result))
-                {
-                    continue;
-                }
-                
+        // The TreeNode returned, from the future, is the next node to be splintered (the node with the largest diameter)         
+        List<Future<TreeNode<T>>> futures = new ArrayList<Future<TreeNode<T>>>();  
+        Calendar calendar = Calendar.getInstance(); // gets a calendar using the default time zone and locale.
+        calendar.add(Calendar.SECOND, runTimeSeconds);
+        Date endTime = calendar.getTime();
+        while (!isClustered && endTime.after(new Date()))//!allFuturesFinished)//(results.size() > 0)) 
+        {                             
+            if(results.size() > 0)  
+            {
+                TreeNode<T> result = results.poll();                
                 for(int i = 0; i < result.getToBeSplitOn().size(); i++)
                 {
                     ScavengerFunction<TreeNode<T>> run = new CreateNewSplinter(result.getToBeSplitOn().get(i), dianaDistanceFunctions);
                     Algorithm<TreeNode<T>, TreeNode<T>> algorithm = scavengerAlgorithm.expensive("createNewSplinter", run);
                     Computation<TreeNode<T>> computation = scavengerComputation.apply("node_"+result+result.getToBeSplitOn().get(i), result);                    
-                     
+                    
                     Computation<TreeNode<T>> applyComputation = algorithm.apply(computation).cacheGlobally();
-                    futures.add(scavengerContext().submit(applyComputation));
+                    Future future = scavengerContext().submit(applyComputation);
+                    
+                    future.onSuccess(new OnSuccess<TreeNode<T>>() 
+                                     {
+                                         public void onSuccess(TreeNode<T> currentResult) 
+                                         {
+                                             
+                                             setIsClustered(currentResult); 
+                                             results.add(currentResult);
+                                         }
+                                     }, scavengerContext().executionContext());
                 }
             }
-            
-            // wait for all the futures to finish
-            Future<Iterable<TreeNode<T>>> allTogether = Futures.sequence(futures, scavengerContext().executionContext());            
             try
             {
-                results = (List<TreeNode<T>>)Await.result(allTogether, (new Timeout(Duration.create(timeoutSeconds, "seconds")).duration()));
+                Thread.yield();
             }
             catch(Exception e) 
             { 
                 e.printStackTrace(); 
-            }                        
-            setIsClustered(results);
+            }  
         }
         
         System.out.println("Finished");
@@ -227,14 +241,14 @@ public class Diana<T> extends ScavengerAppJ
      *
      * @param results The list returned by the list of futures.
      */
-    private void setIsClustered(List<TreeNode<T>> results)
+    private void setIsClustered(TreeNode<T> result)//List<TreeNode<T>> results)
     {        
-        for (TreeNode<T> result : results)
-        {
-            if (!enoughSplits(result))
+        //for (TreeNode<T> result : results)
+        //{
+           /* if (!enoughSplits(result))
             {
-                continue;
-            }
+                return;
+            }*/
             TreeNode<T> root = result.getRoot();//dianaDistanceFunctions.findRoot(result);
             List<TreeNode<T>> leaves = dianaDistanceFunctions.findLeafNodes(root);
             
@@ -244,9 +258,9 @@ public class Diana<T> extends ScavengerAppJ
                 smallestError = errorCalculation.getLastError();
                 bestResult = result;
             }
-            
-            if (isClustered) break;
-        }
+            result.setError(errorCalculation.getLastError());
+            //if (isClustered) break;
+       // }
     }
     
     

@@ -23,9 +23,9 @@ A different error calculation can be used by extending *scavenger.demo.clusterin
 The properties file should contain the following information:
 - ARFF_FILE = /path/to/arff/file
 - attribute = distanceMeasure_id 
-    - The attribute_name should be the same as the attribute name used in the arff file.
-    - distanceMeasure_id should contain the name of the distance measure being used (eg. tanimoto or eclidean).
-    - Multiple attributes can be be set to the same distanceMeasure_id. These attributes will be grouped together into the same order as they are given in the arff file.
+    - attributes should be equivalent to the attributes in the ARFF_FILE.
+    - distanceMeasure_id should contain the name of the distance measure being used (eg. tanimoto or euclidean).
+    - Multiple attributes can be be set to the same distanceMeasure_id. These attributes will be grouped together, and will be in the order they appear in the ARFF_FILE.
 - distanceMeasure_id = value
     - The value which is passed to the constructor of the distanceMeasure
 - distanceMeasure_id_weight = int/double

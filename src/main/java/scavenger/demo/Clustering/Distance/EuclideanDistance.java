@@ -27,7 +27,7 @@ public class EuclideanDistance extends DistanceMeasure<List<Double>>
      */
     public EuclideanDistance(double maxDifference)
     {
-        this.maxDifference = maxDifference;
+        this.maxDifference = maxDifference;  
     }
     
     /**
@@ -41,14 +41,25 @@ public class EuclideanDistance extends DistanceMeasure<List<Double>>
     {
         if (value1.size() != value2.size())
         {
-            return 0.0; //TODO throw exeception
+            return 0.0;
         }
         double total = 0.0;
+        double totalMaxDifference = 0;
         for(int i = 0; i < value1.size(); i++)
         {
-             total = total + Math.pow((Math.max(value1.get(i), value2.get(i)) - Math.min(value1.get(i), value2.get(i))), 2);       
+             total = total + Math.pow((Math.max(value1.get(i), value2.get(i)) - Math.min(value1.get(i), value2.get(i))), 2);      
         }
-        return (Math.sqrt(total) / Math.sqrt(value1.size()) / maxDifference);
+        
+        double sigmoidValue = sigmoid(Math.sqrt(total) / Math.sqrt(maxDifference * value1.size()));/// Math.sqrt(value1.size()) / maxDifference);
+        //System.out.println("sigmoidValue : " + sigmoidValue);
+        return sigmoidValue;
+    }
+    
+    private double sigmoid(double x)
+    {
+        double result = 1 / (1 + Math.exp(-x));
+        result = (result - 0.5) / 0.5; // x will never be negative, so sigmoid will be between 0.5 and 1
+        return result;
     }
     
     

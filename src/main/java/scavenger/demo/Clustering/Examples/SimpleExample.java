@@ -24,28 +24,28 @@ class SimpleExample implements java.io.Serializable
     public SimpleExample()
     {
         // 1. Create distance measure
-        DistanceMeasure<List<Double>> distanceMeasure = new EuclideanDistance(10.0);
+        DistanceMeasure<List<Double>> distanceMeasure = new EuclideanDistance(9.0);
         
         // 2. Load data
         List list1 = new ArrayList<Double>() 
             {{
-                add(5.0);
-                add(7.0);
-                add(6.0);
+                add(0.0);
+                add(0.0);
+                add(0.0);
             }};
                 
         List list2 = new ArrayList<Double>() 
             {{
-                add(2.0);
-                add(6.0);
-                add(3.0);
+                add(9.0);
+                add(9.0);
+                add(9.0);
             }};
             
         List list3 = new ArrayList<Double>() 
             {{
-                add(4.0);
-                add(4.0);
-                add(5.0);
+                add(2.0);
+                add(1.0);
+                add(1.0);
             }};
         List list4 = new ArrayList<Double>() 
             {{
@@ -61,15 +61,15 @@ class SimpleExample implements java.io.Serializable
             }};
         List list6 = new ArrayList<Double>() 
             {{
-                add(5.0);
-                add(7.0);
-                add(3.0);
+                add(1.0);
+                add(1.0);
+                add(1.0);
             }};
         List list7 = new ArrayList<Double>() 
             {{
-                add(9.0);
-                add(9.0);
-                add(9.0);
+                add(1.0);
+                add(2.0);
+                add(1.0);
             }};
             
         DataItem<Integer> item1 = new DataItem<Integer>("1", list1);
@@ -94,12 +94,12 @@ class SimpleExample implements java.io.Serializable
         
         // 4.2 change the defaults
         diana.setErrorCalculation(new SimpleErrorCalculation(0.04));
-        diana.setNumberOfSplinters(4);
+        diana.setRunTimeSeconds(30);
         diana.setNumberOfStartSplinterNodes(2);
         diana.setDiameterMeasure(DiameterMeasure.LARGEST_AVERAGE_DISTANCE);
         
         // 5. Perform the clustering
-        TreeNode<Integer> node = diana.runClustering(input, 3);
+        TreeNode<Integer> node = diana.runClustering(input);
         diana.endClustering();
         
         // 5. Print results

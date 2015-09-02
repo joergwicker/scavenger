@@ -26,19 +26,19 @@ class IrisExample implements java.io.Serializable
         List<DistanceMeasureSelection> dataInformationList = new ArrayList<DistanceMeasureSelection>();
         
         DistanceMeasure<List<Double>> distanceMeasure1 = new EuclideanDistance(3.6); // 3.6 is the max distance between sepal lengths
-        DistanceMeasureSelection distanceSelection1 = new DistanceMeasureSelection("sepal_length", distanceMeasure1, 1); // 1 is the weighting
+        DistanceMeasureSelection distanceSelection1 = new DistanceMeasureSelection("sepal_length", distanceMeasure1, 4); // 1 is the weighting
         dataInformationList.add(distanceSelection1);
         
         DistanceMeasure<List<Double>> distanceMeasure2 = new EuclideanDistance(2.4);
-        DistanceMeasureSelection distanceSelection2 = new DistanceMeasureSelection("sepal_width", distanceMeasure2, 1);
+        DistanceMeasureSelection distanceSelection2 = new DistanceMeasureSelection("sepal_width", distanceMeasure2, 8);
         dataInformationList.add(distanceSelection2);
         
         DistanceMeasure<List<Double>> distanceMeasure3 = new EuclideanDistance(5.9);
-        DistanceMeasureSelection distanceSelection3 = new DistanceMeasureSelection("petal_length", distanceMeasure3, 1);
+        DistanceMeasureSelection distanceSelection3 = new DistanceMeasureSelection("petal_length", distanceMeasure3, 5);
         dataInformationList.add(distanceSelection3);
         
         DistanceMeasure<List<Double>> distanceMeasure4 = new EuclideanDistance(2.4);
-        DistanceMeasureSelection distanceSelection4 = new DistanceMeasureSelection("petal_width", distanceMeasure4, 1);
+        DistanceMeasureSelection distanceSelection4 = new DistanceMeasureSelection("petal_width", distanceMeasure4, 10);
         dataInformationList.add(distanceSelection4);
         
         // 2. Load the data into a HashMap (@see DataItem)
@@ -95,7 +95,7 @@ class IrisExample implements java.io.Serializable
         
         // 4. Run the clustering
         Diana<List<Double>> diana = new Diana<List<Double>>(dataInformationList); 
-        TreeNode<List<Double>> node = diana.runClustering(input, 3);        
+        TreeNode<List<Double>> node = diana.runClustering(input);        
         diana.endClustering();
         
         // 5. Print the results

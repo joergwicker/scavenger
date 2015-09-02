@@ -15,3 +15,23 @@ Normally, a new cluster is started using the data item furthest from the other i
 New distance measures can be added by extending *scavenger.demo.clustering.distance.DistanceMeasure*. For an example see *scavenger.demo.clustering.distance.EuclideanDistance*.
 
 A different error calculation can be used by extending *scavenger.demo.clustering.errorCalculation.ErrorCalculation* and passing an instance of *ErrorCalculation* to *Diana.setErrorCalculation()*.
+
+
+##Chemical Data Clustering##
+
+###Properties file###
+The properties file should contain the following information:
+- ARFF_FILE = /path/to/arff/file
+- attribute = distanceMeasure_id 
+    - The attribute_name should be the same as the attribute name used in the arff file.
+    - distanceMeasure_id should contain the name of the distance measure being used (eg. tanimoto or eclidean).
+    - Multiple attributes can be be set to the same distanceMeasure_id. These attributes will be grouped together into the same order as they are given in the arff file.
+- distanceMeasure_id = value
+    - The value which is passed to the constructor of the distanceMeasure
+- distanceMeasure_id_weight = int/double
+    - The weighting given to the distance measure's results
+- RUN_TIME = int
+    - Seconds the clustering will run for.
+- NUM_START_SPLITER_NODES = int
+    - Number of different data items the new splinter will be started with.
+    

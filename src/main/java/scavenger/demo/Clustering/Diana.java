@@ -120,7 +120,7 @@ public class Diana<T> extends ScavengerAppJ
      *
      * @return The root for the tree of clusters.
      */
-    public TreeNode<T> runClustering(TreeNode<T> root, int numberOfIterations)
+    public TreeNode<T> runClustering(TreeNode<T> root) //TODO why multiple masters start up
     {
         System.out.println("Diana.runClustering() called... setting defauls");
         if(root.getData().size() <= 1)
@@ -146,9 +146,9 @@ public class Diana<T> extends ScavengerAppJ
         if (diameterMeasure == null)
         {
             System.out.println("diameterMeasure has not been set using default (DiameterMeasure.TRIMMED_MEAN)");
-            diameterMeasure = DiameterMeasure.TRIMMED_MEAN; 
+            diameterMeasure = DiameterMeasure.TRIMMED_MEAN;//LARGEST_AVERAGE_DISTANCE; 
         }
-        
+        //setupWeights();
         startScavenger();
         dianaDistanceFunctions = new DianaDistanceFunctions(dataInfo, numberOfStartSplinterNodes, diameterMeasure);  
         //dianaDistanceFunctions.setScavengerContext(scavengerContext());      
@@ -213,6 +213,42 @@ public class Diana<T> extends ScavengerAppJ
         return bestResult.getRoot();
     }
     
+    /**
+     * 
+     */
+    /*private void setupWeights()
+    {   
+        System.out.println("setupWeights");
+        double baseMin = 0.0;
+        double baseMax = 0.0;
+        double limitMin = 0.0; 
+        double limitMax = 0.0;
+        
+        for(DistanceMeasureSelection distanceMeasure : dataInfo)
+        {
+            for(String id : distanceMeasure.getIds()) 
+            {
+                if (distanceMeasure.getWeight() > baseMax)
+                {
+                    baseMax = distanceMeasure.getWeight();
+                }
+                limitMax = limitMax + 1.0;
+            }
+        }
+        System.out.println("baseMax : " + baseMax);
+        System.out.println("limitMax : " + limitMax);
+        for(DistanceMeasureSelection distanceMeasure : dataInfo)
+        {
+            //for(String id : distanceMeasure.getIds()) 
+           // {
+            //http://stackoverflow.com/questions/5294955/how-to-scale-down-a-range-of-numbers-with-a-known-min-and-max-value
+            double weight = ((limitMax - limitMin) * (distanceMeasure.getWeight() - baseMin) / (baseMax - baseMin)) + limitMin;
+            distanceMeasure.setWeight(weight);
+            System.out.println("weight : " + weight);
+            //}
+        }
+    }*/
+    
     
     /**
      * Checks if the number of splits that should be performed has been reached.
@@ -220,7 +256,7 @@ public class Diana<T> extends ScavengerAppJ
      * @param node Any node within the tree
      * @return true if number of splits reached
      */
-    private boolean enoughSplits(TreeNode<T> node)
+   /* private boolean enoughSplits(TreeNode<T> node)
     {
         boolean enoughSplits = false;
         TreeNode<T> root = node.getRoot();
@@ -234,7 +270,7 @@ public class Diana<T> extends ScavengerAppJ
             }
         }
         return enoughSplits;
-    }
+    }*/
     
     /**
      * Checks if the clustering has been completed

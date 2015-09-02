@@ -72,9 +72,23 @@ public class DistanceMeasureSelection implements java.io.Serializable
         }
     }
     
+    public void addId(String id)
+    {
+        if(ids == null)
+        {
+            this.ids = new ArrayList<String>();
+            this.ids.add(this.id);
+        }
+        this.ids.add(id);
+    }
+    
     public double getWeight()
     {
         return weight;
+    }
+    public void setWeight(double weight)
+    {
+        this.weight = weight;
     }
     
 }

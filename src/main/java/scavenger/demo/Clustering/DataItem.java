@@ -102,7 +102,7 @@ public class DataItem<T> implements java.io.Serializable
         if (isHash())
         {
             List<T> list = new ArrayList<T>(dataAsHash.values());
-            return list;
+            return list.get(0);//only one distance measure being used, so HashMap should only have one value
         }
         else if (dataList != null)
         {

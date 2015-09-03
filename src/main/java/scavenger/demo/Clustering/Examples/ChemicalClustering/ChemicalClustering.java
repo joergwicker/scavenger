@@ -33,15 +33,23 @@ class ChemicalClustering implements java.io.Serializable
     
     private final String RUN_TIME = "RUN_TIME";
     private final String NUM_START_SPLITER_NODES = "NUM_START_SPLITER_NODES";
-    private final String[] PROPERTY_NAMES = {ARFF_FILE, EUCLIDEAN, TANIMOTO, RUN_TIME, NUM_START_SPLITER_NODES};
+    
+    private final String GOODNESS_ATTRIBUTE = "GOODNESS_ATTRIBUTE";
+    private final String GOODNESS_ATTRIBUTE_VALUES = "GOODNESS_ATTRIBUTE_VALUES";
+    
+    private final String[] PROPERTY_NAMES = {ARFF_FILE, EUCLIDEAN, TANIMOTO, RUN_TIME, NUM_START_SPLITER_NODES, GOODNESS_ATTRIBUTE, GOODNESS_ATTRIBUTE_VALUES};
    
     private List<DistanceMeasureSelection> dataInformationList = new ArrayList<DistanceMeasureSelection>();
     private List<DataItem<Object>> initialCluster = new ArrayList<DataItem<Object>>();
     
-    public ChemcalData(String fileName)
+   // private List<String> goodnessAttributeValues = new ArrayList<String>();
+    //private String[] goodnessAttributePossibleValues;
+    private Goodness goodness = null;
+    
+    public ChemicalClustering(String fileName)
     {   
-        Properties properties = setup(fileName);
-         
+        // read in the data
+        Properties properties = setup(fileName);         
         TreeNode<Object> input = new TreeNode<Object>(initialCluster);
         Diana<Object> diana = new Diana<Object>(dataInformationList); 
         diana = setProperties(diana, properties);
@@ -53,6 +61,12 @@ class ChemicalClustering implements java.io.Serializable
         // Print the results
         System.out.println("Printing end result : ");
         diana.printTree(node);
+        
+        // Check results
+        if (goodness != null)
+        { 
+            goodness.calculateGoodness(node);
+        }
     }
     
     /**
@@ -67,6 +81,7 @@ class ChemicalClustering implements java.io.Serializable
         System.out.println("ChemcalData running setup");
         List<String> dataNames = new ArrayList<String>();
         Properties properties = new Properties();
+        
         
         // 1. read properties file
         try
@@ -84,6 +99,12 @@ class ChemicalClustering implements java.io.Serializable
         
         // 2. Set-up the distance measures
         HashMap<String, List<String>> distanceAttributes = setupDistanceMeasures(properties);
+        
+        // set-up for the Goodness calculatation
+        if (properties.getProperty(GOODNESS_ATTRIBUTE) != null)
+        {
+            goodness = new GoodnessStringValues(properties, GOODNESS_ATTRIBUTE_VALUES);
+        }
         
         // 3. read in the data from the ARFF_FILE
         try
@@ -120,6 +141,12 @@ class ChemicalClustering implements java.io.Serializable
                         map.put(key, euclideanValues);
                     }
                 }
+                
+                if (goodness != null)
+                {
+                    goodness.addGoodnessAttributeValue(splitString[orderedAttributeList.indexOf(properties.getProperty(GOODNESS_ATTRIBUTE))]);
+                }
+                
                 DataItem<Object> item = new DataItem<Object>(Integer.toString(initialCluster.size()), map); // to give a unique id to the DataItem the current size of the initialCluster is used. (Is optional, and doesn't have to be unique. Only used by this.printTree())
                 initialCluster.add(item);                    
             }
@@ -177,9 +204,9 @@ class ChemicalClustering implements java.io.Serializable
                 }
                 catch(java.lang.NullPointerException ex)
                 {
-                    System.out.println("Use default weight : 1");
+                    System.out.println("Use default weight (1) for " + distanceMeasureId);
                 }
-                
+                System.out.println("Use weight " + weight);
                 DistanceMeasureSelection distanceSelection = new DistanceMeasureSelection(distanceMeasureId, distanceMeasure, weight);
                 dataInformationList.add(distanceSelection);
     
@@ -269,15 +296,30 @@ class ChemicalClustering implements java.io.Serializable
         List<String> orderedAttributeList = new ArrayList<String>();
         while(line.contains("@attribute"))
         {
-            boolean added = false;
-            for(String dataName : properties.stringPropertyNames())
+            if (properties.getProperty(GOODNESS_ATTRIBUTE) != null)
             {
-                if (line.contains(dataName))
+                if(line.contains(properties.getProperty(GOODNESS_ATTRIBUTE)))
                 {
-                    orderedAttributeList.add(dataName);
+                   // goodnessAttributePossibleValues = line.substring(line.indexOf("{") + 1, line.indexOf("}")).split(",");
+                    orderedAttributeList.add(properties.getProperty(GOODNESS_ATTRIBUTE));
+                    
+                    line = scan.nextLine();
+                    continue;
+                }
+            }
+            boolean added = false;
+            for(String attributeName : properties.stringPropertyNames())
+            {
+                if(isProperty(attributeName))
+                {
+                    continue;
+                }
+                if (line.contains(attributeName))
+                {
+                    orderedAttributeList.add(attributeName);
                     added = true;
                     break;
-                }                    
+                }
             }
             if (!added) // not an attribute used to cluster, so leave blank gap
             {
@@ -320,16 +362,11 @@ class ChemicalClustering implements java.io.Serializable
         }
         return diana;
     }    
-
-    
-    private void calculateGoodness(TreeNode<Object> node)
-    {
-        //TODO
-    }
     
     public static void main(final String[] args)
     {
-         String fileName = "/Users/helen/Documents/MainzUni/scavengerClean/scavenger/src/main/java/scavenger/demo/Clustering/clustering.properties";//args[1];
+        //String fileName = "/Users/helen/Documents/MainzUni/scavengerClean/scavenger/src/main/java/scavenger/demo/Clustering/clustering.properties";//args[1];
+        String fileName = "/Users/helen/Documents/MainzUni/scavengerClean/scavenger/src/main/java/scavenger/demo/Clustering/clusteringEuclidean.properties";
         ChemicalClustering chemicalClustering = new ChemicalClustering(fileName);
     }
     

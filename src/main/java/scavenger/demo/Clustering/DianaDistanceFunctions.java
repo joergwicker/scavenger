@@ -36,7 +36,7 @@ public class DianaDistanceFunctions<T> implements java.io.Serializable
     private int numberOfStartSplinterNodes = 0;
     
     private DiameterMeasure distanceDiameter = DiameterMeasure.TRIMMED_MEAN;
-    private int trimmedMeanPercent = 5;
+    private int trimmedMeanPercent = 10;
     
     
     /**
@@ -50,6 +50,11 @@ public class DianaDistanceFunctions<T> implements java.io.Serializable
         this.dataInfo = dataInfo;
         this.numberOfStartSplinterNodes = numberOfStartSplinterNodes;
         this.distanceDiameter = distanceDiameter;
+    }
+    
+    public DianaDistanceFunctions()
+    {
+    
     }
     
     public void setTrimmedMeanPercent(int trimmedMeanPercent)
@@ -231,7 +236,7 @@ public class DianaDistanceFunctions<T> implements java.io.Serializable
     {
         if (dataInfo.length == 1 )
         {
-            return calculateAverageSimple(cluster, index); 
+            return calculateAverageSimple(cluster, index, dataInfo[0].getDistanceMeasure()); 
         }
         else
         {
@@ -246,7 +251,7 @@ public class DianaDistanceFunctions<T> implements java.io.Serializable
      * @param index The index of the item, who's average distance is being calculated
      * @return The average distance
      */
-    private double calculateAverageSimple(List<DataItem<T>> cluster, int index)
+    public double calculateAverageSimple(List<DataItem<T>> cluster, int index, DistanceMeasure distanceMeasure)
     {
         double total = 0;
         for(int i = 0; i < cluster.size(); i++)
@@ -255,7 +260,9 @@ public class DianaDistanceFunctions<T> implements java.io.Serializable
             {
                 continue;
             }
-            total = total + dataInfo[0].getDistanceMeasure().getDistance(cluster.get(index).getData(), cluster.get(i).getData()); 
+            
+            total = total + distanceMeasure.getDistance(cluster.get(index).getData(), cluster.get(i).getData()); 
+            
             //total = total + getDistance(cluster.get(index).getData(), cluster.get(i).getData(), dataInfo[0].getDistanceMeasure());            
         }
         return total / cluster.size();
@@ -299,9 +306,9 @@ public class DianaDistanceFunctions<T> implements java.io.Serializable
                 }
             }
             total = total + (subTotal / totalWeightings);
-            //System.out.println("subTotal / numberOfItems " + subTotal / totalWeightings);
+            //System.out.println("subTotal " + subTotal + " / numberOfItems " + totalWeightings + " = " + subTotal / totalWeightings);
         }    
-       // System.out.println("total / cluster.size() " + total / cluster.size());    
+        //System.out.println("total / cluster.size() " + total / cluster.size());    
         return total / cluster.size(); 
     }
 

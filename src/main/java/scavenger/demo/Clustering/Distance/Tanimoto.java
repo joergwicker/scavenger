@@ -27,7 +27,14 @@ public class Tanimoto extends DistanceMeasure<BitSet>
         BitSet bitSetAnd = (BitSet)value1.clone();
         bitSetAnd.and(value2);
         double andCardinality = bitSetAnd.cardinality();
-        return (andCardinality / (cardinality1 + cardinality2 - andCardinality));        
+        
+        
+        double distance = (cardinality1 + cardinality2 - andCardinality);
+        if (distance != 0)
+        {
+            distance = andCardinality / distance;
+        }
+        return distance;        
     }
     
     

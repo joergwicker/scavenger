@@ -44,6 +44,8 @@ public class Diana<T> extends ScavengerAppJ
     private double smallestError = Double.MAX_VALUE;
     private boolean isClustered = false;
     
+    private double errorThreshold = 0.04;
+    
     private int timeoutSeconds = 60;
     
     /////// Constructors ///////
@@ -84,6 +86,11 @@ public class Diana<T> extends ScavengerAppJ
     public void setErrorCalculation(ErrorCalculation<T> errorCalculation)
     {
         this.errorCalculation = errorCalculation;
+    }
+    
+    public void setErrorThreshold(double errorThreshold)
+    {
+        this.errorThreshold = errorThreshold;
     }
     
     public void setRunTimeSeconds(int runTimeSeconds)
@@ -130,8 +137,8 @@ public class Diana<T> extends ScavengerAppJ
         }
         if (errorCalculation == null)
         {
-            System.out.println("ErrorCalculation has not been set using SimpleErrorCalculation");
-            this.errorCalculation = new SimpleErrorCalculation(0.04);
+            System.out.println("ErrorCalculation has not been set using SimpleErrorCalculation with errorThreshold of " + errorThreshold);
+            this.errorCalculation = new SimpleErrorCalculation(errorThreshold);
         }
         if (runTimeSeconds == 0)
         {

@@ -38,7 +38,8 @@ with ContextProvider {
     * individual parts for computation.
     */
   def schedule(job: Computation[Any]): Future[Value[Any]] = {
-    if (mustScheduleHere(job.cachingPolicy, job.difficulty)) {
+    println("+++++++++++++Enter schedule()")
+    val result = if (mustScheduleHere(job.cachingPolicy, job.difficulty)) {
       // no choice, we are forced to schedule it right here,
       // we can not delegate it anyway, so there is no
       // reason to try to simplify it.
@@ -47,9 +48,13 @@ with ContextProvider {
     } else {
       for {
         simplifiedComputation <- simplify(job)
+        // TODO: this is bad... This is race condition. This breaks actor-style concurrency
+        // For now trying to fix it by synchronizing computeSimplified
         finalResult <- computeSimplified(simplifiedComputation)
       } yield Value(job.identifier, finalResult, CachingPolicy.Nowhere)
     }
+    println("+++++++++++++Exit schedule()")
+    result
   }
 
   /** Simplify a computation such that the resulting computation can

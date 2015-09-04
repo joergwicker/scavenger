@@ -1,0 +1,147 @@
+#!/bin/bash
+#
+# This script can be used to start seed and worker nodes of
+# the Scavenger 2.x framework.
+
+source $SCAVENGER_HOME/bin/plumbing/help.sh
+source $SCAVENGER_HOME/bin/plumbing/startSeed.sh
+source $SCAVENGER_HOME/bin/plumbing/startWorker.sh 
+source $SCAVENGER_HOME/bin/plumbing/startMaster.sh
+
+# prints out error messages
+function errcho() {
+  echo $@ 1>&2
+}
+
+# initialize expected arguments with reasonable default-values
+theCommand=""
+jvmOpts=""
+configFile="scavenger.conf"
+host="$(hostname)"
+port="2552"
+verbose="false"
+jars=""
+main=""
+verbose="false"
+
+# parse arguments passed to this script
+while (( $# > 0 ))
+do
+  case $1 in
+    "-help" | "--help" | "-h" | "-?" )
+      printHelp
+      shift
+      exit 0
+    ;;
+    "--verbose" | "-v" )
+      verbose="true"
+      shift
+    ;;
+    "startSeed" | "seed" )
+      theCommand="startSeed"
+      shift
+    ;;
+    "startWorker" | "worker" )
+      theCommand="startWorker"
+      shift
+    ;;
+    "startMaster" | "master" )
+      theCommand="startMaster"
+      shift
+    ;;
+    "--jvm-options" | "-jvm-options" | "--jvm-opts" )
+      shift
+      if (( $# == 0 )) 
+      then
+        errcho "Expected JVM-options, but no more args found"
+        exit 2
+      fi
+      jvmOpts="$1"
+    ;;
+    "--scavenger-conf" | "-conf" | "-c" | "--config-file" )
+      shift
+      if (( $# == 0 )) 
+      then
+        errcho "Expected path to config file similar to 'scavenger.conf' "
+        exit 2
+      fi
+      configFile="$1"
+      shift
+    ;;
+    "--ip" | "-ip" | "--host" )
+      shift
+      if (( $# == 0 )) 
+      then
+        errcho "Expected an ip or hostname after --ip/--host option."
+        exit 2
+      fi
+      host="$1"
+      shift
+    ;;
+    "--port" | "-port" )
+      shift
+      if (( $# == 0 )) 
+      then
+        errcho "Expected a port number after --port option."
+        exit 2
+      fi
+      port="$1"
+      shift
+    ;;
+    "--jars" )
+      shift
+      if (( $# == 0 )) 
+      then
+        errcho "Expected list of :-separated jars after --jars"
+        exit 2
+      fi
+      jars="$1"
+      shift
+    ;;
+    "--main" )
+      shift
+      if (( $# == 0 )) 
+      then
+        errcho "Expected full name of the class with main()-method"
+        exit 2
+      fi
+      main="$1"
+      shift
+    ;;
+    * )
+      errcho "Unrecognized option '$1'"
+      exit 3
+    ;;
+  esac
+done
+
+if [ ! $theCommand == "" ] 
+then 
+  # don_t do anything if there is no 'scavenger.conf' in the current directory
+  if [ ! -f "$configFile" ] 
+  then
+    errcho "No configuration file in '$configFile'. "
+    errcho "Either specify the option --config-file /path/to/scavenger.conf "
+    errcho "or start the application from a directory that already contains "
+    errcho "a version of 'scavenger.conf'. Exit."
+    exit 1
+  fi
+
+  if [ $theCommand == "startSeed" ] 
+  then
+    startSeed
+  elif [ $theCommand == "startWorker" ]
+  then
+    startWorker
+  elif [ $theCommand == "startMaster" ]
+  then
+    if [ -z $main ]
+    then
+      errcho "Need --main to start the master node"
+      exit 5
+    fi
+    startMaster
+  fi
+else 
+  errcho "No command specified."
+fi

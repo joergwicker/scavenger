@@ -1,6 +1,6 @@
 package scavenger.backend
 
-import akka.actor.{Actor, Props}
+import akka.actor.{Actor, Props, ActorLogging}
 import scala.collection.mutable
 import scala.collection.mutable.HashMap
 import scala.concurrent.{Future, Promise}
@@ -19,7 +19,10 @@ import scavenger.categories.formalccc
   * @since 2.1
   * @author Andrey Tyukin
   */
-trait SimpleComputationExecutor extends Actor with ContextProvider {
+trait SimpleComputationExecutor 
+extends Actor 
+with ActorLogging
+with ContextProvider {
 
   import context.dispatcher
 
@@ -38,9 +41,13 @@ trait SimpleComputationExecutor extends Actor with ContextProvider {
   protected val promises: mutable.Map[InternalLabel, Promise[Any]] =
     HashMap.empty[InternalLabel, Promise[Any]]
 
+  // just additional debug information...
+  // Where do we lose stuff?
+  private var allFulfilledPromises: List[InternalLabel] = Nil
+
   /** Helper method for fulfilling promises */
   protected def fulfillPromise(label: InternalLabel, result: Any): Unit = {
-    println("DEBUG: fulfilling promise for id = " + label) // TODO: remove debug
+    log.debug("fulfilling promise for id = " + label)
     if (!promises.contains(label)) {
       println("ERROR: the promise for id = " + label + " does not exist")
       throw new Error("SimpleComputationExecutor.fulfillPromise: nothing to fulfill")
@@ -48,8 +55,11 @@ trait SimpleComputationExecutor extends Actor with ContextProvider {
       println("ERROR: the promise for id = " + label + " is already completed!")
       throw new Error("SimpleComputationExecutor.fulfillPromise seems buggy")
     }
+    allFulfilledPromises ::= label
     promises(label).success(result)
     promises -= label
+    log.debug("All promises fulfilled so far: \n " + 
+      allFulfilledPromises.mkString("\n"))
   }
 
   /** Perform a simple computation that can be delegated.

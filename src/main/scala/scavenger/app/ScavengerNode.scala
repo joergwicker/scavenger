@@ -35,7 +35,7 @@ private[app] trait ScavengerNode {
   /** This method composes `ActorPath` of the seed node from various
     * entries in the specified configuration.
     *
-    * It makes use of the entries following entries in the `seed`-subconfig:
+    * It makes use of the following entries in the `seed`-subconfig:
     *
     * {{{
     * scavenger {
@@ -57,7 +57,9 @@ private[app] trait ScavengerNode {
   /** Loads configuration files and initializes an
     * actor system, together with the right set of actors.
     *
-    * The configuration files are loaded from the following pathes:
+    * TODO: this description is outdated
+    *
+    * The configuration files are loaded from the following paths:
     *
     * 1) /src/main/resources/reference.conf
     *   contains the default configuration for the framework. Works only
@@ -70,17 +72,36 @@ private[app] trait ScavengerNode {
     *    IP and port of the seed node, as well as the directory for
     *    persisted intermediate results should be specified.
     *
-    * 3) Environment variables and java arguments can be used to override
-    *    certain settings, but we prefer to use the configuration files.
+    * 3) Following additional JVM-properties can be used to set the 
+    *    IP and port of worker nodes: -DnodeIp=123.456.0.78 -DnodePort=8765
+    *    
+    * 4) All other parameters can be specified as JVM properties as well, but
+    *    keep in mind that values in 'scavenger.conf' have higher precedence
+    *    than anything else.
     *
     */
   def scavengerInit(): Unit = {
-    val referenceConf = ConfigFactory.load()
-    val userConf = ConfigFactory.parseFile(new File("scavenger.conf"))
+    val conf = ConfigFactory.load()
+    // TODO: all this seemed to be a bad idea, just remove it completely
+    // use system property -Dconfig.file=/path/to/scavenger.conf instead
+    // of all this mess!
+    // 
+    // val scavengerConfPath_null = System.getProperty("scavengerConfPath")
+    // val scavengerConfPath = 
+    //   if (scavengerConfPath_null == null) "scavenger.conf"
+    //   else scavengerConfPath_null
+    // val scavengerConfFile = new File(scavengerConfPath)
+    // if (!scavengerConfFile.exists) {
+    //   throw new FileNotFoundException("Could not find the user-modified " +
+    //     "configuration file. Expected a path to this file passed as a " +
+    //     "property to the jvm: " +
+    //     "-DscavengerConfPath=/path/to/my/scavenger.conf"
+    //   )
+    // }
+    // val userConf = ConfigFactory.parseFile(scavengerConfFile)
     val generalConfig = 
-      userConf.getConfig("scavenger") withFallback 
-      userConf withFallback
-      referenceConf
+      conf.getConfig("scavenger") withFallback conf
+      // referenceConf
     val nodeSpecificConfig = extractNodeConfig(generalConfig)
     actorSystem = ActorSystem("scavenger", nodeSpecificConfig)
     initializeActors(actorSystem, nodeSpecificConfig)

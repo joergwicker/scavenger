@@ -24,7 +24,8 @@ with ContextProvider
 with LoadBalancer
 with MasterScheduler
 with MasterCache
-with DemilitarizedZone {
+with DemilitarizedZone 
+with UnexpectedMessageHandler {
 
   import Master._
 
@@ -34,16 +35,20 @@ with DemilitarizedZone {
     seedPath,
     MasterHere,
     normalOperationMode
-  ) orElse handleExternalRequests
+  ) orElse handleExternalRequests orElse 
+  handleScheduling orElse 
+  handleUnexpectedMessages
 
   private def normalOperationMode: Receive = 
     handleExternalRequests orElse
     updatingLastMessageTime(handleWorkerRequests) orElse
     updatingLastMessageTime(handleWorkerResponses) orElse
+    handleScheduling orElse
     handleLocalResponses orElse
     monitorLastMessageTimes orElse
     handleReminders orElse
-    monitorCache
+    monitorCache orElse
+    handleUnexpectedMessages
 }
 
 /** Defines `props` used to construct `Master` actors, 

@@ -31,7 +31,8 @@ with BruteForceEvaluator
 with WorkerScheduler
 with WorkerCache
 with DemilitarizedZone
-with ContextProvider {
+with ContextProvider 
+with UnexpectedMessageHandler {
 
   import context.dispatcher
   import Worker._
@@ -49,7 +50,7 @@ with ContextProvider {
       WorkerHere,
       awaitingJob  // what to do after connection is established
     )
-  )
+  ) orElse handleUnexpectedMessages
 
   private val awaitingJob: Receive = ({
     
@@ -90,9 +91,10 @@ with ContextProvider {
   }: Receive) orElse 
   handleExternalRequests orElse 
   handleLocalResponses orElse
+  handleScheduling orElse
   handleHandshakeRemnants orElse
   monitorCache orElse
-  reportUnexpectedMessages
+  handleUnexpectedMessages
   
   /** When a worker is occupied, it does not react on
     * anything except `Ping` requests.
@@ -129,28 +131,7 @@ with ContextProvider {
   handleLocalResponses orElse 
   handleHandshakeRemnants orElse 
   monitorCache orElse
-  reportUnexpectedMessages
-
-  /** Behavior for reporting unexpected messages */
-  private def reportUnexpectedMessages: Receive = ({
-    case unexpectedMessage => {
-      unexpectedMessage match {
-        case akka.actor.Status.Failure(exc) => {
-          val sw = new java.io.StringWriter()
-          val pw = new java.io.PrintWriter(sw)
-          exc.printStackTrace(pw)
-          val stackTrace = sw.toString()
-          log.error("Exception caught in Worker: " + 
-            exc.getMessage + "\n" + stackTrace
-          )
-        }
-      }
-      log.error(
-        "Received something unexpected: " + unexpectedMessage + " " + 
-        "The class of this thing is: " + unexpectedMessage.getClass + " "
-      )
-    }
-  }: Receive)
+  handleUnexpectedMessages
 }
 
 /** The worker object describes various kinds of messages that

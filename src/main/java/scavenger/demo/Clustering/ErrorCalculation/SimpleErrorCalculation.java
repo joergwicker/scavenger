@@ -51,7 +51,7 @@ public class SimpleErrorCalculation<T> implements ErrorCalculation<T>, java.io.S
         maxClusterDiameter = 0;
         for (TreeNode<T> cluster : clusters)
         {
-            double clusterDiameter = diana.calculateClusterDiameter(cluster.getData());
+            double clusterDiameter = diana.calculateClusterDiameter(cluster);
             if (clusterDiameter > maxClusterDiameter)
             {
                 maxClusterDiameter = clusterDiameter;

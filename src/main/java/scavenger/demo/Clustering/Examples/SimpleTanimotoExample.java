@@ -82,7 +82,7 @@ class SimpleTanimotoExample implements java.io.Serializable
         diana.endClustering();
         
         // 5. Print results 
-        diana.printTree(node);         
+        node.printTree();         
     }
     
     

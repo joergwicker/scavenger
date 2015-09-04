@@ -99,7 +99,7 @@ class IrisExample implements java.io.Serializable
         diana.endClustering();
         
         // 5. Print the results
-        diana.printTree(node); 
+        node.printTree(); 
     }
     
     public static void main(final String[] args)

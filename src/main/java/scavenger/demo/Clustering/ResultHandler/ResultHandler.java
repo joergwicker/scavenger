@@ -1,4 +1,4 @@
-package scavenger.demo.clustering.examples;
+package scavenger.demo.clustering;
 
 import scavenger.demo.clustering.distance.*;
 import scavenger.demo.clustering.*;
@@ -23,16 +23,16 @@ import java.util.Properties;
 /**
  * Clustering of chemical data
  */
-public abstract class Goodness implements java.io.Serializable
+public abstract class ResultHandler<T> implements java.io.Serializable
 {   
     //public Goodness(Properties properties, final String GOODNESS_ATTRIBUTE_VALUES);
     
     
-    public abstract void addGoodnessAttributeValue(String value);
+    public abstract void addAttributeValue(String value);
     
     /**
      *
      */
-    public abstract void calculateGoodness(TreeNode<Object> node);
+    public abstract void handleResults(TreeNode<T> node);
     
 }

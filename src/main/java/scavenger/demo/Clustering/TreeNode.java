@@ -4,7 +4,7 @@ import scavenger.demo.clustering.distance.*;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Queue;
-
+import java.util.LinkedList;
 /**
  * A node within the cluster hierarchy.
  */
@@ -17,6 +17,7 @@ public class TreeNode<T> implements java.io.Serializable
     
     private int splitNumber;    
     private List<Integer> toBeSplitOn = new ArrayList<Integer>(); // indexes of items
+    private int splitHappenedOnIndex = 0;
     
     private double error = 1;
 
@@ -43,10 +44,17 @@ public class TreeNode<T> implements java.io.Serializable
         this.parent = parent;
     }
     
-    public void setUpSplinterInfo(List<Integer> toBeSplitOn)
+    public void setUpSplinterInfo(List<Integer> toBeSplitOn, int numberOfSplinters)
     {
-        this.toBeSplitOn = toBeSplitOn;
+        
         splitNumber = countSplits(getRoot());
+        System.out.println("numberOfSplinters : " + numberOfSplinters );
+        System.out.println("splitNumber : " + splitNumber );
+        if ((numberOfSplinters <= 0) || (splitNumber < numberOfSplinters))
+        {
+            System.out.println("setUpSplinterInfo() true" );
+            this.toBeSplitOn = toBeSplitOn;
+        }
     }
     
     public int countSplits(TreeNode<T> root)
@@ -139,18 +147,127 @@ public class TreeNode<T> implements java.io.Serializable
     
     /////////////////
     
-    public void print() 
+    
+    public void setSplitHappenedOn(int splitHappenedOnIndex)
     {
+        this.splitHappenedOnIndex = splitHappenedOnIndex;
+    }
+    
+    public int getSplitHappenedOn()
+    {
+        return splitHappenedOnIndex;
+    }
+    
+    public String getSplitHappenedOnDataId()
+    {
+        return data.get(getSplitHappenedOnIndex()).getId();
+    }
+    
+    public int getSplitHappenedOnIndex()
+    {
+        for(int i = 0; i < toBeSplitOn.size(); i++)
+        {
+            if(toBeSplitOn.get(i).equals(splitHappenedOnIndex))
+            {
+                return i;
+            }
+        }
+        return -1;
+    }
+    
+    public String print() 
+    {
+        String str = "";
         for (DataItem value : data)
         {
+            str = str + ", " + value.getId();
             System.out.print(", " + value.getId());
         }
+        str = str + " : made on split number " + splitNumber;
+        if (childLeft != null)
+        {
+            str = str + ", child started using " + getSplitHappenedOnDataId() + " the " + (getSplitHappenedOnIndex()+1) + " furthest item";
+        }
+        str = str + "\n";
         System.out.println(" : " + splitNumber);
+        return str;
     }
     
     
+    public String printTree()
+    {
+        String str = "";
+        Queue<TreeNode> queue = new LinkedList<TreeNode>();
+        queue.add(this);
+        while(!queue.isEmpty())
+        {
+            TreeNode r = queue.remove(); 
+            str = str + r.print();
+            if (r.getChildLeft() != null)
+            {
+                queue.add(r.getChildLeft());
+                queue.add(r.getChildRight());
+            }
+        }
+        return str;
+    }
     
-    /* public void removeHigherSplitNodes(TreeNode<T> root)
+    
+    public List<TreeNode<T>> findLeafNodes()
+    {
+        return findLeafNodes(this);
+    }
+    
+    public List<TreeNode<T>> findLeafNodes(int splinterNumber)
+    {
+        return findLeafNodes(this, splinterNumber);
+    }
+    
+    
+    /**
+     *
+     * @param tree Initially should be the root node
+     *
+     * @return The leaf nodes
+     */
+    private List<TreeNode<T>> findLeafNodes(TreeNode<T> tree) 
+    {
+        List<TreeNode<T>> leaves = new ArrayList<TreeNode<T>>();
+        
+        if (tree.getChildLeft() == null)
+        {
+            leaves.add(tree);
+        }
+        else
+        {
+            leaves.addAll(findLeafNodes(tree.getChildLeft()) );
+            leaves.addAll(findLeafNodes(tree.getChildRight()) );
+        }
+        return leaves;
+    }
+    
+    private List<TreeNode<T>> findLeafNodes(TreeNode<T> tree, int splinterNumber) 
+    {
+        List<TreeNode<T>> leaves = new ArrayList<TreeNode<T>>();
+        
+        if (tree.getChildLeft() == null)
+        {
+            leaves.add(tree);
+        }
+        else if (tree.getChildLeft().getSplitNumber() > splinterNumber)
+        {
+            leaves.add(tree);
+        }
+        else
+        {
+            leaves.addAll(findLeafNodes(tree.getChildLeft(), splinterNumber) );
+            leaves.addAll(findLeafNodes(tree.getChildRight(), splinterNumber) );
+        }
+        return leaves;
+    }
+    
+    
+    /*public void removeHigherSplitNodes(TreeNode<T> root)
     {
         if ((root.getChildLeft() != null) && (root.getChildLeft().getSplitNumber() > this.splitNumber))
         {
@@ -162,5 +279,5 @@ public class TreeNode<T> implements java.io.Serializable
             removeHigherSplitNodes(root.getChildLeft());
             removeHigherSplitNodes(root.getChildRight());
         }
-    }*/    
+    } */  
 }

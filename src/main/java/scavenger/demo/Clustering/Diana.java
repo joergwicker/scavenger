@@ -26,27 +26,39 @@ import akka.util.Timeout;
 import static akka.dispatch.Futures.future;
 import static akka.dispatch.Futures.sequence;
 import akka.dispatch.*;
+
+
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 /**
  * Performs Diana (DIvisive ANAlysis) clustering using scavenger
  * Attempts to remove the issue of outliers by trying n possible nodes as the node which starts the splinter cluster.
  *
  */
-public class Diana<T> extends ScavengerAppJ 
+public class Diana<T> extends ScavengerAppJ // implements Runnable
 {
     private DianaDistanceFunctions dianaDistanceFunctions;    
     private DistanceMeasureSelection[] dataInfo;
     private int runTimeSeconds = 0;
     private int numberOfStartSplinterNodes = 0;
+    
     private DiameterMeasure diameterMeasure = null;
+    private List<Integer> trimmedMeanPercent = new ArrayList<Integer>();
     
     private ErrorCalculation<T> errorCalculation = null; // Are the clusters "good" clusters?
     private TreeNode<T> bestResult; 
     private double smallestError = Double.MAX_VALUE;
     private boolean isClustered = false;
     
-    private double errorThreshold = 0.04;
+    private double errorThreshold = 0.0;//0.04
     
-    private int timeoutSeconds = 60;
+    private int timeoutSeconds = 60;//timeout for a single job //TODO set in ChemicalClustering
+    
+    private int numberOfSplinters = 0;
+    
+    private ResultHandler<T> resultHandler = null;
+    
+    private int numJobs = 0;
     
     /////// Constructors ///////
     
@@ -108,33 +120,36 @@ public class Diana<T> extends ScavengerAppJ
         this.numberOfStartSplinterNodes = numberOfStartSplinterNodes;
     }
     
+    public void setNumberOfSplinters(int numberOfSplinters)
+    {
+        this.numberOfSplinters = numberOfSplinters;
+    }
+    
     public void setTimeoutSeconds(int timeoutSeconds)
     {
         this.timeoutSeconds = timeoutSeconds;
     }
     
+    public void setResultHandler(ResultHandler<T> resultHandler)
+    {
+        this.resultHandler = resultHandler;
+    }
+    
+    public void setTrimmedMeanPercent(List<Integer> trimmedMeanPercent)
+    {
+        this.trimmedMeanPercent = trimmedMeanPercent;
+    }
+    
+    public void setTrimmedMeanPercent(int trimmedMeanPercent)
+    {
+        this.trimmedMeanPercent = new ArrayList<Integer>();
+        this.trimmedMeanPercent.add(trimmedMeanPercent);
+    }
     ///////////////////////////
     
-    boolean allFuturesFinished = false; 
-    public void setAllFuturesFinished(boolean allFuturesFinished)
+    private void setDefaults()
     {
-        this.allFuturesFinished = allFuturesFinished;
-    }
-    /**
-     *
-     * @param root The root TreeNode that contains all the data to be clusted.
-     * @param numberOfIterations The number of times the cluster should be split up 
-     *
-     * @return The root for the tree of clusters.
-     */
-    public TreeNode<T> runClustering(TreeNode<T> root) //TODO why multiple masters start up
-    {
-        System.out.println("Diana.runClustering() called... setting defauls");
-        if(root.getData().size() <= 1)
-        {
-            System.out.println("Warning : <=1 items given");
-            return root;
-        }
+        System.out.println("Diana : setting defaults ");
         if (errorCalculation == null)
         {
             System.out.println("ErrorCalculation has not been set using SimpleErrorCalculation with errorThreshold of " + errorThreshold);
@@ -155,23 +170,51 @@ public class Diana<T> extends ScavengerAppJ
             System.out.println("diameterMeasure has not been set using default (DiameterMeasure.TRIMMED_MEAN)");
             diameterMeasure = DiameterMeasure.TRIMMED_MEAN;//LARGEST_AVERAGE_DISTANCE; 
         }
-        //setupWeights();
+        if((trimmedMeanPercent.size() == 0) && (diameterMeasure == DiameterMeasure.TRIMMED_MEAN))
+        {
+            System.out.println("trimmedMeanPercent has not been set using default (5)");
+            trimmedMeanPercent.add(5);
+        }
+    }
+    
+    /**
+     *
+     * @param root The root TreeNode that contains all the data to be clusted.
+     * @param numberOfIterations The number of times the cluster should be split up 
+     *
+     * @return The root for the tree of clusters.
+     */
+    public TreeNode<T> runClustering(TreeNode<T> root) 
+    {    
+        if(root.getData().size() <= 1)
+        {
+            System.out.println("Warning : <=1 items given");
+            return root;
+        }
+        System.out.println("Diana.runClustering() called");
+        System.out.println("Help : ");
+        System.out.println("    p : Prints current result");
+        System.out.println("    q : Stops clustering and returns current result \n");
+        
+        this.setDefaults();
+        
         startScavenger();
         dianaDistanceFunctions = new DianaDistanceFunctions(dataInfo, numberOfStartSplinterNodes, diameterMeasure);  
-        //dianaDistanceFunctions.setScavengerContext(scavengerContext());      
-        root.setToBeSplitOn(dianaDistanceFunctions.getIndexFurthestPoints(root));
+        dianaDistanceFunctions.setTrimmedMeanPercent(trimmedMeanPercent);
+        //dianaDistanceFunctions.setScavengerContext(scavengerContext());   
+                   
         
-        //List<TreeNode<T>> results = new ArrayList<TreeNode<T>>();
         PriorityQueue<TreeNode<T>> results = new PriorityQueue<TreeNode<T>>(1, new TreeNodeComparator<T>());
+        numJobs = 0;
         smallestError = Double.MAX_VALUE;
         isClustered = false;
+        
+        root.setToBeSplitOn(dianaDistanceFunctions.getIndexFurthestPoints(root));
         results.add(root);
         
-        System.out.println("Diana.runClustering() running clustering");
+        System.out.println("Diana : running clustering");
         
-        
-        
-        // For all results
+        // For all results 
         //      For all nodes the new splinter cluster can be started on 
         //          create a Future which performs the splitting of the cluster
         //
@@ -180,14 +223,15 @@ public class Diana<T> extends ScavengerAppJ
         Calendar calendar = Calendar.getInstance(); // gets a calendar using the default time zone and locale.
         calendar.add(Calendar.SECOND, runTimeSeconds);
         Date endTime = calendar.getTime();
-        while (!isClustered && endTime.after(new Date()))//!allFuturesFinished)//(results.size() > 0)) 
-        {                             
+        while (!isClustered && endTime.after(new Date()) && ((results.size() != 0) || (numJobs != 0)))
+        {      
             if(results.size() > 0)  
             {
                 TreeNode<T> result = results.poll();                
                 for(int i = 0; i < result.getToBeSplitOn().size(); i++)
                 {
-                    ScavengerFunction<TreeNode<T>> run = new CreateNewSplinter(result.getToBeSplitOn().get(i), dianaDistanceFunctions);
+                    numJobs = numJobs + 1;
+                    ScavengerFunction<TreeNode<T>> run = new CreateNewSplinter(result.getToBeSplitOn().get(i), dianaDistanceFunctions, numberOfSplinters);
                     Algorithm<TreeNode<T>, TreeNode<T>> algorithm = scavengerAlgorithm.expensive("createNewSplinter", run);
                     Computation<TreeNode<T>> computation = scavengerComputation.apply("node_"+result+result.getToBeSplitOn().get(i), result);                    
                     
@@ -201,18 +245,12 @@ public class Diana<T> extends ScavengerAppJ
                                              
                                              setIsClustered(currentResult); 
                                              results.add(currentResult);
+                                             decrementNumberOfJobs();
                                          }
                                      }, scavengerContext().executionContext());
                 }
-            }
-            try
-            {
-                Thread.yield();
-            }
-            catch(Exception e) 
-            { 
-                e.printStackTrace(); 
-            }  
+            }              
+            this.handleKeyboardInput(); 
         }
         
         System.out.println("Finished");
@@ -220,65 +258,40 @@ public class Diana<T> extends ScavengerAppJ
         return bestResult.getRoot();
     }
     
-    /**
-     * 
-     */
-    /*private void setupWeights()
-    {   
-        System.out.println("setupWeights");
-        double baseMin = 0.0;
-        double baseMax = 0.0;
-        double limitMin = 0.0; 
-        double limitMax = 0.0;
-        
-        for(DistanceMeasureSelection distanceMeasure : dataInfo)
-        {
-            for(String id : distanceMeasure.getIds()) 
-            {
-                if (distanceMeasure.getWeight() > baseMax)
-                {
-                    baseMax = distanceMeasure.getWeight();
-                }
-                limitMax = limitMax + 1.0;
-            }
-        }
-        System.out.println("baseMax : " + baseMax);
-        System.out.println("limitMax : " + limitMax);
-        for(DistanceMeasureSelection distanceMeasure : dataInfo)
-        {
-            //for(String id : distanceMeasure.getIds()) 
-           // {
-            //http://stackoverflow.com/questions/5294955/how-to-scale-down-a-range-of-numbers-with-a-known-min-and-max-value
-            double weight = ((limitMax - limitMin) * (distanceMeasure.getWeight() - baseMin) / (baseMax - baseMin)) + limitMin;
-            distanceMeasure.setWeight(weight);
-            System.out.println("weight : " + weight);
-            //}
-        }
-    }*/
-    
-    
-    /**
-     * Checks if the number of splits that should be performed has been reached.
-     * 
-     * @param node Any node within the tree
-     * @return true if number of splits reached
-     */
-   /* private boolean enoughSplits(TreeNode<T> node)
+    public void decrementNumberOfJobs()
     {
-        boolean enoughSplits = false;
-        TreeNode<T> root = node.getRoot();
-        List<TreeNode<T>> leaves = dianaDistanceFunctions.findLeafNodes(root);
-        for(TreeNode<T> leaf : leaves)
+        numJobs = numJobs - 1;
+    }
+    
+    /**
+     * Allows user to ask for results and for the clustering to finish
+     */
+    public void handleKeyboardInput()
+    {
+        try 
         {
-            if (leaf.getSplitNumber() >= numberOfSplinters)
+            Thread.sleep(80); // TODO try shorter sleep
+            //Thread.yield();
+            if(System.in.available() > 0)
             {
-                enoughSplits = true;
-                break;
+                int keyboardInput = System.in.read();
+                if ((keyboardInput == (int)'p') && (resultHandler != null))
+                {
+                    resultHandler.handleResults(bestResult.getRoot());
+                }
+                else if (keyboardInput == (int)'q')
+                {
+                    isClustered = true;
+                }
             }
         }
-        return enoughSplits;
-    }*/
+        catch(Exception e) 
+        { 
+            e.printStackTrace(); 
+        }
+    }
     
+       
     /**
      * Checks if the clustering has been completed
      *
@@ -286,46 +299,17 @@ public class Diana<T> extends ScavengerAppJ
      */
     private void setIsClustered(TreeNode<T> result)//List<TreeNode<T>> results)
     {        
-        //for (TreeNode<T> result : results)
-        //{
-           /* if (!enoughSplits(result))
-            {
-                return;
-            }*/
-            TreeNode<T> root = result.getRoot();//dianaDistanceFunctions.findRoot(result);
-            List<TreeNode<T>> leaves = dianaDistanceFunctions.findLeafNodes(root);
-            
-            isClustered = errorCalculation.isClustered(leaves, dianaDistanceFunctions);
-            if (errorCalculation.getLastError() < smallestError)
-            {
-                smallestError = errorCalculation.getLastError();
-                bestResult = result;
-            }
-            result.setError(errorCalculation.getLastError());
-            //if (isClustered) break;
-       // }
-    }
-    
-    
-    
-    /**
-     *
-     * @param node The root tree node
-     */
-    public void printTree(TreeNode<T> node)
-    {
-        Queue<TreeNode> queue = new LinkedList<TreeNode>();
-        queue.add(node);
-        while(!queue.isEmpty())
+        TreeNode<T> root = result.getRoot();//dianaDistanceFunctions.findRoot(result);
+        List<TreeNode<T>> leaves = root.findLeafNodes();
+        
+        isClustered = errorCalculation.isClustered(leaves, dianaDistanceFunctions);
+        if (errorCalculation.getLastError() <= smallestError)
         {
-            TreeNode r = queue.remove(); 
-            r.print();
-            if (r.getChildLeft() != null)
-            {
-                queue.add(r.getChildLeft());
-                queue.add(r.getChildRight());
-            }
+            smallestError = errorCalculation.getLastError();
+            bestResult = result;
         }
+        result.setError(errorCalculation.getLastError());
+        
     }
     
     /**
@@ -336,6 +320,8 @@ public class Diana<T> extends ScavengerAppJ
         scavengerShutdown();  
     }
 }
+
+
 /**
      * Checks if the cluster has been completed
      */

@@ -36,8 +36,7 @@ public class DianaDistanceFunctions<T> implements java.io.Serializable
     private int numberOfStartSplinterNodes = 0;
     
     private DiameterMeasure distanceDiameter = DiameterMeasure.TRIMMED_MEAN;
-    private int trimmedMeanPercent = 10;
-    
+    private List<Integer> trimmedMeanPercents = new ArrayList<Integer>();
     
     /**
      *
@@ -50,17 +49,20 @@ public class DianaDistanceFunctions<T> implements java.io.Serializable
         this.dataInfo = dataInfo;
         this.numberOfStartSplinterNodes = numberOfStartSplinterNodes;
         this.distanceDiameter = distanceDiameter;
+        
+        trimmedMeanPercents.add(5);
     }
-    
-    public DianaDistanceFunctions()
-    {
-    
-    }
-    
-    public void setTrimmedMeanPercent(int trimmedMeanPercent)
+    public DianaDistanceFunctions(){}
+    /*public void setTrimmedMeanPercent(int trimmedMeanPercent)
     {
         this.trimmedMeanPercent = trimmedMeanPercent;
+    }*/
+    
+    public void setTrimmedMeanPercent(List<Integer> trimmedMeanPercents)
+    {
+        this.trimmedMeanPercents = trimmedMeanPercents;
     }
+    
     
     /**
      * Finds the cluster with the largest diameter 
@@ -100,7 +102,7 @@ public class DianaDistanceFunctions<T> implements java.io.Serializable
         
         for(int j = 0; j < clusters.size(); j++)
         {
-            distances.add(calculateClusterDiameter(clusters.get(j).getData()));
+            distances.add(calculateClusterDiameter(clusters.get(j)));
         }        
         return distances;    
     }
@@ -125,27 +127,7 @@ public class DianaDistanceFunctions<T> implements java.io.Serializable
         return noneLeafNodes;
     }
     
-    /**
-     *
-     * @param tree Initially should be the root node
-     *
-     * @return The leaf nodes
-     */
-    public List<TreeNode<T>> findLeafNodes(TreeNode<T> tree) 
-    {
-        List<TreeNode<T>> leaves = new ArrayList<TreeNode<T>>();
-        
-        if (tree.getChildLeft() == null)
-        {
-            leaves.add(tree);
-        }
-        else
-        {
-            leaves.addAll(findLeafNodes(tree.getChildLeft()) );
-            leaves.addAll(findLeafNodes(tree.getChildRight()) );
-        }
-        return leaves;
-    }
+    
     
     /**
      * Max distance between two elements in a cluster
@@ -154,8 +136,9 @@ public class DianaDistanceFunctions<T> implements java.io.Serializable
      * @param cluster The cluster who's diameter is to be calculated
      * @return the diameter of the cluster
      */
-    public double calculateClusterDiameter(List<DataItem<T>> cluster)
+    public double calculateClusterDiameter(TreeNode<T> node)//List<DataItem<T>> cluster)
     {
+        List<DataItem<T>> cluster = node.getData();
         if(distanceDiameter == DiameterMeasure.LARGEST_AVERAGE_DISTANCE)
         {
             // This calculates the max average distance
@@ -190,7 +173,23 @@ public class DianaDistanceFunctions<T> implements java.io.Serializable
             }
             if(allAverages.size() > 1)
             {
-                allAverages = allAverages.subList(0, (allAverages.size()/(100/trimmedMeanPercent))+1);
+                int currentTrimmedMeanPercent = 0;
+                if (trimmedMeanPercents.size() == 1)
+                {
+                    currentTrimmedMeanPercent = trimmedMeanPercents.get(0);
+                }
+                else
+                {
+                    if (trimmedMeanPercents.size() > node.getSplitNumber())
+                    {
+                        currentTrimmedMeanPercent = trimmedMeanPercents.get(node.getSplitNumber());
+                    }
+                }
+                //System.out.println("Using trimmedMeanPercent = " + currentTrimmedMeanPercent);
+                if (currentTrimmedMeanPercent > 0)
+                {
+                    allAverages = allAverages.subList(0, (allAverages.size()/(100/currentTrimmedMeanPercent))+1);
+                }
             }
             double totalDistance = 0.0;
             for (Double distance : allAverages)

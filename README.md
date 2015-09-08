@@ -32,7 +32,7 @@ to build scavenger.
 Examples
 ====
 
-We have a seperate demo git repository with a few examples and more documentation at https://github.com/joergwicker/scavnger_demo 
+We have a seperate demo git repository with a few examples and more documentation at https://github.com/joergwicker/scavenger_demo 
 
 
 Cite

@@ -48,7 +48,7 @@ with ContextProvider {
     * individual parts for computation.
     */
   def schedule(job: Computation[Any]): Future[Value[Any]] = {
-    println("+++++++++++++Enter schedule()")
+    
     val result = if (mustScheduleHere(job.cachingPolicy, job.difficulty)) {
       // no choice, we are forced to schedule it right here,
       // we can not delegate it anyway, so there is no
@@ -64,19 +64,17 @@ with ContextProvider {
       simplify(job).map{ j => UnscheduledSimplifiedJob(ijid, j) } pipeTo self
       p.future
     }
-    println("+++++++++++++Exit schedule()")
+   
     result
   }
 
   def handleScheduling: Receive = ({
     case UnscheduledSimplifiedJob(ijid, j) => {
-      log.debug("USJ: " + ijid + ":" + j)
       computeSimplified(j).map{ 
         r => FinalResultSimplifiedJob(j.identifier, r, ijid) 
       } pipeTo self
     }
     case FinalResultSimplifiedJob(id, res, ijid) => {
-      log.debug("FRSJ: ijid = " + ijid + " id = " + id + " : " + res)
       simplifiedJobs(ijid).success(Value(id, res, CachingPolicy.Nowhere))
       simplifiedJobs.remove(ijid)
     }

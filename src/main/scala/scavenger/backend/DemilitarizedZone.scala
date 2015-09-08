@@ -26,13 +26,11 @@ trait DemilitarizedZone extends Actor with ActorLogging with Cache {
   
   def handleExternalRequests: Receive = ({
     case Compute(job, result) => {
-      log.debug("DMZ: got Compute {}", job)
       getComputed(job).onSuccess{
         case r: Any => result.success(r)
       }
     }
     case GetExplicitComputation(job, result) => {
-      log.debug("DMZ: got GetExplicitComputation {}", job)
       getExplicit(job).onSuccess{
         case r: ExplicitComputation[Any] => result.success(r)
       }

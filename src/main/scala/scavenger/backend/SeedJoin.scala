@@ -70,6 +70,10 @@ with Remindable {
 
   }: Receive)
 
+  def handleSeedHandshakeRemnants: Receive = ({
+    case x : SeedResolution => { log.info("Ignored repeated SeedResolution") }
+  }: Receive)
+
 }
 
 /** Contains `SeedJoin` specific messages */

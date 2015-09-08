@@ -26,15 +26,10 @@ with LastMessageTimeMonitoring {
 
   import context.dispatcher
   
-  private var comprehensiveOnboardLog = ""
-  def onboardLog(msg: String): Unit = comprehensiveOnboardLog += "\n" + msg
-
   /** Stores internal jobs that
     * have not yet been assigned to a worker
     */
   private val queue = mutable.Queue.empty[InternalJob]
-  
-  onboardLog("Init: queue = " + queue)
 
   /** Assignment of worker-ActorRef's to the currently processed job.
     */
@@ -44,15 +39,12 @@ with LastMessageTimeMonitoring {
   /** Perform a simple computation that can be delegated.
     */
   def computeSimplified[X](r: Computation[X]): Future[X] = {
-    println("--------------------- Enter computeSimplified()")
     // we simply create a promise in the promise-map, and enqueue the job
     val p = Promise[Any]
     val label = toInternalLabel(r.identifier)
     promises(label) = p
     enqueueSimple(label, r)
     val result = p.future.map{ a => a.asInstanceOf[X] }
-
-    println("------------------------- Exit computeSimplified()")
     result
   }
 
@@ -61,10 +53,7 @@ with LastMessageTimeMonitoring {
   private def enqueueSimple(label: InternalLabel, job: Computation[Any]): Unit = 
   { 
     val internalJob = InternalJob(label, job)
-    onboardLog("Want to insert job " + job + " into queue, now queue = " + queue)
     queue.enqueue(internalJob)
-    log.info("enqueued job " + job)
-    onboardLog("enqueued job " + job + " queue now = " + queue)
     // notify all workers that there is something to do
     for (worker <- idleWorkers) worker ! JobsAvailable
   }
@@ -76,7 +65,6 @@ with LastMessageTimeMonitoring {
     */
   private def sendJobToWorker(j: InternalJob, w: ActorRef): Unit = {
     log.debug("sendJobToWorker: job = {}",j)
-    onboardLog("sendJobToWorker: job = " + j + " to " + w)
     assert(j != null, "The job should be not null")
     w ! j
   }
@@ -109,13 +97,9 @@ with LastMessageTimeMonitoring {
       assert(!(internalJob == null), "Dequeued job should be not null")
       assignedJobs(worker) = Some(internalJob)
       sendJobToWorker(internalJob, worker)
-      onboardLog("Assigned " + internalJob + " to " + worker.path.name + "," +
-        "queue = " + queue)
       log.info(
         "Assigned job " + internalJob.job + 
-        " to " + worker.path.name +
-        ", \n remaining jobs in queue: " + queue + "\n completeLog = " + 
-        comprehensiveOnboardLog
+        " to " + worker.path.name
       )
     } else {
       log.info(
@@ -172,6 +156,7 @@ with LastMessageTimeMonitoring {
       for (w <- ws) {
         tryAssignJob(w)
       }
+    case r: Reminder => { /* no longer relevant, ignore */ }
   }
   
   /** Behavior for normal operation mode.
@@ -196,7 +181,7 @@ with LastMessageTimeMonitoring {
     */
   protected[master] def handleWorkerResponses: Receive = {
     case InternalResult(label, result) => {
-      val logMessageIntro = "Received result " + result + " from " + 
+      val logMessageIntro = "Received result " + label + " from " + 
         sender.path.name + " "
       assignedJobs(sender) match {
         case None => log.error(
@@ -212,8 +197,7 @@ with LastMessageTimeMonitoring {
           } else {
             log.info(
               logMessageIntro + 
-              ", fulfilling promise, try assign new job. " +
-              " Currently todo: " + queue
+              ", fulfilling promise, try assign new job. "
             )
             fulfillPromise(label, result)
             assignedJobs(sender) = None

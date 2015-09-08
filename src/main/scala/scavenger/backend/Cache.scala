@@ -41,8 +41,6 @@ trait Cache extends Actor with ActorLogging with Scheduler {
     * scheduler.
     */
   def getComputed(job: Computation[Any]): Future[Any] = {
-    println("====================Enter getComputed")
-    log.debug("Cache.getComputed({})", job)
     val result = if (shouldBeCachedHere(job.cachingPolicy)) {
       // it makes sense to check the cache
       if (cache.isDefinedAt(job.identifier)) {
@@ -73,7 +71,6 @@ trait Cache extends Actor with ActorLogging with Scheduler {
         value <- explicit.getExplicitValue
       } yield value
     }
-    println("================== Exit get computed")
     result
   }
 
@@ -81,7 +78,6 @@ trait Cache extends Actor with ActorLogging with Scheduler {
     * a backed up computation)
     */
   def getExplicit(job: Computation[Any]): Future[ExplicitComputation[Any]] = {
-    log.debug("Cache.getExplicit({})", job)
     if (shouldBeCachedHere(job.cachingPolicy)) {
       // it makes sense to check the cache
       if (cache.isDefinedAt(job.identifier)) {

@@ -35,8 +35,9 @@ with UnexpectedMessageHandler {
     seedPath,
     MasterHere,
     normalOperationMode
-  ) orElse handleExternalRequests orElse 
-  handleScheduling orElse 
+  ) orElse 
+  handleExternalRequests orElse 
+  handleScheduling orElse
   handleUnexpectedMessages
 
   private def normalOperationMode: Receive = 
@@ -47,8 +48,10 @@ with UnexpectedMessageHandler {
     handleLocalResponses orElse
     monitorLastMessageTimes orElse
     handleReminders orElse
+    handleSeedHandshakeRemnants orElse
     monitorCache orElse
     handleUnexpectedMessages
+
 }
 
 /** Defines `props` used to construct `Master` actors, 

@@ -24,8 +24,7 @@ import static akka.dispatch.Futures.sequence;
 /**
  * A basic example of how to create a Local Scavenger Java application.
  */
-class LocalDemoJ extends LocalScavengerAppJ
-{
+class LocalDemoJ extends LocalScavengerAppJ {
     ScavengerFunction<Integer> f0 = new ScavengerFunction<Integer>()
     {
         // Value computation is being applied to can be accessed using "this.value"

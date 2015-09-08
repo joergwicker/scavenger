@@ -11,7 +11,7 @@ import java.util.LinkedList;
 public class TreeNode<T> implements java.io.Serializable
 {
     private List<DataItem<T>> data;
-    private TreeNode parent;
+    private TreeNode parent = null;
     private TreeNode childLeft = null;
     private TreeNode childRight = null;
     
@@ -32,6 +32,12 @@ public class TreeNode<T> implements java.io.Serializable
         splitNumber = 0;        
     }
     
+    public TreeNode(List<DataItem<T>> data, int splitNumber)
+    {
+        this.data = data;
+        this.splitNumber = splitNumber;        
+    }
+    
     /**
      * Constructor for all none root nodes.
      * 
@@ -44,30 +50,29 @@ public class TreeNode<T> implements java.io.Serializable
         this.parent = parent;
     }
     
-    public void setUpSplinterInfo(List<Integer> toBeSplitOn, int numberOfSplinters)
+    public void setUpSplinterInfo(List<Integer> toBeSplitOn)//, int numberOfSplinters)
     {
-        
-        splitNumber = countSplits(getRoot());
-        System.out.println("numberOfSplinters : " + numberOfSplinters );
-        System.out.println("splitNumber : " + splitNumber );
-        if ((numberOfSplinters <= 0) || (splitNumber < numberOfSplinters))
-        {
-            System.out.println("setUpSplinterInfo() true" );
+        //splitNumber = countSplits(getRoot());
+        //System.out.println("splitNumber : " + splitNumber + ", numberOfSplinters : " + numberOfSplinters);
+        //if ((numberOfSplinters <= 0) || (splitNumber < numberOfSplinters))
+        //{
+            //System.out.println("2 splitNumber : " + splitNumber + ", numberOfSplinters : " + numberOfSplinters);
             this.toBeSplitOn = toBeSplitOn;
-        }
+        //}
     }
     
-    public int countSplits(TreeNode<T> root)
+    public int countSplits()
     {
-        int count = 0;
+        splitNumber = getRoot().findLeafNodes().size();
+        return splitNumber;
+        /*int count = 0;
         if (root.getChildLeft() != null)
         {     
             count = count + 1;
             count = count + countSplits(root.getChildLeft());
             count = count + countSplits(root.getChildRight());
         }
-        System.out.println("countSplits : " + count);
-        return count;
+        return count;*/
     }
     
     
@@ -80,6 +85,11 @@ public class TreeNode<T> implements java.io.Serializable
     {
         this.childLeft = childLeft;
         this.childRight = childRight;
+    }
+    
+    public void setParent(TreeNode parent)
+    {
+        this.parent = parent;
     }
     
     public void setToBeSplitOn(List<Integer> toBeSplitOn)
@@ -183,10 +193,17 @@ public class TreeNode<T> implements java.io.Serializable
             str = str + ", " + value.getId();
             System.out.print(", " + value.getId());
         }
-        str = str + " : made on split number " + splitNumber;
+        str = str + " : made on " + splitNumber;
         if (childLeft != null)
         {
-            str = str + ", child started using " + getSplitHappenedOnDataId() + " the " + (getSplitHappenedOnIndex()+1) + " furthest item";
+            if (toBeSplitOn.size() > 0)
+            {
+                str = str + ", child started using " + getSplitHappenedOnDataId() + " the " + (getSplitHappenedOnIndex()+1) + " furthest item";
+            }
+        }
+        else if ((parent != null) && (toBeSplitOn.size() == 0))//Bottom-up was used
+        {
+            str = str + ", created using the " + (splitHappenedOnIndex+1) + " furthest items";
         }
         str = str + "\n";
         System.out.println(" : " + splitNumber);

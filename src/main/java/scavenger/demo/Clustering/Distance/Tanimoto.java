@@ -34,14 +34,14 @@ public class Tanimoto extends DistanceMeasure<BitSet>
         {
             distance = andCardinality / distance;
         }
-        return distance;        
+        return 1-distance;        
     }
     
     
     /**
      * For testing
      */
-  /*  public static void main(final String[] args)
+   /* public static void main(final String[] args)
     {
         BitSet bits1 = new BitSet(7);
         bits1.set(0);
@@ -51,10 +51,23 @@ public class Tanimoto extends DistanceMeasure<BitSet>
         bits1.set(5);
         BitSet bits2 = new BitSet(7);
         bits2.set(0);
+        bits2.set(2);
         bits2.set(3);
-        bits2.set(5);
         
         Tanimoto t = new Tanimoto();
         System.out.println(t.getDistance(bits1, bits2));
+        
+        BitSet bits3 = new BitSet(7);
+        bits3.set(0);
+        bits3.set(2);
+        bits3.set(3);
+        bits3.set(4);
+        BitSet bits4 = new BitSet(7);
+        bits4.set(0);
+        bits4.set(2);
+        bits4.set(3);
+        
+        //Tanimoto t = new Tanimoto();
+        System.out.println(t.getDistance(bits3, bits4));
     }*/
 }

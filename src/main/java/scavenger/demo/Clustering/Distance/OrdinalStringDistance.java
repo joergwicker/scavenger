@@ -34,7 +34,7 @@ public class OrdinalStringDistance extends DistanceMeasure<String>
         double difference = Math.abs(indexValue1 - indexValue2);
         
         
-        double distance = Math.pow(difference, 2) / Math.pow(valueOrder.size(), 2);
+        double distance = Math.pow(difference, 2) / Math.pow(valueOrder.size()-1, 2);
         //System.out.println("calculateDistance " + value1 + " and " + value2 + " = " + distance);
         return distance;
     }

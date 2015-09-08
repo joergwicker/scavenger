@@ -74,7 +74,17 @@ public class DianaDistanceFunctions<T> implements java.io.Serializable
     {
         double largestDiameter = 0.0;
         int largestDiameterIndex = 0;
-        
+        for (int j = 0; j < clusters.size(); j++)
+        {
+            double clusterDiameter = calculateClusterDiameter(clusters.get(j));
+            if (clusterDiameter > largestDiameter)
+            {
+                largestDiameter = clusterDiameter;
+                largestDiameterIndex = j;
+            }
+        }
+        return largestDiameterIndex;
+        /*
         List<Double> diameters = calculateClusterDiameters(clusters);
         for(int j = 0; j < diameters.size(); j++)
         {
@@ -86,7 +96,7 @@ public class DianaDistanceFunctions<T> implements java.io.Serializable
             }
         }
         //System.out.println("largestDiameterIndex : " + largestDiameterIndex);
-        return largestDiameterIndex;
+        return largestDiameterIndex;*/
     }
     
     /**
@@ -334,7 +344,7 @@ public class DianaDistanceFunctions<T> implements java.io.Serializable
     {
         List<Integer> indexesOfHighestAverage = new ArrayList<Integer>();
         List<Double> highestAverages = new ArrayList<Double>();
-        System.out.println("getIndexFurthestPoints cluster.getData() : " + cluster.getData().size());
+        //System.out.println("getIndexFurthestPoints cluster.getData() : " + cluster.getData().size());
         List<DistanceData> allAverages = new ArrayList<DistanceData>();
         for (int i = 0; i < cluster.getData().size(); i++)
         {
@@ -408,5 +418,96 @@ public class DianaDistanceFunctions<T> implements java.io.Serializable
     }*/
     
     
+    ///////////////// Methods used for Bottom-Up clustering //////////////////////
+    
+    /**
+     * 
+     * @param treeNodeList Contains a list of the nodes that could be joined
+     * @param numberOfClusters The number of clusters that should be created
+     * @param startNumberOfTreeNodes The number of clusters started with
+     *
+     * @return A list of the closest nodes (size will be same as numberOfStartSplinterNodes)
+     */
+    public List<Integer[]> getJoinNodes(List<TreeNode<T>> treeNodeList, int numberOfClusters, int startNumberOfTreeNodes)
+    {
+        List<Integer[]> joinNodes = new ArrayList<Integer[]>();
+        List<Double> smallestDistances = new ArrayList<Double>();
+        if(treeNodeList.size() > numberOfClusters)
+        {
+            for(int i = 0; i < treeNodeList.size(); i++)
+            {
+                for(int j = 0; j < treeNodeList.size(); j++)
+                {
+                    if(i == j)
+                    {
+                        continue;
+                    }
+                    double distance = calculateDistanceBetweenTwoClusters(treeNodeList.get(i), treeNodeList.get(j));
+                    
+                    if(smallestDistances.size() < numberOfStartSplinterNodes)
+                    {
+                        Integer[] array = {i, j};
+                        joinNodes.add(array);
+                        smallestDistances.add(distance);
+                    }
+                    else
+                    {
+                        int index = getLargestValueIndex(smallestDistances);
+                        if(-1 != index)
+                        {
+                            if (distance <  smallestDistances.get(index))
+                            {
+                                Integer[] array = {i, j};
+                                joinNodes.set(index, array);
+                                smallestDistances.set(index, distance);
+                            }
+                        }
+                    }
+                    
+                }
+            }
+        }
+        return joinNodes;
+    }
+    
+    /**
+     * The average distance between every DataItem in the clusters.
+     * 
+     */
+    public double calculateDistanceBetweenTwoClusters(TreeNode<T> cluster1, TreeNode<T> cluster2)
+    {
+        double distance = 0;
+        for(int i = 0; i < cluster1.getData().size(); i++)
+        {
+            for(int j = 0; j < cluster2.getData().size(); j++)
+            {
+                List<DataItem<T>> temp = new ArrayList<DataItem<T>>();
+                temp.add(cluster1.getData().get(i));
+                temp.add(cluster2.getData().get(j));                
+                distance = distance + calculateAverage(temp, 1);
+            }
+        }
+        return distance / (double)(cluster1.getData().size() * cluster2.getData().size());
+    }
+    
+    /**
+     *
+     */
+    private int getLargestValueIndex(List<Double> distances)
+    {
+        double max = 0.0;
+        int index = 0;
+        for (int i = 0; i < distances.size(); i++)
+        {
+            if (distances.get(i) > max)
+            {
+                max = distances.get(i);
+                index = i;
+            }
+        }
+        return index;
+    }
+    
+    /////////////////////////////////////////////////////////////////////////////////////
 }
 

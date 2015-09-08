@@ -35,7 +35,7 @@ class ResultHandlerStringValues extends ResultHandler<Object>
     private List<String> attributePossibleValues;
     
     private int splinterNumber = -1;
-    private String outputFile = null;
+    private String outputFile = "";
     
     private String outputStr = "";
     
@@ -108,8 +108,7 @@ class ResultHandlerStringValues extends ResultHandler<Object>
     {
         outputStr = node.printTree();
     
-        OrdinalStringDistance stringDistance = new OrdinalStringDistance(attributePossibleValues);
-        DianaDistanceFunctions distanceFunctions = new DianaDistanceFunctions();
+        
         List<TreeNode<Object>> leaves = new ArrayList<TreeNode<Object>>();
        
         if (splinterNumber == -1)
@@ -120,6 +119,21 @@ class ResultHandlerStringValues extends ResultHandler<Object>
         {
             leaves = node.getRoot().findLeafNodes(splinterNumber);
         }
+        handleResults(leaves);
+    }
+    
+    public void handleResults(TreeNodeList<Object> node)
+    {
+        System.out.println("handleResults TreeNodeList");
+        outputStr = node.print();
+        handleResults(node.getTreeNodeData());
+    }  
+    
+    public void handleResults(List<TreeNode<Object>> leaves)
+    {
+        System.out.println("handleResults leaves");
+        OrdinalStringDistance stringDistance = new OrdinalStringDistance(attributePossibleValues);
+        DianaDistanceFunctions distanceFunctions = new DianaDistanceFunctions();
         int[][] numInSetsForLeaves = new int[leaves.size()][attributePossibleValues.size()];
         
         double totalDistance = 0;
@@ -146,8 +160,6 @@ class ResultHandlerStringValues extends ResultHandler<Object>
             } 
             outputStr = outputStr + " : ( cluster distance " + " = " + (1 - (clusterDistance / cluster.size())) + " )\n";
             //System.out.println(" : ( calculateGoodness " + " = " + (1 - (clusterDistance / cluster.size())) + " )");
-            
-            
             
             numInSetsForLeaves[i] = printNumberInEachSet(cluster);
             

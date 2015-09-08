@@ -34,5 +34,6 @@ public abstract class ResultHandler<T> implements java.io.Serializable
      *
      */
     public abstract void handleResults(TreeNode<T> node);
-    
+    public abstract void handleResults(List<TreeNode<T>> nodes);
+    public abstract void handleResults(TreeNodeList<Object> node);
 }

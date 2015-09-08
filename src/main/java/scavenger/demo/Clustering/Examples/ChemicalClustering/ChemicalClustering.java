@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.HashMap;
 import java.util.Queue;
 import java.util.LinkedList;
+import java.util.Date;
 import java.net.URL;
 import java.util.Scanner;
 import java.io.IOException;
@@ -26,35 +27,39 @@ import java.util.Properties;
 class ChemicalClustering implements java.io.Serializable
 {   
     // Strings used in the properties file
-    private final String ARFF_FILE = "ARFF_FILE";
-    private final String EUCLIDEAN = "euclidean";
-    private final String TANIMOTO = "tanimoto";
-    private final String WEIGTH = "_weight"; // eg. tanimoto_1_weight
+    protected final String ARFF_FILE = "ARFF_FILE";
+    protected final String EUCLIDEAN = "euclidean";
+    protected final String TANIMOTO = "tanimoto";
+    protected final String WEIGTH = "_weight"; // eg. tanimoto_1_weight
     
-    private final String RUN_TIME = "RUN_TIME";
-    private final String NUM_START_SPLITER_NODES = "NUM_START_SPLITER_NODES";
+    protected final String RUN_TIME = "RUN_TIME";
+    protected final String START_SPLINTER_NODES = "START_SPLINTER_NODES";
     
-    private final String TEST_ATTRIBUTE = "TEST_ATTRIBUTE";
-    private final String TEST_ATTRIBUTE_VALUES = "TEST_ATTRIBUTE_VALUES"; 
+    protected final String TEST_ATTRIBUTE = "TEST_ATTRIBUTE";
+    protected final String TEST_ATTRIBUTE_VALUES = "TEST_ATTRIBUTE_VALUES"; 
     
-    private final String SPLINTER_NUMBER = "OUTPUT_SPLINTER_NUMBER";
-    private final String OUTPUT_FILE = "OUTPUT_FILE";
+    protected final String SPLINTER_NUMBER = "CLUSTERS";
+    protected final String OUTPUT_FILE = "OUTPUT_FILE";
     
-    private final String TRIMMED_MEAN_PERCENT = "TRIMMED_MEAN_PERCENT";
+    protected final String TRIMMED_MEAN_PERCENT = "TRIMMED_MEAN_PERCENT";
     
-    private final String SIMIPLE_ERROR_THRESHOLD = "SIMIPLE_ERROR_THRESHOLD"; // when clusters are all below this threshold the clustering is finished
+    protected final String SIMIPLE_ERROR_THRESHOLD = "SIMIPLE_ERROR_THRESHOLD"; // when clusters are all below this threshold the clustering is finished
     
-    private final String[] PROPERTY_NAMES = {ARFF_FILE, EUCLIDEAN, TANIMOTO, RUN_TIME, NUM_START_SPLITER_NODES, TEST_ATTRIBUTE, TEST_ATTRIBUTE_VALUES, SPLINTER_NUMBER, OUTPUT_FILE, TRIMMED_MEAN_PERCENT, SIMIPLE_ERROR_THRESHOLD};
+    protected final String[] PROPERTY_NAMES = {ARFF_FILE, EUCLIDEAN, TANIMOTO, RUN_TIME, START_SPLINTER_NODES, TEST_ATTRIBUTE, TEST_ATTRIBUTE_VALUES, SPLINTER_NUMBER, OUTPUT_FILE, TRIMMED_MEAN_PERCENT, SIMIPLE_ERROR_THRESHOLD};
    
-    private List<DistanceMeasureSelection> dataInformationList = new ArrayList<DistanceMeasureSelection>();
-    private List<DataItem<Object>> initialCluster = new ArrayList<DataItem<Object>>();
+    protected List<DistanceMeasureSelection> dataInformationList = new ArrayList<DistanceMeasureSelection>();
+    protected List<DataItem<Object>> initialCluster = new ArrayList<DataItem<Object>>();
     
-   // private List<String> goodnessAttributeValues = new ArrayList<String>();
-    //private String[] goodnessAttributePossibleValues;
-    private ResultHandler resultHandle = null;
+   // protected List<String> goodnessAttributeValues = new ArrayList<String>();
+    //protected String[] goodnessAttributePossibleValues;
+    protected ResultHandler resultHandle = null;
     
-    public ChemicalClustering(String fileName)
+    public ChemicalClustering()
     {   
+        
+    }
+    public void runChemicalClustering(String fileName)
+    {
         // read in the data
         Properties properties = setup(fileName);         
         TreeNode<Object> input = new TreeNode<Object>(initialCluster);
@@ -62,9 +67,15 @@ class ChemicalClustering implements java.io.Serializable
         diana = setProperties(diana, properties);
         diana.setResultHandler(resultHandle);
         
-        // Run the clustering        
+        // Run the clustering 
+        
+        Date start = new Date();
+        
         TreeNode<Object> node = diana.runClustering(input);        
         diana.endClustering();
+        
+        Date end = new Date();
+        System.out.println("Clustering took : " + (end.getTime() - start.getTime()) + " milliseconds");
         
         // Print the results
         System.out.println("Printing end result : ");
@@ -75,6 +86,7 @@ class ChemicalClustering implements java.io.Serializable
         { 
             resultHandle.handleResults(node);
         }
+    
     }
     
     /**
@@ -84,7 +96,7 @@ class ChemicalClustering implements java.io.Serializable
      * 
      * @param propertiesFilePath 
      */ 
-    private Properties setup(String propertiesFilePath)
+    protected Properties setup(String propertiesFilePath)
     {
         System.out.println("ChemcalData running setup");
         List<String> dataNames = new ArrayList<String>();
@@ -136,13 +148,13 @@ class ChemicalClustering implements java.io.Serializable
                 //   get the data the measure will be used on
                 for(String key : distanceAttributes.keySet()) 
                 {
-                    if(key.contains(TANIMOTO))
+                    if(key.toLowerCase().contains(TANIMOTO))
                     {
                         List<String> subSetAttributes = getOrderedAttributes(orderedAttributeList, distanceAttributes.get(key));
                         BitSet bitSet = setupTanimotoData(splitString, subSetAttributes, orderedAttributeList);
                         map.put(key, bitSet);
                     }
-                    else if(key.contains(EUCLIDEAN))
+                    else if(key.toLowerCase().contains(EUCLIDEAN))
                     {
                         List<String> subSetAttributes = getOrderedAttributes(orderedAttributeList, distanceAttributes.get(key));
                         List<Double> euclideanValues = setupEuclideanData(splitString, subSetAttributes, orderedAttributeList);
@@ -178,7 +190,7 @@ class ChemicalClustering implements java.io.Serializable
      * @param properties
      * @return HashMap containing key = distance metric identifier, value = list of attributes. (eg. key = tanimoto_1, value = [F1_Ring_1382529864, F2_AromaticRing_547664213, F3_PhenolicRing_448747194])
      */
-    private HashMap<String, List<String>> setupDistanceMeasures(Properties properties)
+    protected HashMap<String, List<String>> setupDistanceMeasures(Properties properties)
     {    
         HashMap<String, List<String>> distanceAttributes = new HashMap<String, List<String>>();
         for(String attribute : properties.stringPropertyNames())
@@ -203,7 +215,15 @@ class ChemicalClustering implements java.io.Serializable
                 }
                 else if(distanceMeasureId.contains(EUCLIDEAN))
                 {
-                    distanceMeasure = new EuclideanDistance(Double.parseDouble(properties.getProperty(distanceMeasureId)));
+                    try
+                    {
+                        distanceMeasure = new EuclideanDistance(Double.parseDouble(properties.getProperty(distanceMeasureId)));
+                    }
+                    catch(java.lang.NullPointerException ex)
+                    {
+                        System.out.println("Use default parameter (1) for " + distanceMeasureId);
+                        distanceMeasure = new EuclideanDistance(1);
+                    }
                 }
                 
                 // add weighting
@@ -234,7 +254,7 @@ class ChemicalClustering implements java.io.Serializable
      * @param attributes The attributes who's distance will be calculated using eucldiean distance.
      * @param orderedAttributeList The full list of attributes. Used to find the data index that the attributes are at.
      */
-    private BitSet setupTanimotoData(final String[] data, List<String> attributes, List<String> orderedAttributeList)
+    protected BitSet setupTanimotoData(final String[] data, List<String> attributes, List<String> orderedAttributeList)
     {
         BitSet bitSet = new BitSet(attributes.size());
         for (int i = 0; i < attributes.size(); i++)
@@ -256,7 +276,7 @@ class ChemicalClustering implements java.io.Serializable
      * @param attributes The attributes who's distance will be calculated using eucldiean distance.
      * @param orderedAttributeList The full list of attributes. Used to find the data index that the attributes are at.
      */
-    private List<Double> setupEuclideanData(final String[] data, List<String> attributes, List<String> orderedAttributeList)
+    protected List<Double> setupEuclideanData(final String[] data, List<String> attributes, List<String> orderedAttributeList)
     {
         List<Double> euclideanValues = new ArrayList<Double>();
         for (int i = 0; i < attributes.size(); i++)//String value : values)
@@ -275,7 +295,7 @@ class ChemicalClustering implements java.io.Serializable
      * @param unorderedAttributes An unordered subset of the attributes
      * @return ordered subset of the attributes
      */
-    private List<String> getOrderedAttributes(List<String> orderedAttributeList, List<String> unorderedAttributes)
+    protected List<String> getOrderedAttributes(List<String> orderedAttributeList, List<String> unorderedAttributes)
     {
         List<String> values = new ArrayList<String>();
         for(String attribute : orderedAttributeList)
@@ -295,7 +315,7 @@ class ChemicalClustering implements java.io.Serializable
      *
      * @return The list of attributes. Same order as arff file.
      */
-    private List<String> getOrderedAttributeList(Scanner scan, Properties properties)
+    protected List<String> getOrderedAttributeList(Scanner scan, Properties properties)
     {
         String line = scan.nextLine();
         while (!line.contains("@attribute"))
@@ -343,7 +363,7 @@ class ChemicalClustering implements java.io.Serializable
      * 
      * List.contains() performs String.equals(), but we want String.contains()
      */
-    private boolean isProperty(String attribute)
+    protected boolean isProperty(String attribute)
     {
         for(String property : PROPERTY_NAMES)
         {
@@ -363,7 +383,7 @@ class ChemicalClustering implements java.io.Serializable
      *
      * @param Diana with the properties set
      */
-    private Diana setProperties(Diana diana, Properties properties)
+    protected Diana setProperties(Diana diana, Properties properties)
     {
         // RUN_TIME
         if(properties.getProperty(RUN_TIME) != null)
@@ -371,16 +391,16 @@ class ChemicalClustering implements java.io.Serializable
             diana.setRunTimeSeconds(Integer.parseInt(properties.getProperty(RUN_TIME)));
         }
         
-        // NUM_START_SPLITER_NODES
-        if(properties.getProperty(NUM_START_SPLITER_NODES) != null)
+        // START_SPLINTER_NODES
+        if(properties.getProperty(START_SPLINTER_NODES) != null)
         {
-            diana.setNumberOfStartSplinterNodes(Integer.parseInt(properties.getProperty(NUM_START_SPLITER_NODES)));
+            diana.setNumberOfStartSplinterNodes(Integer.parseInt(properties.getProperty(START_SPLINTER_NODES)));
         }
         
         // SPLINTER_NUMBER
         if (properties.getProperty(SPLINTER_NUMBER) != null)
         {
-            diana.setNumberOfSplinters(Integer.parseInt(properties.getProperty(SPLINTER_NUMBER)));
+            diana.setNumberOfClusters(Integer.parseInt(properties.getProperty(SPLINTER_NUMBER)));
         }
         
         // TRIMMED_MEAN_PERCENT - might be single or list of integer values
@@ -408,9 +428,15 @@ class ChemicalClustering implements java.io.Serializable
     
     public static void main(final String[] args)
     {
-        String fileName = "/Users/helen/Documents/MainzUni/scavengerClean/scavenger/src/main/java/scavenger/demo/Clustering/clustering.properties";//args[1];
+        
+        
+        //String fileName = "/Users/helen/Documents/MainzUni/scavengerClean/scavenger/src/main/java/scavenger/demo/Clustering/clustering.properties";//args[1];
         //String fileName = "/Users/helen/Documents/MainzUni/scavengerClean/scavenger/src/main/java/scavenger/demo/Clustering/clusteringEuclidean.properties";
-        ChemicalClustering chemicalClustering = new ChemicalClustering(fileName);
+        String fileName = "/Users/helen/Documents/MainzUni/scavengerClean/scavenger/src/main/java/scavenger/demo/Clustering/clusteringEuclideanAndTanimoto.properties";
+        ChemicalClustering chemicalClustering = new ChemicalClustering();
+        chemicalClustering.runChemicalClustering(fileName);
+        
+        
     }
     
 }

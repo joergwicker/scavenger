@@ -94,16 +94,26 @@ public class CreateNewSplinter<T> extends ScavengerFunction<TreeNode<T>>
         TreeNode<T> rightTreeNode = new TreeNode<T>(rightLeaf, parent);
         parent.setChildren(leftTreeNode, rightTreeNode);        
         parent.setSplitHappenedOn(splinterStartNode);
-        leftTreeNode.setUpSplinterInfo(dianaDistanceFunctions.getIndexFurthestPoints(leftTreeNode), numberOfSplinters);
-        rightTreeNode.setUpSplinterInfo(dianaDistanceFunctions.getIndexFurthestPoints(rightTreeNode), numberOfSplinters);
+        int splitNumber = leftTreeNode.countSplits();
+        rightTreeNode.countSplits();
+        
+        //leftTreeNode.setUpSplinterInfo(dianaDistanceFunctions.getIndexFurthestPoints(leftTreeNode), numberOfSplinters);
+        //rightTreeNode.setUpSplinterInfo(dianaDistanceFunctions.getIndexFurthestPoints(rightTreeNode), numberOfSplinters);
         //System.out.println("createNewSplinter : leftTreeNode " + leftLeaf.size() + " rightTreeNode " + rightLeaf.size());            
         
-        List<TreeNode<T>> leafNodes = parent.getRoot().findLeafNodes();//dianaDistanceFunctions.findRoot(parent));
+        if ((numberOfSplinters <= 0) || (splitNumber < numberOfSplinters))
+        {
+            List<TreeNode<T>> leafNodes = parent.getRoot().findLeafNodes();//dianaDistanceFunctions.findRoot(parent));
         //System.out.println("CreateNewSplinter leafNodes " + leafNodes.size());
-        int largestDiameterIndex = dianaDistanceFunctions.getClusterIndexWithLargestDiameter(leafNodes);            
-        return leafNodes.get(largestDiameterIndex);
-        
-
+            int largestDiameterIndex = dianaDistanceFunctions.getClusterIndexWithLargestDiameter(leafNodes); 
+            TreeNode<T> nextToBeSplit = leafNodes.get(largestDiameterIndex);
+            nextToBeSplit.setUpSplinterInfo(dianaDistanceFunctions.getIndexFurthestPoints(nextToBeSplit));
+            return nextToBeSplit;
+        }
+        else
+        {
+            return leftTreeNode;
+        }
     }
 }
 

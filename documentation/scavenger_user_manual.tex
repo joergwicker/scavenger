@@ -41,7 +41,7 @@ The framework itself does not rely on any particular operating system,
 but some of the scripts that come together with the framework are
 currently available only for Linux and Unix. 
 Porting them to Windows is possible, but not entirely trivial.
-We will assume that you want to install a Scavenger 2.x application 
+We will assume that you want to install a Scavenger application 
 on a Linux cluster using only the shell (e.g. bash).
 We will use different prompts to distinguish between shells on
 the cluster and on your local machine:
@@ -54,14 +54,14 @@ if it's not important or can be inferred
 from the context.
 
 You do not need any administrator rights on the system where you want
-to install a Scavenger 2.x application.
+to install a Scavenger application.
 Essentially, all you need is a working Java Runtime Environment 
 (at least version 1.6) on the cluster, and some way to connect to the cluster 
 (presumably \lstinline{ssh} and \lstinline{scp}). Everything else can be
 obtained and installed without administrator rights.
 
 Here is the list of resources, tools and changes in configuration
-that you will need in order to build, install and run Scavenger 2.x applications. 
+that you will need in order to build, install and run Scavenger applications. 
 We first give the full list, and later describe some of the items in more detail.
 
 \noindent\textbf{On the cluster (installed by administrator)}
@@ -104,9 +104,9 @@ and append the following line to the end:
 This will tell the SBT that the \lstinline{sbt-pack} plugin is 
 required. The actual installation is handled automatically by SBT.
 
-\subsection{Obtaining Scavenger 2.x scripts and JARs}
-Currently, there are no Maven/SBT-repositories containing Scavenger 2.x.
-You can either download and unzip or git-clone the Scavenger 2.x project from 
+\subsection{Obtaining Scavenger scripts and JARs}
+Currently, there are no Maven/SBT-repositories containing Scavenger.
+You can either download and unzip or git-clone the Scavenger project from 
 \url{https://github.com/joergwicker/scavenger}.
 %\footnote{
 %  A less stable ``bleeding-edge''-version can be found here:

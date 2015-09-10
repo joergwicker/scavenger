@@ -154,27 +154,27 @@ public class Diana<T> extends ScavengerAppJ
         System.out.println("Diana : setting defaults ");
         if (errorCalculation == null)
         {
-            System.out.println("ErrorCalculation has not been set using SimpleErrorCalculation with errorThreshold of " + errorThreshold);
+            System.out.println("ErrorCalculation has not been set, using SimpleErrorCalculation with errorThreshold of " + errorThreshold);
             this.errorCalculation = new SimpleErrorCalculation(errorThreshold);
         }
         if (runTimeSeconds == 0)
         {
-            System.out.println("runTimeSeconds has not been set using default (30)");
+            System.out.println("runTimeSeconds has not been set, using default (30)");
             runTimeSeconds = 30; 
         }
         if (numberOfStartSplinterNodes == 0)
         {
-            System.out.println("numberOfStartSplinterNodes has not been set using default (3)");
+            System.out.println("numberOfStartSplinterNodes has not been set, using default (3)");
             numberOfStartSplinterNodes = 3; 
         }
         if (diameterMeasure == null)
         {
-            System.out.println("diameterMeasure has not been set using default (DiameterMeasure.TRIMMED_MEAN)");
+            System.out.println("diameterMeasure has not been set, using default (DiameterMeasure.TRIMMED_MEAN)");
             diameterMeasure = DiameterMeasure.TRIMMED_MEAN;//LARGEST_AVERAGE_DISTANCE; 
         }
         if((trimmedMeanPercent.size() == 0) && (diameterMeasure == DiameterMeasure.TRIMMED_MEAN))
         {
-            System.out.println("trimmedMeanPercent has not been set using default (5)");
+            System.out.println("trimmedMeanPercent has not been set, using default (5)");
             trimmedMeanPercent.add(5);
         }
     }
@@ -216,7 +216,7 @@ public class Diana<T> extends ScavengerAppJ
         //
         // The TreeNode returned, from the future, is the next node to be splintered (the node with the largest diameter)         
         List<Future<TreeNode<T>>> futures = new ArrayList<Future<TreeNode<T>>>();  
-        Calendar calendar = Calendar.getInstance(); // gets a calendar using the default time zone and locale.
+        Calendar calendar = Calendar.getInstance(); 
         calendar.add(Calendar.SECOND, runTimeSeconds);
         Date endTime = calendar.getTime();
         while (!isClustered && endTime.after(new Date()) && ((results.size() != 0) || (numJobs != 0)))
@@ -271,8 +271,8 @@ public class Diana<T> extends ScavengerAppJ
     {
         try 
         {
-            Thread.sleep(40); 
-            //Thread.yield();
+            //Thread.sleep(10); 
+            Thread.yield();
             if(System.in.available() > 0)
             {
                 int keyboardInput = System.in.read();

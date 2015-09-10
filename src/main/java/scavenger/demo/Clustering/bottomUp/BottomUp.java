@@ -94,7 +94,7 @@ public class BottomUp<T> extends Diana
         //          create a Future which performs the joining of the clusters
         //        
         List<Future<TreeNodeList<T>>> futures = new ArrayList<Future<TreeNodeList<T>>>();  
-        Calendar calendar = Calendar.getInstance(); // gets a calendar using the default time zone and locale.
+        Calendar calendar = Calendar.getInstance(); 
         calendar.add(Calendar.SECOND, runTimeSeconds);
         Date endTime = calendar.getTime();
         while (!isClustered && endTime.after(new Date()) && ((results.size() != 0) || (numJobs != 0)))

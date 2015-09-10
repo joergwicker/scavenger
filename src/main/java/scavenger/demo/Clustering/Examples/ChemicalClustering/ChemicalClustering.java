@@ -122,7 +122,7 @@ class ChemicalClustering implements java.io.Serializable
         // set-up for the Goodness calculatation
         if (properties.getProperty(TEST_ATTRIBUTE) != null)
         {
-            resultHandle = new ResultHandlerStringValues(properties, TEST_ATTRIBUTE_VALUES, SPLINTER_NUMBER, OUTPUT_FILE);
+            resultHandle = new ResultHandlerStringValues<Object>(properties, TEST_ATTRIBUTE_VALUES, SPLINTER_NUMBER, OUTPUT_FILE);
         }
         
         // 3. read in the data from the ARFF_FILE

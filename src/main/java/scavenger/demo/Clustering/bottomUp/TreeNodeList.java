@@ -8,7 +8,7 @@ import java.util.LinkedList;
 import java.util.Comparator;
 
 /**
- * Used for Bottom-up clustering
+ * Used for bottom up clustering
  * Contains a list of all the leaf clusters
  */
 public class TreeNodeList<T> implements java.io.Serializable, Comparator<TreeNodeList<T>>

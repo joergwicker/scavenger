@@ -31,7 +31,7 @@ import java.text.DecimalFormat;
 /**
  * 
  */
-class ResultHandlerStringValues extends ResultHandler<Object>
+class ResultHandlerStringValues<T> extends ResultHandler<T, String>
 {   
     private List<String> attributeValues = new ArrayList<String>();
     private List<String> attributePossibleValues;
@@ -75,7 +75,7 @@ class ResultHandlerStringValues extends ResultHandler<Object>
      * @param cluster The DataItems from a cluster
      * @return The number of DataItems belonging to each set (attributePossibleValues)
      */
-    public int[] getNumberInEachSet(List<DataItem<Object>> cluster)
+    public int[] getNumberInEachSet(List<DataItem<T>> cluster)
     {
         int[] numInSets = new int[attributePossibleValues.size()]; 
         for (int i = 0; i < cluster.size(); i++)
@@ -96,12 +96,12 @@ class ResultHandlerStringValues extends ResultHandler<Object>
     /**
      * Diana clustering
      */
-    public void handleResults(TreeNode<Object> node)
+    public void handleResults(TreeNode<T> node)
     {
         outputStr = node.printTree();
     
         
-        List<TreeNode<Object>> leaves = new ArrayList<TreeNode<Object>>();
+        List<TreeNode<T>> leaves = new ArrayList<TreeNode<T>>();
        
         if (numberOfClusters == -1)
         {
@@ -117,7 +117,7 @@ class ResultHandlerStringValues extends ResultHandler<Object>
     /**
      * BottomUp clustering
      */
-    public void handleResults(TreeNodeList<Object> node)
+    public void handleResults(TreeNodeList<T> node)
     {
         outputStr = node.print();
         handleResults(node.getTreeNodeData());
@@ -126,7 +126,7 @@ class ResultHandlerStringValues extends ResultHandler<Object>
     /**
      *
      */
-    public void handleResults(List<TreeNode<Object>> leaves)
+    public void handleResults(List<TreeNode<T>> leaves)
     {
         OrdinalStringDistance stringDistance = new OrdinalStringDistance(attributePossibleValues);
         DianaDistanceFunctions distanceFunctions = new DianaDistanceFunctions();
@@ -137,7 +137,7 @@ class ResultHandlerStringValues extends ResultHandler<Object>
         {
             outputStr = outputStr + "Cluster " + i;
             //System.out.print("Cluster " + i);
-            List<DataItem<Object>> cluster = leaves.get(i).getData();
+            List<DataItem<T>> cluster = leaves.get(i).getData();
             // cluster distance 
             double clusterDistance = 0;
             for (int j = 0; j < cluster.size(); j++)

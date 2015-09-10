@@ -25,7 +25,8 @@ import static akka.dispatch.Futures.sequence;
 
 
 /**
- * 
+ * Used for bottom up clustering to join two clusters together. 
+ *
  */
 public class CreateNewJoin<T> extends ScavengerFunction<TreeNodeList<T>> 
 {
@@ -49,7 +50,9 @@ public class CreateNewJoin<T> extends ScavengerFunction<TreeNodeList<T>>
         this.startNumberOfTreeNodes = startNumberOfTreeNodes;
     }
     
-    
+    /**
+     * @return The TreeNodeList containing a list of all the clusters
+     */
     public TreeNodeList<T> call()
     {         
         TreeNodeList<T> child = value;

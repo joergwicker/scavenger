@@ -21,19 +21,29 @@ import java.io.InputStream;
 import java.util.Properties;
 
 /**
- * Clustering of chemical data
+ * 
+ * T - The type given to all the TreeNode objects
+ * Y - The type of the value to be compared be the ResultHandler 
  */
-public abstract class ResultHandler<T> implements java.io.Serializable
+public abstract class ResultHandler<T, Y> implements java.io.Serializable
 {   
-    //public Goodness(Properties properties, final String GOODNESS_ATTRIBUTE_VALUES);
-    
-    
-    public abstract void addAttributeValue(String value);
-    
+    public abstract void addAttributeValue(Y value); 
+
     /**
-     *
+     * Used by Diana clustering.
+     * Clusters should be extracted and passed to handleResults(List<TreeNode<T>> nodes) 
      */
     public abstract void handleResults(TreeNode<T> node);
+    
+    /**
+     * Used by bottom up clustering.
+     * Clusters should be extracted and passed to handleResults(List<TreeNode<T>> nodes) 
+     */
+    public abstract void handleResults(TreeNodeList<T> node);
+    
+    /**
+     * @param nodes List of the clusters to be evaluated 
+     */
     public abstract void handleResults(List<TreeNode<T>> nodes);
-    public abstract void handleResults(TreeNodeList<Object> node);
+    
 }

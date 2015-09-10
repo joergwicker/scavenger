@@ -29,7 +29,7 @@ import akka.dispatch.*;
 
 /**
  * Performs hierarchical clustering using scavenger
- * Attempts to remove the issue of outliers by trying n possible nodes as the node which starts the splinter cluster.
+ * Attempts to remove the issue of outliers by trying n possible nodes as the nodes which are joined
  *
  */
 public class BottomUp<T> extends Diana 
@@ -90,10 +90,9 @@ public class BottomUp<T> extends Diana
         System.out.println("BottomUp.runClustering() running clustering");
         
         // For all results
-        //      For all nodes the new splinter cluster can be started on 
-        //          create a Future which performs the splitting of the cluster
-        //
-        // The TreeNode returned, from the future, is the next node to be splintered (the node with the largest diameter)         
+        //      For all nodes the join cluster can be created on 
+        //          create a Future which performs the joining of the clusters
+        //        
         List<Future<TreeNodeList<T>>> futures = new ArrayList<Future<TreeNodeList<T>>>();  
         Calendar calendar = Calendar.getInstance(); // gets a calendar using the default time zone and locale.
         calendar.add(Calendar.SECOND, runTimeSeconds);
@@ -141,7 +140,7 @@ public class BottomUp<T> extends Diana
     }
 
     /**
-     *
+     * Checks if the clustering is complete
      */
     private void setIsClustered(TreeNodeList<T> result)
     {       

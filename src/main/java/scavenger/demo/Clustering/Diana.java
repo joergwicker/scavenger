@@ -42,8 +42,8 @@ public class Diana<T> extends ScavengerAppJ
     protected int runTimeSeconds = 0;
     protected int numberOfStartSplinterNodes = 0;
     protected int numberOfClusters = 0;
-    protected int timeoutSeconds = 60;//timeout for a single job //TODO set in ChemicalClustering
-    protected ResultHandler<T> resultHandler = null;
+    protected int timeoutSeconds = 60;//timeout for a single job 
+    protected ResultHandler resultHandler = null;
     
     protected DiameterMeasure diameterMeasure = null;
     protected List<Integer> trimmedMeanPercent = new ArrayList<Integer>();
@@ -127,7 +127,7 @@ public class Diana<T> extends ScavengerAppJ
         this.timeoutSeconds = timeoutSeconds;
     }
     
-    public void setResultHandler(ResultHandler<T> resultHandler)
+    public void setResultHandler(ResultHandler resultHandler)
     {
         this.resultHandler = resultHandler;
     }
@@ -198,8 +198,7 @@ public class Diana<T> extends ScavengerAppJ
         startScavenger();
         dianaDistanceFunctions = new DianaDistanceFunctions(dataInfo, numberOfStartSplinterNodes, diameterMeasure);  
         dianaDistanceFunctions.setTrimmedMeanPercent(trimmedMeanPercent);
-        //dianaDistanceFunctions.setScavengerContext(scavengerContext());   
-                   
+        //dianaDistanceFunctions.setScavengerContext(scavengerContext());                      
         
         PriorityQueue<TreeNode<T>> results = new PriorityQueue<TreeNode<T>>(1, new TreeNode<T>());
         numJobs = 0;

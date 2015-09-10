@@ -111,7 +111,7 @@ public class BottomUp<T> extends Diana
                     Algorithm<TreeNodeList<T>, TreeNodeList<T>> algorithm = scavengerAlgorithm.expensive("CreateNewJoin", run);
                     Computation<TreeNodeList<T>> computation = scavengerComputation.apply("node_"+result+result.getJoinNodes().get(i), result);                    
                     
-                    Computation<TreeNodeList<T>> applyComputation = algorithm.apply(computation).cacheGlobally();
+                    Computation<TreeNodeList<T>> applyComputation = algorithm.apply(computation);//.cacheGlobally();
                     Future future = scavengerContext().submit(applyComputation);
                     
                     future.onSuccess(new OnSuccess<TreeNodeList<T>>() 

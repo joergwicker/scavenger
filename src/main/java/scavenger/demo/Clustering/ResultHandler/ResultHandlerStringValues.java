@@ -26,6 +26,8 @@ import java.nio.file.Paths;
 import java.nio.file.Path;
 import java.util.Date;
 
+import java.text.DecimalFormat;
+
 /**
  * 
  */
@@ -34,29 +36,15 @@ class ResultHandlerStringValues extends ResultHandler<Object>
     private List<String> attributeValues = new ArrayList<String>();
     private List<String> attributePossibleValues;
     
-    private int splinterNumber = -1;
+    private int numberOfClusters = -1;
     private String outputFile = "";
+    private String outputStr = "";    
+    private DecimalFormat df = new DecimalFormat("##0.0000");
     
-    private String outputStr = "";
-    
+   
     /**
-     * parses the GOODNESS_ATTRIBUTE_VALUES
+     *
      */
-    public ResultHandlerStringValues(Properties properties, final String TEST_ATTRIBUTE_VALUES)
-    {
-        String line = properties.getProperty(TEST_ATTRIBUTE_VALUES);
-        attributePossibleValues = Arrays.asList(line.substring(line.indexOf("{") + 1, line.indexOf("}")).split(","));
-    }
-    
-    
-    public ResultHandlerStringValues(Properties properties, final String TEST_ATTRIBUTE_VALUES, int splinterNumber)
-    {
-        String line = properties.getProperty(TEST_ATTRIBUTE_VALUES);
-        attributePossibleValues = Arrays.asList(line.substring(line.indexOf("{") + 1, line.indexOf("}")).split(","));
-        
-        this.splinterNumber = splinterNumber;
-    }
-    
     public ResultHandlerStringValues(Properties properties, final String TEST_ATTRIBUTE_VALUES, final String SPLINTER_NUMBER, final String OUTPUT_FILE)
     {
         String line = properties.getProperty(TEST_ATTRIBUTE_VALUES);
@@ -64,7 +52,7 @@ class ResultHandlerStringValues extends ResultHandler<Object>
         
         if (properties.getProperty(SPLINTER_NUMBER) != null)
         {
-            this.splinterNumber = Integer.parseInt(properties.getProperty(SPLINTER_NUMBER));
+            this.numberOfClusters = Integer.parseInt(properties.getProperty(SPLINTER_NUMBER));
         }
         
         if (properties.getProperty(OUTPUT_FILE) != null)
@@ -73,7 +61,9 @@ class ResultHandlerStringValues extends ResultHandler<Object>
         }
     }
     
-    
+    /**
+     *
+     */
     public void addAttributeValue(String value)
     {
         attributeValues.add(value);
@@ -82,8 +72,10 @@ class ResultHandlerStringValues extends ResultHandler<Object>
     
     /**
      *
+     * @param cluster The DataItems from a cluster
+     * @return The number of DataItems belonging to each set (attributePossibleValues)
      */
-    public int[] printNumberInEachSet(List<DataItem<Object>> cluster)
+    public int[] getNumberInEachSet(List<DataItem<Object>> cluster)
     {
         int[] numInSets = new int[attributePossibleValues.size()]; 
         for (int i = 0; i < cluster.size(); i++)
@@ -102,7 +94,7 @@ class ResultHandlerStringValues extends ResultHandler<Object>
     
     
     /**
-     *
+     * Diana clustering
      */
     public void handleResults(TreeNode<Object> node)
     {
@@ -111,27 +103,31 @@ class ResultHandlerStringValues extends ResultHandler<Object>
         
         List<TreeNode<Object>> leaves = new ArrayList<TreeNode<Object>>();
        
-        if (splinterNumber == -1)
+        if (numberOfClusters == -1)
         {
             leaves = node.getRoot().findLeafNodes();
         }
         else
         {
-            leaves = node.getRoot().findLeafNodes(splinterNumber);
+            leaves = node.getRoot().findLeafNodes(numberOfClusters);
         }
         handleResults(leaves);
     }
     
+    /**
+     * BottomUp clustering
+     */
     public void handleResults(TreeNodeList<Object> node)
     {
-        System.out.println("handleResults TreeNodeList");
         outputStr = node.print();
         handleResults(node.getTreeNodeData());
     }  
     
+    /**
+     *
+     */
     public void handleResults(List<TreeNode<Object>> leaves)
     {
-        System.out.println("handleResults leaves");
         OrdinalStringDistance stringDistance = new OrdinalStringDistance(attributePossibleValues);
         DianaDistanceFunctions distanceFunctions = new DianaDistanceFunctions();
         int[][] numInSetsForLeaves = new int[leaves.size()][attributePossibleValues.size()];
@@ -161,20 +157,24 @@ class ResultHandlerStringValues extends ResultHandler<Object>
             outputStr = outputStr + " : ( cluster distance " + " = " + (1 - (clusterDistance / cluster.size())) + " )\n";
             //System.out.println(" : ( calculateGoodness " + " = " + (1 - (clusterDistance / cluster.size())) + " )");
             
-            numInSetsForLeaves[i] = printNumberInEachSet(cluster);
+            numInSetsForLeaves[i] = getNumberInEachSet(cluster);
             
             totalDistance = totalDistance + (clusterDistance / cluster.size());
         }
         totalDistance = totalDistance / leaves.size();
         totalDistance = (1-totalDistance);
         //System.out.println("calculateGoodness total = " + totalDistance);
-        outputStr = outputStr + "average distance = " + totalDistance + "\n\n\n\n";
+        outputStr = outputStr + "average distance = " + totalDistance + "\n\n";
         
         testClusters(numInSetsForLeaves);
         System.out.println(outputStr);
         writeToFile();
     }
     
+    /**
+     * Appends the results to the ouput file.
+     * 
+     */
     private void writeToFile()
     {
         if(!outputFile.equals(""))
@@ -199,49 +199,112 @@ class ResultHandlerStringValues extends ResultHandler<Object>
         }
     }
     
-    public void testClusters(int[][] numInSetsForLeaves)
+    
+    /**
+     * 
+     *
+     * @param numInSetsForLeaves [leafIndex][SetIndex]
+     *
+     */
+    private double testClusters(int[][] numInSetsForLeaves)
     {
+        int[] givenSets = new int[attributePossibleValues.size()]; 
         int numberIncorrectlyClustered = 0;
         int numberClustered = 0;
-        for(int j = 0; j < numInSetsForLeaves[0].length; j++)
+        
+        for(int k = 0; k < attributePossibleValues.size(); k++)
         {
-            int maxNum = -1;
-            int maxIndex = -1;
-            for(int i = 0; i < numInSetsForLeaves.length; i++)
+            for(int j = 0; j < numInSetsForLeaves[0].length; j++)
             {
-                if(numInSetsForLeaves[i][j] > maxNum)
+                if(givenSets[j] != 0)
                 {
-                    maxNum = numInSetsForLeaves[i][j];
-                    if(maxNum == maxValueInArray(numInSetsForLeaves[i]))
+                    continue;
+                }
+                int maxNum = -1;
+                int maxIndex = -1;
+                
+                // Find the cluster that has the highest number of items belonging to the set
+                for(int i = 0; i < numInSetsForLeaves.length; i++)
+                {
+                    if(numInSetsForLeaves[i][j] > maxNum)
                     {
-                        if (maxIndex != -1)
+                        int containsIndex = getIndex(givenSets, i+1);
+                        if(containsIndex != -1) // check cluster has not already been asigned to a set
                         {
-                            numberIncorrectlyClustered = numberIncorrectlyClustered + numInSetsForLeaves[maxIndex][j];
+                            if(numInSetsForLeaves[i][containsIndex] > numInSetsForLeaves[i][j])
+                            {
+                                continue;
+                            }
                         }
+                        maxNum = numInSetsForLeaves[i][j];
                         maxIndex = i;
+                    }
+                }
+                
+                int containsIndex = getIndex(givenSets, maxIndex+1);
+                if(containsIndex != -1) // stops a cluster being assigned to multiple sets
+                {
+                    if(numInSetsForLeaves[maxIndex][containsIndex] > maxNum)
+                    {
+                        continue;
                     }
                     else
                     {
-                        numberIncorrectlyClustered = numberIncorrectlyClustered + numInSetsForLeaves[i][j];
-                        maxIndex = -1;
+                        givenSets[containsIndex] = 0;
                     }
                 }
-                else
-                {
-                    numberIncorrectlyClustered = numberIncorrectlyClustered + numInSetsForLeaves[i][j];
-                }
-                numberClustered = numberClustered + numInSetsForLeaves[i][j];
+                givenSets[j] = maxIndex + 1; // Default is 0 (not assigned), so cluster number 0 should be 1 
+            }
+            
+            if(getIndex(givenSets, 0) == -1) // all clusters have been assigned a set
+            {
+                break;
             }
         }
+
+        
+        // add up the number of correctly clustered nodes
+        int total = 0;
+        for (int i = 0; i < givenSets.length; i++)
+        {
+            if (givenSets[i] != 0)
+            {
+                total = total + numInSetsForLeaves[givenSets[i]-1][i];
+            }
+            for(int j = 0; j < numInSetsForLeaves.length; j++)
+            {
+                numberClustered = numberClustered + numInSetsForLeaves[j][i];
+            }
+        }
+        outputStr = outputStr + "number correctly clustered : " + total + " (" + df.format(((double)(total)/(double)numberClustered)*100.00) + "%)\n";
+        numberIncorrectlyClustered = numberClustered - total;
+        
         //System.out.println("numberIncorrectlyClustered : " + numberIncorrectlyClustered);
-        outputStr = outputStr + "numberIncorrectlyClustered : " + numberIncorrectlyClustered + "\n";
+        outputStr = outputStr + "numberIncorrectlyClustered : " + numberIncorrectlyClustered + " (" + df.format(((double)(numberIncorrectlyClustered)/(double)numberClustered)*100.00) + "%)\n";
         //System.out.println("numberClustered : " + numberClustered);
         outputStr = outputStr + "numberClustered : " + numberClustered + "\n";
-        //System.out.println("percentage : " + ((double)(numberClustered-numberIncorrectlyClustered)/(double)numberClustered)*100.00);
-        outputStr = outputStr + "percentage : " + ((double)(numberClustered-numberIncorrectlyClustered)/(double)numberClustered)*100.00 + "\n";
+        
+        return ((double)(numberIncorrectlyClustered))/((double)numberClustered);
     }
     
+    /**
+     *
+     */
+    private int getIndex(int[] array, int value)
+    {
+        for (int i = 0; i < array.length; i++)
+        {
+            if (value == array[i])
+            {
+                return i;
+            }
+        }
+        return -1;
+    }
     
+    /**
+     *
+     */
     private int maxValueInArray(int[] array)
     {
         int max = 0;

@@ -86,9 +86,9 @@ public class DistanceMeasureSelection implements java.io.Serializable
     {
         return weight;
     }
-    public void setWeight(double weight)
+   /* public void setWeight(double weight)
     {
         this.weight = weight;
-    }
+    }*/
     
 }

@@ -5,10 +5,12 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Queue;
 import java.util.LinkedList;
+import java.util.Comparator;
+
 /**
  * A node within the cluster hierarchy.
  */
-public class TreeNode<T> implements java.io.Serializable
+public class TreeNode<T> implements java.io.Serializable, Comparator<TreeNode<T>>
 {
     private List<DataItem<T>> data;
     private TreeNode parent = null;
@@ -20,6 +22,8 @@ public class TreeNode<T> implements java.io.Serializable
     private int splitHappenedOnIndex = 0;
     
     private double error = 1;
+    
+    public TreeNode(){}// for the Comparator
 
     /**
      * Constructor for the root node.
@@ -284,6 +288,15 @@ public class TreeNode<T> implements java.io.Serializable
     }
     
     
+    
+    
+    public int compare(TreeNode<T> node1, TreeNode<T> node2)
+     {
+        if (node1.getError() < node2.getError()) return -1;
+        if (node1.getError() > node2.getError()) return 1;
+        return 0;
+     } 
+     
     /*public void removeHigherSplitNodes(TreeNode<T> root)
     {
         if ((root.getChildLeft() != null) && (root.getChildLeft().getSplitNumber() > this.splitNumber))

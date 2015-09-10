@@ -68,7 +68,8 @@ class ChemicalClusteringBottomUp extends ChemicalClustering implements java.io.S
     {
         //String fileName = "/Users/helen/Documents/MainzUni/scavengerClean/scavenger/src/main/java/scavenger/demo/Clustering/clustering.properties";//args[1];
         //String fileName = "/Users/helen/Documents/MainzUni/scavengerClean/scavenger/src/main/java/scavenger/demo/Clustering/clusteringEuclidean.properties";
-        String fileName = "/Users/helen/Documents/MainzUni/scavengerClean/scavenger/src/main/java/scavenger/demo/Clustering/clusteringEuclideanAndTanimoto.properties";
+        //String fileName = "/Users/helen/Documents/MainzUni/scavengerClean/scavenger/src/main/java/scavenger/demo/Clustering/clusteringEuclideanAndTanimoto.properties";
+        String fileName = args[0];
         ChemicalClusteringBottomUp chemicalClustering = new ChemicalClusteringBottomUp();
         chemicalClustering.runChemicalClusteringBottomUp(fileName);
     }

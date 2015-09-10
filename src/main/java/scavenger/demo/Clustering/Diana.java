@@ -27,6 +27,8 @@ import static akka.dispatch.Futures.future;
 import static akka.dispatch.Futures.sequence;
 import akka.dispatch.*;
 
+import java.lang.Throwable;
+
 /**
  * Performs Diana (DIvisive ANAlysis) clustering using scavenger
  * Attempts to remove the issue of outliers by trying n possible nodes as the node which starts the splinter cluster.
@@ -50,7 +52,7 @@ public class Diana<T> extends ScavengerAppJ
     protected ErrorCalculation<T> errorCalculation = null; // Are the clusters "good" clusters?
     
     
-    private TreeNode<T> bestResult; 
+    private TreeNode<T> bestResult = null; 
     protected double smallestError = Double.MAX_VALUE;
     protected boolean isClustered = false;
     protected int numJobs = 0;
@@ -199,7 +201,7 @@ public class Diana<T> extends ScavengerAppJ
         //dianaDistanceFunctions.setScavengerContext(scavengerContext());   
                    
         
-        PriorityQueue<TreeNode<T>> results = new PriorityQueue<TreeNode<T>>(1, new TreeNodeComparator<T>());
+        PriorityQueue<TreeNode<T>> results = new PriorityQueue<TreeNode<T>>(1, new TreeNode<T>());
         numJobs = 0;
         smallestError = Double.MAX_VALUE;
         isClustered = false;
@@ -225,8 +227,8 @@ public class Diana<T> extends ScavengerAppJ
                 TreeNode<T> result = results.poll();                
                 for(int i = 0; i < result.getToBeSplitOn().size(); i++)
                 {
-                    System.out.println("result.getToBeSplitOn().size() :" + result.getToBeSplitOn().size());
-                    System.out.println("result.getSplitNumber()) :" + result.getSplitNumber());
+                    //System.out.println("result.getToBeSplitOn().size() :" + result.getToBeSplitOn().size());
+                    //System.out.println("result.getSplitNumber()) :" + result.getSplitNumber());
                     numJobs = numJobs + 1;
                     ScavengerFunction<TreeNode<T>> run = new CreateNewSplinter(result.getToBeSplitOn().get(i), dianaDistanceFunctions, numberOfClusters);
                     Algorithm<TreeNode<T>, TreeNode<T>> algorithm = scavengerAlgorithm.expensive("createNewSplinter", run);
@@ -239,7 +241,6 @@ public class Diana<T> extends ScavengerAppJ
                                      {
                                          public void onSuccess(TreeNode<T> currentResult) 
                                          {
-                                             
                                              setIsClustered(currentResult); 
                                              results.add(currentResult);
                                              decrementNumberOfJobs();
@@ -314,19 +315,30 @@ public class Diana<T> extends ScavengerAppJ
         //System.out.println("Number of leaves : " + leaves.size());
         
         isClustered = errorCalculation.isClustered(leaves, dianaDistanceFunctions);
-        if (leaves.size() != numberOfClusters)
+        if (numberOfClusters > 0)
         {
-            isClustered = false;
+            if (leaves.size() != numberOfClusters)
+            {
+                isClustered = false;
+            }
         }
-        
         //System.out.println("errorCalculation.getLastError(): " + errorCalculation.getLastError());
-        if (errorCalculation.getLastError() <= smallestError)
+        /*if (errorCalculation.getLastError() <= smallestError)
         {
             smallestError = errorCalculation.getLastError();
             bestResult = result;
-        }
+        }*/
         result.setError(errorCalculation.getLastError());
         
+        
+        if (bestResult == null)
+        {
+            bestResult = result;
+        }
+        else if ((leaves.size() > bestResult.getRoot().findLeafNodes().size()) || (result.getError() < bestResult.getError())) 
+        {
+            bestResult = result;
+        }
     }
     
     /**

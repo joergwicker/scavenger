@@ -45,7 +45,7 @@ The properties file should contain the following information:
 - TEST_ATTRIBUTE_VALUES = {value1,value2,value3}
     - ordered values for the TEST_ATTRIBUTE
     - default = null
-- OUTPUT_SPLINTER_NUMBER = int
+- CLUSTERS = int
     - The number of times the initial cluster should be split up 
     - If -1 given, the clustering will continue until the RUN_TIME is reached and return the result
     - default = -1 
@@ -59,4 +59,11 @@ The properties file should contain the following information:
 - SIMIPLE_ERROR_THRESHOLD = double
     - If the largest cluster diameter falls below the SIMIPLE_ERROR_THRESHOLD the clustering will stop
     - default = 0.0
+    
+    
+    
+##FAQ##
+
+- akka.remote.OversizedPayloadException: Discarding oversized payload sent to Actor[akka.tcp://scavenger@127.0.0.1:54217/user/gentle_sensitive_martian_0#-384585262]: max allowed size 256000 bytes, actual size of encoded class scavenger.backend.package$InternalJob was 290830 bytes.
+    - Increase the maximum-frame-size in /src/main/resources/application.conf
 

@@ -428,11 +428,10 @@ class ChemicalClustering implements java.io.Serializable
     
     public static void main(final String[] args)
     {
-        
-        
-        //String fileName = "/Users/helen/Documents/MainzUni/scavengerClean/scavenger/src/main/java/scavenger/demo/Clustering/clustering.properties";//args[1];
+        //String fileName = "/Users/helen/Documents/MainzUni/scavengerClean/scavenger/src/main/java/scavenger/demo/Clustering/clustering.properties";//args[0];
         //String fileName = "/Users/helen/Documents/MainzUni/scavengerClean/scavenger/src/main/java/scavenger/demo/Clustering/clusteringEuclidean.properties";
-        String fileName = "/Users/helen/Documents/MainzUni/scavengerClean/scavenger/src/main/java/scavenger/demo/Clustering/clusteringEuclideanAndTanimoto.properties";
+        //String fileName = "/Users/helen/Documents/MainzUni/scavengerClean/scavenger/src/main/java/scavenger/demo/Clustering/clusteringEuclideanAndTanimoto.properties";
+        String fileName = args[0];
         ChemicalClustering chemicalClustering = new ChemicalClustering();
         chemicalClustering.runChemicalClustering(fileName);
         

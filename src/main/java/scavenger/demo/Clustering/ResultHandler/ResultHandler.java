@@ -1,4 +1,6 @@
-package scavenger.demo.clustering;
+package scavenger.demo.clustering.resultHandler;
+
+import scavenger.demo.clustering.*;
 
 import java.util.List;
 
@@ -26,6 +28,6 @@ public abstract class ResultHandler<T, Y> implements java.io.Serializable
     /**
      * @param nodes List of the clusters to be evaluated 
      */
-    public abstract void handleResults(List<TreeNode<T>> nodes);
+    public abstract double handleResults(List<TreeNode<T>> nodes);
     
 }

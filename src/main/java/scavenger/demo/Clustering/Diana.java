@@ -3,6 +3,7 @@ package scavenger.demo.clustering;
 import scavenger.demo.clustering.distance.*;
 import scavenger.demo.clustering.errorCalculation.*;
 import scavenger.demo.clustering.enums.*;
+import scavenger.demo.clustering.resultHandler.*;
 import scavenger.*;
 import scavenger.app.ScavengerAppJ;
 

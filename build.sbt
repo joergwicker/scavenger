@@ -1,4 +1,3 @@
-
 lazy val root = (project in file(".")).
   settings(
     organization := "org.scavenger",
@@ -12,14 +11,9 @@ lazy val root = (project in file(".")).
       "org.scala-lang" % "scala-swing" % "2.10.4"
     ),
     scalacOptions ++= Seq("-feature"),
-    scalacOptions in (Compile,doc) ++= Seq("-groups", "-implicits")
+    scalacOptions in (Compile,doc) ++= Seq("-groups", "-implicits"),
     //packAutoSettings
+    javaOptions += "-Xmx8G"
   )
 
-
-val buildSettings = Defaults.defaultSettings ++ Seq(
-  //…
-  javaOptions += "-Xmx8G"
-  //…
-)
 

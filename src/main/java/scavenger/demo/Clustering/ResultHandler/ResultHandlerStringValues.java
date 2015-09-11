@@ -1,4 +1,4 @@
-package scavenger.demo.clustering.examples;
+package scavenger.demo.clustering.resultHandler;
 
 import scavenger.demo.clustering.distance.*;
 import scavenger.demo.clustering.*;
@@ -6,13 +6,6 @@ import scavenger.demo.clustering.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.HashMap;
-import java.util.Queue;
-import java.util.LinkedList;
-import java.net.URL;
-import java.util.Scanner;
-import java.io.IOException;
-import java.util.BitSet;
 import java.io.File;
 
 import java.io.FileInputStream;
@@ -29,9 +22,11 @@ import java.util.Date;
 import java.text.DecimalFormat;
 
 /**
- * 
+ * Calculates the number of items that have been correctly clustered.
+ * Prints information about the clusters to cmd and file.
+ *
  */
-class ResultHandlerStringValues<T> extends ResultHandler<T, String>
+public class ResultHandlerStringValues<T> extends ResultHandler<T, String>
 {   
     private List<String> attributeValues = new ArrayList<String>();
     private List<String> attributePossibleValues;
@@ -69,27 +64,14 @@ class ResultHandlerStringValues<T> extends ResultHandler<T, String>
         attributeValues.add(value);
     }
     
-    
-    /**
-     *
-     * @param cluster The DataItems from a cluster
-     * @return The number of DataItems belonging to each set (attributePossibleValues)
-     */
-    public int[] getNumberInEachSet(List<DataItem<T>> cluster)
+    public List<String> getAttributePossibleValues()
     {
-        int[] numInSets = new int[attributePossibleValues.size()]; 
-        for (int i = 0; i < cluster.size(); i++)
-        {
-            String attribute = attributeValues.get(Integer.parseInt(cluster.get(i).getId()));
-            int index = attributePossibleValues.indexOf(attribute);
-            numInSets[index] = numInSets[index]+1;
-        }
-        for(int i = 0; i < numInSets.length; i++)
-        {
-            outputStr = outputStr + "    " + attributePossibleValues.get(i) + " : " + numInSets[i] + "\n";
-            //System.out.println("    " + goodnessAttributePossibleValues.get(i) + " : " + numInSets[i]);
-        }
-        return numInSets;
+        return attributePossibleValues;
+    }
+    
+    public List<String> getAttributeValues()
+    {
+        return attributeValues;
     }
     
     
@@ -112,6 +94,8 @@ class ResultHandlerStringValues<T> extends ResultHandler<T, String>
             leaves = node.getRoot().findLeafNodes(numberOfClusters);
         }
         handleResults(leaves);
+        System.out.println(outputStr);
+        writeToFile();
     }
     
     /**
@@ -121,22 +105,27 @@ class ResultHandlerStringValues<T> extends ResultHandler<T, String>
     {
         outputStr = node.print();
         handleResults(node.getTreeNodeData());
+        System.out.println(outputStr);
+        writeToFile();
     }  
     
     /**
-     *
+     * Calculates the OrdinalStringDistance for each cluster,
+     * and calcuates the purity of the clusters. (@see testClusters())
+     * 
+     * @return Percentage of incorrectly clustered items
      */
-    public void handleResults(List<TreeNode<T>> leaves)
+    public double handleResults(List<TreeNode<T>> leaves)
     {
         OrdinalStringDistance stringDistance = new OrdinalStringDistance(attributePossibleValues);
         DianaDistanceFunctions distanceFunctions = new DianaDistanceFunctions();
         int[][] numInSetsForLeaves = new int[leaves.size()][attributePossibleValues.size()];
         
         double totalDistance = 0;
+        // calculate the diameter of each cluster using the OrdinalStringDistance
         for (int i = 0; i < leaves.size(); i++)
         {
             outputStr = outputStr + "Cluster " + i;
-            //System.out.print("Cluster " + i);
             List<DataItem<T>> cluster = leaves.get(i).getData();
             // cluster distance 
             double clusterDistance = 0;
@@ -155,63 +144,56 @@ class ResultHandlerStringValues<T> extends ResultHandler<T, String>
                 clusterDistance = clusterDistance + (total / cluster.size());
             } 
             outputStr = outputStr + " : ( cluster distance " + " = " + (1 - (clusterDistance / cluster.size())) + " )\n";
-            //System.out.println(" : ( calculateGoodness " + " = " + (1 - (clusterDistance / cluster.size())) + " )");
-            
-            numInSetsForLeaves[i] = getNumberInEachSet(cluster);
-            
             totalDistance = totalDistance + (clusterDistance / cluster.size());
+            
+            
+            
+            numInSetsForLeaves[i] = getNumberInEachSet(cluster); // used by testClusters()
         }
         totalDistance = totalDistance / leaves.size();
         totalDistance = (1-totalDistance);
-        //System.out.println("calculateGoodness total = " + totalDistance);
         outputStr = outputStr + "average distance = " + totalDistance + "\n\n";
         
-        testClusters(numInSetsForLeaves);
-        System.out.println(outputStr);
-        writeToFile();
+        
+        return testClusters(numInSetsForLeaves);
     }
     
-    /**
-     * Appends the results to the ouput file.
-     * 
+     /**
+     *
+     * @param cluster The DataItems from a cluster
+     * @return The number of DataItems belonging to each set (attributePossibleValues)
      */
-    private void writeToFile()
+    public int[] getNumberInEachSet(List<DataItem<T>> cluster)
     {
-        if(!outputFile.equals(""))
+        int[] numInSets = new int[attributePossibleValues.size()]; 
+        for (int i = 0; i < cluster.size(); i++)
         {
-            try
-            {
-                outputStr = "Time : " + new Date() + "\n Results : \n" + outputStr;
-                Path path = Paths.get(outputFile);
-                if (!Files.exists(path))
-                {
-                    Files.write(path, outputStr.getBytes(), StandardOpenOption.CREATE);
-                }
-                else
-                {
-                    Files.write(path, outputStr.getBytes(), StandardOpenOption.APPEND);
-                }
-            }
-            catch (IOException ex) 
-            {
-                ex.printStackTrace();
-            }
+            String attribute = attributeValues.get(Integer.parseInt(cluster.get(i).getId()));
+            int index = attributePossibleValues.indexOf(attribute);
+            numInSets[index] = numInSets[index]+1;
         }
+        for(int i = 0; i < numInSets.length; i++)
+        {
+            outputStr = outputStr + "    " + attributePossibleValues.get(i) + " : " + numInSets[i] + "\n";
+        }
+        return numInSets;
     }
     
     
     /**
-     * 
+     * Works out which set should be assigned to each cluster and 
+     * finds the number of items correctly clustered.
      *
      * @param numInSetsForLeaves [leafIndex][SetIndex]
-     *
+     * @return Percentage of incorrectly clustered items
      */
     private double testClusters(int[][] numInSetsForLeaves)
     {
         int[] givenSets = new int[attributePossibleValues.size()]; 
         int numberIncorrectlyClustered = 0;
         int numberClustered = 0;
-        
+                
+        // assigns each cluster to a set 
         for(int k = 0; k < attributePossibleValues.size(); k++)
         {
             for(int j = 0; j < numInSetsForLeaves[0].length; j++)
@@ -279,16 +261,16 @@ class ResultHandlerStringValues<T> extends ResultHandler<T, String>
         outputStr = outputStr + "number correctly clustered : " + total + " (" + df.format(((double)(total)/(double)numberClustered)*100.00) + "%)\n";
         numberIncorrectlyClustered = numberClustered - total;
         
-        //System.out.println("numberIncorrectlyClustered : " + numberIncorrectlyClustered);
         outputStr = outputStr + "numberIncorrectlyClustered : " + numberIncorrectlyClustered + " (" + df.format(((double)(numberIncorrectlyClustered)/(double)numberClustered)*100.00) + "%)\n";
-        //System.out.println("numberClustered : " + numberClustered);
         outputStr = outputStr + "numberClustered : " + numberClustered + "\n";
         
         return ((double)(numberIncorrectlyClustered))/((double)numberClustered);
     }
     
     /**
-     *
+     * Gets the index value is located at.
+     * 
+     * @return -1 if the value is not in the array. Otherwise, the index the value first appears
      */
     private int getIndex(int[] array, int value)
     {
@@ -302,21 +284,32 @@ class ResultHandlerStringValues<T> extends ResultHandler<T, String>
         return -1;
     }
     
+    
     /**
-     *
+     * Appends the results to the ouput file.
+     * 
      */
-    private int maxValueInArray(int[] array)
+    private void writeToFile()
     {
-        int max = 0;
-        for (int i = 0; i < array.length; i++)
+        if(!outputFile.equals(""))
         {
-            if (array[i] > max)
+            try
             {
-                max = array[i];
+                outputStr = "Time : " + new Date() + "\n Results : \n" + outputStr;
+                Path path = Paths.get(outputFile);
+                if (!Files.exists(path))
+                {
+                    Files.write(path, outputStr.getBytes(), StandardOpenOption.CREATE);
+                }
+                else
+                {
+                    Files.write(path, outputStr.getBytes(), StandardOpenOption.APPEND);
+                }
+            }
+            catch (IOException ex) 
+            {
+                ex.printStackTrace();
             }
         }
-        return max;
     }
-    
-    
 }

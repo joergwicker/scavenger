@@ -2,6 +2,8 @@ package scavenger.demo.clustering.examples;
 
 import scavenger.demo.clustering.distance.*;
 import scavenger.demo.clustering.*;
+import scavenger.demo.clustering.errorCalculation.*;
+import scavenger.demo.clustering.resultHandler.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -43,9 +45,11 @@ class ChemicalClustering implements java.io.Serializable
     
     protected final String TRIMMED_MEAN_PERCENT = "TRIMMED_MEAN_PERCENT";
     
-    protected final String SIMIPLE_ERROR_THRESHOLD = "SIMIPLE_ERROR_THRESHOLD"; // when clusters are all below this threshold the clustering is finished
+    protected final String ERROR_THRESHOLD = "SIMIPLE_ERROR_THRESHOLD"; // when clusters are all below this threshold the clustering is finished
     
-    protected final String[] PROPERTY_NAMES = {ARFF_FILE, EUCLIDEAN, TANIMOTO, RUN_TIME, START_SPLINTER_NODES, TEST_ATTRIBUTE, TEST_ATTRIBUTE_VALUES, SPLINTER_NUMBER, OUTPUT_FILE, TRIMMED_MEAN_PERCENT, SIMIPLE_ERROR_THRESHOLD};
+    protected final String ERROR_CALCULATION = "ERROR_CALCULATION";
+    
+    protected final String[] PROPERTY_NAMES = {ARFF_FILE, EUCLIDEAN, TANIMOTO, RUN_TIME, START_SPLINTER_NODES, TEST_ATTRIBUTE, TEST_ATTRIBUTE_VALUES, SPLINTER_NUMBER, OUTPUT_FILE, TRIMMED_MEAN_PERCENT, ERROR_THRESHOLD, ERROR_CALCULATION};
    
     protected List<DistanceMeasureSelection> dataInformationList = new ArrayList<DistanceMeasureSelection>();
     protected List<DataItem<Object>> initialCluster = new ArrayList<DataItem<Object>>();
@@ -329,9 +333,7 @@ class ChemicalClustering implements java.io.Serializable
             {
                 if(line.contains(properties.getProperty(TEST_ATTRIBUTE)))
                 {
-                   // goodnessAttributePossibleValues = line.substring(line.indexOf("{") + 1, line.indexOf("}")).split(",");
                     orderedAttributeList.add(properties.getProperty(TEST_ATTRIBUTE));
-                    
                     line = scan.nextLine();
                     continue;
                 }
@@ -419,9 +421,25 @@ class ChemicalClustering implements java.io.Serializable
         }
         
         // SIMIPLE_ERROR_THRESHOLD
-        if (properties.getProperty(SIMIPLE_ERROR_THRESHOLD) != null)
+        if (properties.getProperty(ERROR_THRESHOLD) != null)
         {
-            diana.setErrorThreshold(Double.parseDouble(properties.getProperty(SIMIPLE_ERROR_THRESHOLD)));
+            diana.setErrorThreshold(Double.parseDouble(properties.getProperty(ERROR_THRESHOLD)));
+        }
+        
+        System.out.println(properties.getProperty(ERROR_CALCULATION));
+        if (properties.getProperty(ERROR_CALCULATION) != null)
+        {
+            if(properties.getProperty(ERROR_CALCULATION).equals("PurityErrorCalculation"))
+            {
+                if (properties.getProperty(ERROR_THRESHOLD) != null)
+                {
+                    diana.setErrorCalculation(new PurityErrorCalculation(Double.parseDouble(properties.getProperty(ERROR_THRESHOLD)), (ResultHandlerStringValues)resultHandle));
+                }
+                else
+                {
+                    diana.setErrorCalculation(new PurityErrorCalculation(0.0, (ResultHandlerStringValues)resultHandle));
+                }
+            }
         }
         return diana;
     }    

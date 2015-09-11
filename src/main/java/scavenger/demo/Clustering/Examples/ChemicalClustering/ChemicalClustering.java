@@ -9,19 +9,17 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.HashMap;
-import java.util.Queue;
-import java.util.LinkedList;
 import java.util.Date;
-import java.net.URL;
 import java.util.Scanner;
-import java.io.IOException;
 import java.util.BitSet;
-import java.io.File;
+import java.util.Properties;
 
+import java.io.IOException;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Properties;
+
 
 /**
  * Clustering of chemical data
@@ -45,7 +43,7 @@ class ChemicalClustering implements java.io.Serializable
     
     protected final String TRIMMED_MEAN_PERCENT = "TRIMMED_MEAN_PERCENT";
     
-    protected final String ERROR_THRESHOLD = "SIMIPLE_ERROR_THRESHOLD"; // when clusters are all below this threshold the clustering is finished
+    protected final String ERROR_THRESHOLD = "ERROR_THRESHOLD"; // when clusters are all below this threshold the clustering is finished
     
     protected final String ERROR_CALCULATION = "ERROR_CALCULATION";
     
@@ -54,8 +52,6 @@ class ChemicalClustering implements java.io.Serializable
     protected List<DistanceMeasureSelection> dataInformationList = new ArrayList<DistanceMeasureSelection>();
     protected List<DataItem<Object>> initialCluster = new ArrayList<DataItem<Object>>();
     
-   // protected List<String> goodnessAttributeValues = new ArrayList<String>();
-    //protected String[] goodnessAttributePossibleValues;
     protected ResultHandler resultHandle = null;
     
     public ChemicalClustering()
@@ -420,13 +416,13 @@ class ChemicalClustering implements java.io.Serializable
             diana.setTrimmedMeanPercent(values);
         }
         
-        // SIMIPLE_ERROR_THRESHOLD
+        // ERROR_THRESHOLD
         if (properties.getProperty(ERROR_THRESHOLD) != null)
         {
             diana.setErrorThreshold(Double.parseDouble(properties.getProperty(ERROR_THRESHOLD)));
         }
         
-        System.out.println(properties.getProperty(ERROR_CALCULATION));
+        // ERROR_CALCULATION
         if (properties.getProperty(ERROR_CALCULATION) != null)
         {
             if(properties.getProperty(ERROR_CALCULATION).equals("PurityErrorCalculation"))
@@ -446,14 +442,9 @@ class ChemicalClustering implements java.io.Serializable
     
     public static void main(final String[] args)
     {
-        //String fileName = "/Users/helen/Documents/MainzUni/scavengerClean/scavenger/src/main/java/scavenger/demo/Clustering/clustering.properties";//args[0];
-        //String fileName = "/Users/helen/Documents/MainzUni/scavengerClean/scavenger/src/main/java/scavenger/demo/Clustering/clusteringEuclidean.properties";
-        //String fileName = "/Users/helen/Documents/MainzUni/scavengerClean/scavenger/src/main/java/scavenger/demo/Clustering/clusteringEuclideanAndTanimoto.properties";
         String fileName = args[0];
         ChemicalClustering chemicalClustering = new ChemicalClustering();
         chemicalClustering.runChemicalClustering(fileName);
-        
-        
     }
     
 }

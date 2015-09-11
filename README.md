@@ -32,7 +32,6 @@ The following command can be used to clean compile and run scavenger :
 sbt clean compile run
 ```
 
-
 Create and run JAR file
 -----------------------
 
@@ -56,10 +55,39 @@ To run a worker from the jar run :
 java -cp target/scala-2.10/scavenger-assembly-2.1.jar scavenger.app.WorkerMain
 ```
 
-For the Sudoku demo run :
+For the basic demo run :
 
 ```
-java -cp target/scala-2.10/scavenger-assembly-2.1.jar scavenger.demo.Sudoku
+java -cp target/scala-2.10/scavenger-assembly-2.1.jar scavenger.demo.Demo
 ```
 
-For an example of running scavenger on mogon see : scavenger/mogonJobScripts/Sudoku
+Examples
+====
+
+We have a seperate demo git repository with a few examples and more documentation at https://github.com/joergwicker/scavenger_demo 
+
+
+Cite
+====
+
+If you use Scavenger, please cite:
+
+```
+@inproceedings{tyukin2015scavenger,
+title = {Scavenger - A Framework for the Efficient Evaluation of Dynamic and Modular Algorithms},
+author = { Andrey Tyukin and Stefan Kramer and Jörg Wicker},
+editor = {Albert Bifet and Michael May and Bianca Zadrozny and Ricard Gavalda and Dino Pedreschi and Jaime Cardoso and Myra Spiliopoulou},
+url = {http://dx.doi.org/10.1007/978-3-319-23461-8_40},
+doi = {10.1007/978-3-319-23461-8_40},
+isbn = {978-3-319-23460-1},
+year = {2015},
+date = {2015-09-07},
+booktitle = {Machine Learning and Knowledge Discovery in Databases},
+volume = {9286},
+pages = {325-328},
+publisher = {Springer International Publishing},
+series = {Lecture Notes in Computer Science},
+pubstate = {published},
+tppubtype = {inproceedings}
+}
+```

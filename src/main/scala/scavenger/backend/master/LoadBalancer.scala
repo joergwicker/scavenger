@@ -30,7 +30,7 @@ with LastMessageTimeMonitoring {
     * have not yet been assigned to a worker
     */
   private val queue = mutable.Queue.empty[InternalJob]
-  
+
   /** Assignment of worker-ActorRef's to the currently processed job.
     */
   private val assignedJobs: mutable.Map[ActorRef, Option[InternalJob]] = 
@@ -44,15 +44,16 @@ with LastMessageTimeMonitoring {
     val label = toInternalLabel(r.identifier)
     promises(label) = p
     enqueueSimple(label, r)
-    p.future.map{ a => a.asInstanceOf[X] }
+    val result = p.future.map{ a => a.asInstanceOf[X] }
+    result
   }
 
   /** Appends an internal job id to a job and puts it into the job queue.
     */
-  private def enqueueSimple(label: InternalLabel, job: Computation[Any]): Unit = { 
+  private def enqueueSimple(label: InternalLabel, job: Computation[Any]): Unit = 
+  { 
     val internalJob = InternalJob(label, job)
     queue.enqueue(internalJob)
-    log.info("enqueued job " + job)
     // notify all workers that there is something to do
     for (worker <- idleWorkers) worker ! JobsAvailable
   }
@@ -62,7 +63,11 @@ with LastMessageTimeMonitoring {
     * Just a way to make things a little safer (e.g. prevents you from
     * sending `Computation`s to workers).
     */
-  private def sendJobToWorker(j: InternalJob, w: ActorRef): Unit = w ! j
+  private def sendJobToWorker(j: InternalJob, w: ActorRef): Unit = {
+    log.debug("sendJobToWorker: job = {}",j)
+    assert(j != null, "The job should be not null")
+    w ! j
+  }
   
   /** Makes sure that we know about the existence of the worker
     */
@@ -73,7 +78,7 @@ with LastMessageTimeMonitoring {
       log.info("Registered worker " + worker.path.name)
     }
   }
-  
+
   /** Tries to assign a job to a worker.
     * Sends an `NothingToDo` reply if there is currently nothing to do.
     */
@@ -86,8 +91,10 @@ with LastMessageTimeMonitoring {
         "Attempted to assign job to unregistered worker " + 
         worker.path.name
       )
-    } else if (assignedJobs(worker) == None){
+    } else if (assignedJobs(worker).isEmpty){
+      assert(!queue.isEmpty, "Queue should not be empty, size = " + queue.size)
       val internalJob = queue.dequeue
+      assert(!(internalJob == null), "Dequeued job should be not null")
       assignedJobs(worker) = Some(internalJob)
       sendJobToWorker(internalJob, worker)
       log.info(
@@ -146,9 +153,10 @@ with LastMessageTimeMonitoring {
         s"Trying to assign ${queue.size} jobs from initialization phase " +
         s"to ${ws.size} workers: { " + ws.mkString(",") +" }" 
       )
-      for ((w, None) <- assignedJobs) {
+      for (w <- ws) {
         tryAssignJob(w)
       }
+    case r: Reminder => { /* no longer relevant, ignore */ }
   }
   
   /** Behavior for normal operation mode.
@@ -173,7 +181,7 @@ with LastMessageTimeMonitoring {
     */
   protected[master] def handleWorkerResponses: Receive = {
     case InternalResult(label, result) => {
-      val logMessageIntro = "Received result " + result + " from " + 
+      val logMessageIntro = "Received result " + label + " from " + 
         sender.path.name + " "
       assignedJobs(sender) match {
         case None => log.error(
@@ -189,7 +197,7 @@ with LastMessageTimeMonitoring {
           } else {
             log.info(
               logMessageIntro + 
-              ", fulfilling promise, try assign new job"
+              ", fulfilling promise, try assign new job. "
             )
             fulfillPromise(label, result)
             assignedJobs(sender) = None

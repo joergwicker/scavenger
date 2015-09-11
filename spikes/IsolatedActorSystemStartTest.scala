@@ -18,7 +18,7 @@ object IsolatedActorSystemStartTest {
     println("Starting system...")
     val system = ActorSystem("scavenger")
     println("Create foo:")
-    val foo = system.actorOf(Props(classOf[Blup], "Barack"), "foo")
+    val foo = system.actorOf(Props(classOf[Blup], "MilesJr"), "foo")
     println("send stuff to foo")
     foo ! "Greetings to Freeman"
   }

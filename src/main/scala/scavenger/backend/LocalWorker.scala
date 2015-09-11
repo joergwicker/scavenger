@@ -10,8 +10,8 @@ import scavenger.categories.formalccc
   * Master and Worker nodes.
   *
   * The purpose of this kind of actors is to keep
-  * the node-manager actor responsive and isolate it
-  * from eventual errors.
+  * the node-manager actor responsive and add an additional layer 
+  * where the error-propagation can be stopped.
   *
   * @since 2.1
   * @author Andrey Tyukin

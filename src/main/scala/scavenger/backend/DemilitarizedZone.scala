@@ -26,13 +26,11 @@ trait DemilitarizedZone extends Actor with ActorLogging with Cache {
   
   def handleExternalRequests: Receive = ({
     case Compute(job, result) => {
-      log.debug("ExtIntf: got Compute {}", job)
       getComputed(job).onSuccess{
         case r: Any => result.success(r)
       }
     }
     case GetExplicitComputation(job, result) => {
-      log.debug("ExtIntf: got GetExplicitComputation {}", job)
       getExplicit(job).onSuccess{
         case r: ExplicitComputation[Any] => result.success(r)
       }
@@ -40,14 +38,20 @@ trait DemilitarizedZone extends Actor with ActorLogging with Cache {
   }: Receive)
 }
 
-/** Provides message types used by `ReactiveContext` to translate method calls into messages */
+/**
+ * Provides message types used by `ReactiveContext` to translate 
+ * method calls into messages 
+ */
 object DemilitarizedZone {
 
   /** First (1/2) type of messages accepted by an `DemilitarizedZone`.
     * Requests the evaluation of `job`. The result should be written into
     * the `result`-`Promise`.
     */
-  private[backend] case class Compute(job: Computation[Any], result: Promise[Any])
+  private[backend] case class Compute(
+    job: Computation[Any], 
+    result: Promise[Any]
+  )
 
   /** Second (2/2) type of messages accepted by an `DemilitarizedZone`.
     * Similar to `Compute`, but does not need the final value, accepts a

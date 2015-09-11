@@ -1,0 +1,489 @@
+\documentclass{scrbook}
+
+\usepackage{courier}
+\usepackage{listings}
+\lstset{basicstyle=\footnotesize\ttfamily,breaklines=true}
+\lstdefinelanguage{scala}{
+  morekeywords={abstract,case,catch,class,def,%
+    do,else,extends,false,final,finally,%
+    for,if,implicit,import,match,mixin,%
+    new,null,object,override,package,%
+    private,protected,requires,return,sealed,%
+    super,this,throw,trait,true,try,%
+    type,val,var,while,with,yield},
+  otherkeywords={=>,<-,<\%,<:,>:,\#,@},
+  sensitive=true,
+  morecomment=[l]{//},
+  morecomment=[n]{/*}{*/},
+  morestring=[b]",
+  morestring=[b]',
+  morestring=[b]"""
+}
+\usepackage{helvet}
+\renewcommand{\familydefault}{\sfdefault}
+\usepackage{geometry}
+\geometry{bindingoffset=1cm} % Make pages appear more or less centered
+
+\usepackage{hyperref}
+\usepackage{xcolor}
+\hypersetup{
+    colorlinks,
+    linkcolor={blue!80!black},
+    urlcolor={blue!50!black}
+}
+
+
+\begin{document}
+%\chapter{Introduction}
+\chapter{Deployment}
+\section{Prerequisites}
+The framework itself does not rely on any particular operating system,
+but some of the scripts that come together with the framework are
+currently available only for Linux and Unix. 
+Porting them to Windows is possible, but not entirely trivial.
+We will assume that you want to install a Scavenger application 
+on a Linux cluster using only the shell (e.g. bash).
+We will use different prompts to distinguish between shells on
+the cluster and on your local machine:
+\begin{lstlisting}
+  cluster currentDirectory> someCommandIssuedOnTheCluster
+  local currentDirectory> someCommandIssuedOnYourLocalMachine
+\end{lstlisting}
+We will omit \lstinline{currentDirectory} 
+if it's not important or can be inferred
+from the context.
+
+You do not need any administrator rights on the system where you want
+to install a Scavenger application.
+Essentially, all you need is a working Java Runtime Environment 
+(at least version 1.6) on the cluster, and some way to connect to the cluster 
+(presumably \lstinline{ssh} and \lstinline{scp}). Everything else can be
+obtained and installed without administrator rights.
+
+Here is the list of resources, tools and changes in configuration
+that you will need in order to build, install and run Scavenger applications. 
+We first give the full list, and later describe some of the items in more detail.
+
+\noindent\textbf{On the cluster (installed by administrator)}
+\begin{itemize}
+  \item A working JRE installation 
+    (at least 1.6, later versions should work fine too)
+  \item Access with \lstinline{ssh} and \lstinline{scp}
+  \item Optionally: LSF or some other job-scheduling system
+\end{itemize}
+
+\noindent\textbf{On the cluster (uploaded or configured by you)}
+\begin{itemize}
+  \item Bash scripts from \lstinline{scavenger_2_x/bin/*}
+  \item Added environment variable \lstinline{SCAVENGER_HOME} and modified 
+    \lstinline{PATH}
+  \item Per application: a modified \lstinline{scavenger.conf} file 
+  \item Per application: directory with all the necessary jars
+\end{itemize}
+
+\noindent\textbf{On the machine where you build your project}
+\begin{itemize}
+  \item A working JRE installation 
+  \item SBT (Scala Build Tool)
+  \item \lstinline{sbt-pack} plug-in
+\end{itemize}
+
+Notice that you can use Maven or any other build tool of your choice, however,
+in the following we will assume that you stick with SBT.
+
+\subsection{Obtaining SBT and installing plugins}
+Visit the SBT-website \url{http://www.scala-sbt.org/0.13/tutorial/Setup.html} and install SBT on your local machine following the instructions.
+Then open the file 
+\begin{lstlisting}
+  ~/.sbt/0.13/plugins/plugin.sbt
+\end{lstlisting} 
+and append the following line to the end:
+\begin{lstlisting}
+  addSbtPlugin("org.xerial.sbt" % "sbt-pack" % "0.7.5")
+\end{lstlisting}
+This will tell the SBT that the \lstinline{sbt-pack} plugin is 
+required. The actual installation is handled automatically by SBT.
+
+\subsection{Obtaining Scavenger scripts and JARs}
+Currently, there are no Maven/SBT-repositories containing Scavenger.
+You can either download and unzip or git-clone the Scavenger project from 
+\url{https://github.com/joergwicker/scavenger}.
+%\footnote{
+%  A less stable ``bleeding-edge''-version can be found here:
+%  \url{https://github.com/tyukiand/scavenger_2_x}
+%}.
+The result should be a directory (we will assume that it's called \lstinline{scavenger_2_x}) with the content that 
+looks approximately as follows:
+\begin{lstlisting}
+  local scavenger_2_x> ls
+  bin
+  build.sbt
+  documentation
+  scavenger.conf
+  src
+\end{lstlisting}
+Here is a brief description of what all these files and directories are:
+\begin{description}
+  \item[bin] Contains bash-scripts that substantially simplify the
+    starting of Scavenger 2.x nodes
+  \item[build.sbt] Description of SBT-build, necessary to build the 
+    Scavenger 2.x jars
+  \item[documentation] Source code of this documentation
+  \item[scavenger.conf] A basic version of the Scavenger 2.x configuration
+    file. You will have to modify it in order to be able to start your
+    Scavenger 2.x application on multiple nodes.
+  \item[src] Source code of the Scavenger 2.x framework.
+\end{description}
+
+Now you have the SBT build tool and all necessary files to build 
+the Scavenger 2.x framework. From the directory containing the
+\lstinline{build.sbt} file, issue the following command in your shell:
+\begin{lstlisting}
+  local scavenger_2_x> sbt publishLocal
+\end{lstlisting}
+This will compile Scavenger 2.x, and package it into a jar-file 
+(you will be able to find it in the newly created subdirectory
+called \lstinline{target}). 
+Then, sbt will publish it locally by creating bunch of \lstinline{.pom} and \lstinline{.jar}-files in the directory 
+\begin{lstlisting}
+~/.ivy2/local/org.scavenger/scavenger_<x>/<y>
+\end{lstlisting} 
+Now these JARs can be 
+used by other projects that have Scavenger 2.x as a dependency.
+
+\subsection{Making bash-scripts available}
+As mentioned previously, the framework comes together with bash-scripts
+that facilitate launching of Scavenger 2.x nodes. These scripts can 
+be found in \lstinline{scavenger_2_x/bin}. In order to be able to use them, we have to copy them on the cluster, and then adjust some environment variables. First, copy the entire \lstinline{scavenger_2_x} directory (with compiled and packaged \lstinline{target}) to the cluster. For Mogon, it could look
+as follows:
+\begin{lstlisting}
+  local> scp -r scavenger_2_x \
+    username@mogon.zdv.uni-mainz.de:/home/username/path/to/
+\end{lstlisting}
+where \lstinline{/path/to/} stands for some path in the cluster
+file system.
+
+Now, edit your \lstinline{~/.bashrc} configuration file (on the cluster), and add the following two lines:
+\begin{lstlisting}
+  export SCAVENGER_HOME=/path/to/scavenger_2_x
+  export PATH=$PATH:$SCAVENGER_HOME/bin
+\end{lstlisting}
+Save the file and restart bash (or simply \lstinline{source} the
+modified \lstinline{.bashrc}).
+You should be able to see something when issuing the command 
+\begin{lstlisting}
+  cluster> echo $SCAVENGER_HOME
+\end{lstlisting}
+The script called \lstinline{scavenger} should also become visible.
+Try it out by issuing the command
+\begin{lstlisting}
+  cluster> scavenger --help
+\end{lstlisting}
+It should print an overview of available commands and options.
+
+Moreover, now we already should be able to start a seed node and
+worker nodes (even though they can't do anything useful so far).
+To test this, issue the following command:
+
+\begin{lstlisting}
+  cluster> scavenger startSeed \
+    --config-file 'path/to/scavenger_2_x/scavenger.conf'
+\end{lstlisting}
+It will print a wall of (mostly incomprehensible) messages and hang
+forever. Create a second bash-instance, and issue the command
+\begin{lstlisting}
+  cluster> scavenger startWorker \
+    --port 2553 \
+    --config-file 'path/to/scavenger_2_x/scavenger.conf'
+\end{lstlisting}
+Again, it should print a wall of messages. What one should
+observe is that the launching of the worker node triggers some
+activity in the console with the seed node. If one looks closely,
+one might be able to see some messages that indicate that the 
+connection between the seed node and the worker node has been 
+established. Terminate both seed and worker forcibly by 
+\lstinline{Ctrl+C} and close the second shell.
+
+If you want to be able to test your application locally, 
+repeat the modification of environment variables on your local 
+machine.
+
+\section{Building the application}
+Let us summarize what we have done so far:
+\begin{itemize}
+  \item We have built and published Scavenger 2.x locally, so 
+    that we can use it as dependency in other SBT and Maven 
+    projects.
+  \item We have copied JARs and bash scripts to the cluster,
+    and adjusted the environment variables on the 
+    cluster, so that we can now start seed and worker nodes
+    using the \lstinline{scavenger} script.
+\end{itemize}
+We want to make use of the first item from the above list, 
+and create a new SBT project that has Scavenger 2.x 
+as dependency. We will demonstrate the building process on
+a simple piece of code.
+You can either follow the instructions step by step, or 
+clone the full example from the repository
+\url{https://github.com/joergwicker/scavenger_demo}.
+
+If you want to build the example from scratch, 
+begin by creating an empty directory, let's call it 
+\lstinline{myScavengerDemo}.
+In this directory, create a file called \lstinline{build.sbt}
+with the following content:
+\begin{lstlisting}[language=scala]
+lazy val root = (project in file(".")).
+  settings(
+    // choosing name and version for the example is up to you
+    organization := "org.foobar", 
+    name := "ScavengerHelloWorld",
+    version := "3.14", 
+    // this should be the same as the Akka-version used by scavenger.
+    scalaVersion := "2.10.4", 
+    libraryDependencies ++= Seq(
+      // this must be the same as the locally published version
+      "org.scavenger" % "scavenger_2.10" % "2.1" 
+    ),
+    packAutoSettings
+  ) // don't forget any parentheses
+\end{lstlisting}
+This is an SBT build description. Here, we give some information about the
+project (name, version, organization), specify a scala version (you can 
+use a newer one, but make sure it's compatible with the Akka version used
+by your current Scavenger 2.x installation, check the dependencies listed
+in \lstinline{scavenger_2_x/build.sbt}). Then we say that our project 
+depends on the Scavenger 2.1 framework. The exact version numbers are not
+that important: they can (and will) change. What is important is that 
+the specified version numbers are the same as in your current
+\lstinline{scavenger_2_x/build.sbt}, otherwise SBT will not be able 
+to find the dependency.
+
+Now, create a source-code directory within the \lstinline{myScavengerDemo}
+directory:
+\begin{lstlisting}
+  local myScavengerDemo> mkdir -p src/main/scala/scavenger_demo
+\end{lstlisting}
+In this directory, create a file called \lstinline{DistributedHelloWorld.scala}
+with the following content:
+
+\begin{lstlisting}[language=scala]
+package scavenger_demo
+import scala.concurrent.Future
+import scavenger._
+import scavenger.app.DistributedScavengerApp
+import scala.concurrent.Future
+
+case object Rot13 extends AtomicAlgorithm[Char, Char] {
+  def apply(c: Char, ctx: Context): Future[Char] = {
+    // just sleep a few milliseconds, pretend it's hard
+    Thread.sleep((new scala.util.Random).nextInt(1000)) 
+    val res = 
+      if ('A' <= c && c <= 'Z') ('A' + (c + 13 - 'A') % 26).toChar
+      else if ('a' <= c && c <= 'z') ('a' + (c + 13 - 'a') % 26).toChar
+      else c
+    Future(res)(ctx.executionContext)
+  }
+  def identifier = scavenger.categories.formalccc.Atom("rot13")
+  def difficulty = Expensive
+}
+
+/**
+ * Scavenger 2.x-specific hello-world example,
+ * workers are in separate JVM's
+ */
+object DistributedHelloWorld extends DistributedScavengerApp {
+  def main(args: Array[String]): Unit = {
+
+    // before we do anything, we have to initialize the master node
+    scavengerInit()
+
+    // Here is some data to work with.
+    val encryptedMessage = "Uryyb, Jbeyq!"
+
+    // Each character becomes a trivial computation
+    val data = for (character <- encryptedMessage) yield {
+      Computation("" + character, character)
+    }
+
+    // Now we apply `rot13` algorithm to the data and 
+    // generate bunch of jobs: one job for each character
+    val jobs = for (trivialComp <- data) yield {
+      Rot13(trivialComp)
+    }
+
+    // Nothing has been computed so far. We have merely created
+    // descriptions of jobs. Here is the full list of jobs that
+    // we want to submit:
+    println("Full list of jobs:")
+    jobs foreach println
+
+
+    // submit all jobs, `Computation[Char]` are 
+    // transformed into `Future[Char]`
+    val singleCharFutures = for (j <- jobs) yield {
+      scavengerContext.submit(j)
+    }
+ 
+    // collect all futures into a single one, 
+    // concatenate single chars into a message
+    val resultFuture = 
+      for (seq <-  Future.sequence(singleCharFutures)) yield {
+        seq.mkString("")
+      }
+    
+    // install a callback on the result: 
+    // print it and shutdown as soon as
+    // the decrypted message is there
+    resultFuture.onSuccess { case str: String =>
+      // draw the result with a box around it
+      println("#" * 80)
+      println("#" + (" " * 78) + "#")
+      println("#" + (" " * ((78 - str.size) / 2)) + str + 
+        (" " * (78 - (78 - str.size) / 2 - str.size)) + "#") 
+      println("#" + (" " * 78) + "#")
+      println("#" * 80)
+      scavengerShutdown()
+    }
+
+  }
+}
+\end{lstlisting}
+This program takes a ROT13-encrypted ``Hello, World!'' message, transforms 
+each character into a separate job, decrypts each character on a different
+worker node, puts the partial results together, and prints out the decrypted
+message. 
+The implementation details are not important right now, because we want to 
+demonstrate how to package and to deploy the application.
+
+Now you can compile the code as follows (the current directory should be the
+one that contains \lstinline{build.sbt} of your example):
+\begin{lstlisting}
+  local myScavengerDemo> sbt compile
+\end{lstlisting}
+In order to launch the application, we need one more ingredient: 
+the application-specific configuration file.
+
+\section{Configuration}
+Each Scavenger 2.x application requires a configuration file. 
+This configuration file contains the address and port of the seed node, and
+also some settings relevant for the master node and the worker nodes.
+The directory \lstinline{scavenger_2_x} contains a basic version of such a 
+configuration file, it's called \lstinline{scavenger.conf}. 
+Copy this file into the directory \lstinline{myScavengerDemo}. 
+It is a plain-text file with a format based on JSON. 
+Open it with the text-editor of your choice. The most important variables 
+are 
+\begin{lstlisting}
+scavenger {
+  seed {
+    akka.remote.netty.tcp.hostname = "login02"
+    akka.remote.netty.tcp.port = 9876
+  }
+}
+\end{lstlisting}
+These two variables must contain the right address and the right port such that
+the worker nodes and the master node can find it. 
+For example, on Mogon, it is reasonable to start the seed on the login node. 
+In such a case, we one should use something like
+\lstinline{"login01"} or \lstinline{"login02"}
+as the host name (depending on where you are starting the
+seed node). One should also choose the port number 
+in such a way that it doesn't cause any conflicts with 
+other applications (we will use 9876 as example).
+Notice that the host name is a string (double quotes), 
+while port number is a numeric value (no quotes).
+
+\section{Deploying applications on the cluster}
+So far, we have written the source-code of our application, compiled it, 
+and supplied a configuration file. However, the compiled classes and the 
+configuration file are not sufficient to run the application on the cluster,
+because we also need the JARs with all the dependencies.
+
+In the \lstinline{build.sbt}, we have added the setting
+\lstinline{packAutoSettings}. 
+This configures the \lstinline{sbt-pack} plugin.
+This plugin helps us to collect all the required jars in a single directory,
+so that they can be easily uploaded to the cluster. If you are using Maven,
+you can take a look at the \lstinline{dependencies} plugin, specifically at
+the \lstinline{copy-dependencies} command.
+
+Package and collect all transitive dependencies into a single 
+directory by issuing the following command:
+\begin{lstlisting}
+  local myScavengerDemo> sbt pack
+\end{lstlisting}
+This will generate a directory \lstinline{target/pack/lib} with a whole lot of
+JARs (this is why we don't want to collect all the
+dependencies manually). Now you can copy all these jars to the cluster:
+\begin{lstlisting}
+  local myScavengerDemo> scp -r target/pack/lib \
+    username@cluster:/path/to/the/jars
+\end{lstlisting}
+You should also copy the modified configuration file
+\lstinline{scavenger.conf} to the cluster:
+\begin{lstlisting}
+  local myScavengerDemo> scp -r scavenger.conf \
+    username@cluster:/path/to/the/confFile
+\end{lstlisting}
+
+\section{Running the application}
+Now all the JARs and the modified configuration file are on the cluster, 
+and all relevant Bash scripts are available, 
+so we should be able to launch our application.
+
+Begin with the seed-node (remember that it has to be launched 
+on the node specified in the configuration file, otherwise
+all the other nodes won't be able to find it):
+\begin{lstlisting}
+  cluster> scavenger startSeed \
+    --port 9876
+    --config-file path/to/modified/scavenger.conf
+\end{lstlisting}
+
+For a moment assume that you have direct access to other
+nodes of your cluster (this is not the case if you have to
+use LSF, we will discuss this use-case in the next section).
+
+Login to another node, and start a worker node as follows:
+\begin{lstlisting}
+  cluster> scavenger startWorker \
+    --jars 'path/to/uploaded/jars'
+    --port 9876
+\end{lstlisting}
+Notice that all the worker nodes must have access to the
+JARs that your application depend on, otherwise they won't
+be able to deserialize incoming job-messages.
+
+Finally, launch the master from some other node.
+The master node runs together with the actual client
+application, the name of the client application must 
+be specified explicitly:
+\begin{lstlisting}
+  cluster> scavenger startMaster \
+    --jars 'target/pack/lib/*' \
+    --port 9876 \
+    --main scavenger_demo.DistributedHelloWorld
+\end{lstlisting}
+
+Now the worker node should be able to connect to the
+seed node, the master node should also be able to connect 
+to the seed node. Then the master will establish a connection
+to the worker node, and switch into normal operation mode.
+Then it should decrypt the \lstinline{"Hello, World!"} message
+character by character, print it out, and exit.
+
+\section{Running with LSF}
+On Mogon, you will have no ssh-access to other physical 
+nodes. Instead, you must save the above commands into 
+scripts, \emph{specify ton of weird options (TODO...)},
+and submit the scripts using \lstinline{bsub}.
+
+\section{Updating the Scavenger 2.x framework}
+Currently, the Scavenger 2.x framework does not provide any built-in mechanism for
+software updates. If you want to get a never version, either
+git-pull a newer version and re-build everything, or simply
+delete the entire \lstinline{scavenger_2_x} directory that you have cloned/downloaded previously, and install everything again.
+
+%\chapter{Writing applications for the Scavenger 2.x framework}
+\end{document}

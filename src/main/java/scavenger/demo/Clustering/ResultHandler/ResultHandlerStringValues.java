@@ -242,7 +242,7 @@ class ResultHandlerStringValues<T> extends ResultHandler<T, String>
                 }
                 
                 int containsIndex = getIndex(givenSets, maxIndex+1);
-                if(containsIndex != -1) // stops a cluster being assigned to multiple sets
+                if((containsIndex != -1) && (maxIndex > -1)) // stops a cluster being assigned to multiple sets
                 {
                     if(numInSetsForLeaves[maxIndex][containsIndex] > maxNum)
                     {

@@ -94,7 +94,6 @@ object RandomNameGenerator {
     "GIZAN",
     "GRAIL",
     "GREY",
-    "GYPSIE",
     "HAV-MUSUV",
     "HU-BRID",
     "HYADEAN",

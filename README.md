@@ -69,6 +69,15 @@ We have a seperate demo git repository with a few examples and more documentatio
 Cite
 ====
 
+Examples
+====
+
+We have a seperate demo git repository with a few examples and more documentation at https://github.com/joergwicker/scavenger_demo 
+
+
+Cite
+====
+
 If you use Scavenger, please cite:
 
 ```
@@ -90,3 +99,4 @@ pubstate = {published},
 tppubtype = {inproceedings}
 }
 ```
+

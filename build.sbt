@@ -12,7 +12,7 @@ lazy val root = (project in file(".")).
     ),
     scalacOptions ++= Seq("-feature"),
     scalacOptions in (Compile,doc) ++= Seq("-groups", "-implicits"),
-    //packAutoSettings
+    //packAutoSettings,
     javaOptions += "-Xmx8G"
   )
 

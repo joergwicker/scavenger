@@ -449,7 +449,7 @@ class ChemicalClustering implements java.io.Serializable
         if (args.length <= 0)
         {
             System.out.println("Path name of .properties file is requiered");
-            exit(1);
+            System.exit(1);
         }
         String fileName = args[0];
         ChemicalClustering chemicalClustering = new ChemicalClustering();

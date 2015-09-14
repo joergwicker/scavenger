@@ -71,7 +71,7 @@ public class BottomUp<T> extends Diana
      *
      * @return The root for the tree of clusters.
      */
-    public TreeNodeList<T> runClustering(TreeNodeList<T> root) //TODO why multiple masters start up
+    public TreeNodeList<T> runClustering(TreeNodeList<T> root) 
     {
         this.setDefaults();        
         int startNumberOfTreeNodes = root.getTreeNodeData().size();        
@@ -154,7 +154,7 @@ public class BottomUp<T> extends Diana
         {
             bestResult = result;
         }
-        else if ((result.getTreeNodeData().size() < bestResult.getTreeNodeData().size()) || (result.getError() < bestResult.getError()))//(result.getTreeNodeData().size() >= bestResult.getTreeNodeData().size()) && 
+        else if ((result.getTreeNodeData().size() < bestResult.getTreeNodeData().size()) || (result.getError() < bestResult.getError())) 
         {
             bestResult = result;
         }

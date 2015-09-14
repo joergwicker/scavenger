@@ -230,8 +230,6 @@ public class Diana<T> extends ScavengerAppJ
                 TreeNode<T> result = results.poll();                
                 for(int i = 0; i < result.getToBeSplitOn().size(); i++)
                 {
-                    //System.out.println("result.getToBeSplitOn().size() :" + result.getToBeSplitOn().size());
-                    //System.out.println("result.getSplitNumber()) :" + result.getSplitNumber());
                     numJobs = numJobs + 1;
                     ScavengerFunction<TreeNode<T>> run = new CreateNewSplinter(result.getToBeSplitOn().get(i), dianaDistanceFunctions, numberOfClusters);
                     Algorithm<TreeNode<T>, TreeNode<T>> algorithm = scavengerAlgorithm.expensive("createNewSplinter", run);

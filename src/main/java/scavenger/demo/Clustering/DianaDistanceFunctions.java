@@ -136,7 +136,6 @@ public class DianaDistanceFunctions<T> implements java.io.Serializable
         else //if(distanceDiameter == DiameterMeasure.TRIMMED_MEAN)
         {            
             // calculates the trimmed mean
-            //System.out.println("calculateClusterDiameter cluster.size() : " + cluster.size());
             List<Double> allAverages = new ArrayList<Double>();        
             for (int i = 0; i < cluster.size(); i++)
             {

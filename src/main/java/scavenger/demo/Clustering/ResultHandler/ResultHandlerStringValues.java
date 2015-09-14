@@ -151,7 +151,7 @@ public class ResultHandlerStringValues<T> extends ResultHandler<T, String>
                 }
                 clusterDistance = clusterDistance + (total / cluster.size());
             } 
-            outputStr = outputStr + " : ( cluster distance " + " = " + (1 - (clusterDistance / cluster.size())) + " )\n";
+            outputStr = outputStr + " : ( cluster distance " + " = " + ((clusterDistance / cluster.size())) + " )\n";
             totalDistance = totalDistance + (clusterDistance / cluster.size());
             
             
@@ -159,7 +159,7 @@ public class ResultHandlerStringValues<T> extends ResultHandler<T, String>
             numInSetsForLeaves[i] = getNumberInEachSet(cluster); // used by testClusters()
         }
         totalDistance = totalDistance / leaves.size();
-        totalDistance = (1-totalDistance);
+        totalDistance = (totalDistance);
         outputStr = outputStr + "average distance = " + totalDistance + "\n\n";
         
         

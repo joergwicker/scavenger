@@ -54,6 +54,10 @@ public class DistanceMeasureSelection implements java.io.Serializable
     {
         return id;
     }
+    public double getWeight()
+    {
+        return weight;
+    }
     
     /**
      * @return the id(s) as a list
@@ -72,6 +76,9 @@ public class DistanceMeasureSelection implements java.io.Serializable
         }
     }
     
+    /**
+     *
+     */
     public void addId(String id)
     {
         if(ids == null)
@@ -82,13 +89,6 @@ public class DistanceMeasureSelection implements java.io.Serializable
         this.ids.add(id);
     }
     
-    public double getWeight()
-    {
-        return weight;
-    }
-   /* public void setWeight(double weight)
-    {
-        this.weight = weight;
-    }*/
+   
     
 }

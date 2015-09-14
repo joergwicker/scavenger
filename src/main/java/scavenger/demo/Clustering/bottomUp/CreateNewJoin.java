@@ -1,6 +1,8 @@
-package scavenger.demo.clustering;
+package scavenger.demo.clustering.bottomUp;
 
 import scavenger.demo.clustering.distance.*;
+import scavenger.demo.clustering.*;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.HashMap;

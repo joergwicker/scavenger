@@ -10,7 +10,8 @@ import java.util.HashMap;
 
 
 /**
- * 
+ * Allows the precentage of incorrectly clustered nodes to be used as the error measure.
+ *
  * @see ResultHandlerStringValues
  * @author Helen Harman
  */

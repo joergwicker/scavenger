@@ -145,6 +145,9 @@ public class Diana<T> extends ScavengerAppJ
     }
     ///////////////////////////
     
+    /**
+     * 
+     */
     protected void setDefaults()
     {
         System.out.println("Diana.runClustering() called");

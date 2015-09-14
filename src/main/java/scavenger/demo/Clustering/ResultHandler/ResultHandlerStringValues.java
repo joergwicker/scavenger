@@ -2,6 +2,7 @@ package scavenger.demo.clustering.resultHandler;
 
 import scavenger.demo.clustering.distance.*;
 import scavenger.demo.clustering.*;
+import scavenger.demo.clustering.bottomUp.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -38,16 +39,21 @@ public class ResultHandlerStringValues<T> extends ResultHandler<T, String>
     
    
     /**
+     * Sets the user defined properties if they have been set.
      *
+     * @param properties 
+     * @param TEST_ATTRIBUTE_VALUES
+     * @param NUMBER_OF_CLUSTERS
+     * @param OUTPUT_FILE
      */
-    public ResultHandlerStringValues(Properties properties, final String TEST_ATTRIBUTE_VALUES, final String SPLINTER_NUMBER, final String OUTPUT_FILE)
+    public ResultHandlerStringValues(Properties properties, final String TEST_ATTRIBUTE_VALUES, final String NUMBER_OF_CLUSTERS, final String OUTPUT_FILE)
     {
         String line = properties.getProperty(TEST_ATTRIBUTE_VALUES);
         attributePossibleValues = Arrays.asList(line.substring(line.indexOf("{") + 1, line.indexOf("}")).split(","));
         
-        if (properties.getProperty(SPLINTER_NUMBER) != null)
+        if (properties.getProperty(NUMBER_OF_CLUSTERS) != null)
         {
-            this.numberOfClusters = Integer.parseInt(properties.getProperty(SPLINTER_NUMBER));
+            this.numberOfClusters = Integer.parseInt(properties.getProperty(NUMBER_OF_CLUSTERS));
         }
         
         if (properties.getProperty(OUTPUT_FILE) != null)
@@ -77,6 +83,7 @@ public class ResultHandlerStringValues<T> extends ResultHandler<T, String>
     
     /**
      * Diana clustering
+     * Finds the leaf nodes and passes them to handleResults(List<TreeNode<T>> leaves)
      */
     public void handleResults(TreeNode<T> node)
     {
@@ -100,6 +107,7 @@ public class ResultHandlerStringValues<T> extends ResultHandler<T, String>
     
     /**
      * BottomUp clustering
+     * Finds the leaf nodes and passes them to handleResults(List<TreeNode<T>> leaves)
      */
     public void handleResults(TreeNodeList<T> node)
     {

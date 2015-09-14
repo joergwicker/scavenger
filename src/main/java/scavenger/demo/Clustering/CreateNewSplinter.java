@@ -29,8 +29,8 @@ import static akka.dispatch.Futures.sequence;
  * If an item is closure to the new cluster (leftLeaf), than the old cluster (rightLeaf) :
  *       remove it from the old cluster (rightLeaf), and add it to the new cluster (leftLeaf).
  *
- * @param parent The TreeNode containing cluster to be split up
- * @return The parent TreeNode with it's children set to the TreeNodes containing the new clusters.
+ * @param parent The TreeNode containing cluster to be split up. Param passed to this.apply().
+ * @return The parent TreeNode with it's children set to the TreeNodes containing the new clusters. Returned by this.call()
  */
 public class CreateNewSplinter<T> extends ScavengerFunction<TreeNode<T>> 
 {
@@ -50,13 +50,12 @@ public class CreateNewSplinter<T> extends ScavengerFunction<TreeNode<T>>
         this.numberOfSplinters = numberOfSplinters;
     }
     
-    
     public TreeNode<T> call()
     { 
+        //System.out.println("CreateNewSplinter.call() called");
         //dianaDistanceFunctions.setScavengerContext(ctx);        
         TreeNode parent = value;
-        
-        //System.out.println("CreateNewSplinter.call() called");
+                
         List<DataItem<T>> data = parent.getData();
         
         List<DataItem<T>> leftLeaf = new ArrayList<DataItem<T>>();
@@ -90,27 +89,25 @@ public class CreateNewSplinter<T> extends ScavengerFunction<TreeNode<T>>
             }
         }
         
+        // create and link the child and parent nodes
         TreeNode<T> leftTreeNode = new TreeNode<T>(leftLeaf, parent);
         TreeNode<T> rightTreeNode = new TreeNode<T>(rightLeaf, parent);
         parent.setChildren(leftTreeNode, rightTreeNode);        
         parent.setSplitHappenedOn(splinterStartNode);
         int splitNumber = leftTreeNode.countSplits();
         rightTreeNode.countSplits();
-        
-        //leftTreeNode.setUpSplinterInfo(dianaDistanceFunctions.getIndexFurthestPoints(leftTreeNode), numberOfSplinters);
-        //rightTreeNode.setUpSplinterInfo(dianaDistanceFunctions.getIndexFurthestPoints(rightTreeNode), numberOfSplinters);
-        //System.out.println("createNewSplinter : leftTreeNode " + leftLeaf.size() + " rightTreeNode " + rightLeaf.size());            
-        
+           
+        // If more clusters should be created
+            // find the cluster which should be split up, and nodes that the new splinter group should be attempted to be started on
         if ((numberOfSplinters <= 0) || (splitNumber < numberOfSplinters))
         {
-            List<TreeNode<T>> leafNodes = parent.getRoot().findLeafNodes();//dianaDistanceFunctions.findRoot(parent));
-        //System.out.println("CreateNewSplinter leafNodes " + leafNodes.size());
+            List<TreeNode<T>> leafNodes = parent.getRoot().findLeafNodes();
             int largestDiameterIndex = dianaDistanceFunctions.getClusterIndexWithLargestDiameter(leafNodes); 
             TreeNode<T> nextToBeSplit = leafNodes.get(largestDiameterIndex);
             nextToBeSplit.setUpSplinterInfo(dianaDistanceFunctions.getIndexFurthestPoints(nextToBeSplit));
             return nextToBeSplit;
         }
-        else
+        else 
         {
             return leftTreeNode;
         }

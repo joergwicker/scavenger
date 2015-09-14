@@ -22,7 +22,11 @@ import java.io.InputStream;
 
 
 /**
- * Clustering of chemical data
+ * Diana clustering of chemical data.
+ *
+ * File path name of a .properties file is requiered. For an example see src/main/java/scavenger/demo/Clustering/examples/chemicalClustering/PropertiesFiles/*.properties
+ *
+ * Should work for any ARFF file (not just chemical data).
  */
 class ChemicalClustering implements java.io.Serializable
 {   
@@ -38,7 +42,7 @@ class ChemicalClustering implements java.io.Serializable
     protected final String TEST_ATTRIBUTE = "TEST_ATTRIBUTE";
     protected final String TEST_ATTRIBUTE_VALUES = "TEST_ATTRIBUTE_VALUES"; 
     
-    protected final String SPLINTER_NUMBER = "CLUSTERS";
+    protected final String NUMBER_OF_CLUSTERS = "CLUSTERS";
     protected final String OUTPUT_FILE = "OUTPUT_FILE";
     
     protected final String TRIMMED_MEAN_PERCENT = "TRIMMED_MEAN_PERCENT";
@@ -47,7 +51,7 @@ class ChemicalClustering implements java.io.Serializable
     
     protected final String ERROR_CALCULATION = "ERROR_CALCULATION";
     
-    protected final String[] PROPERTY_NAMES = {ARFF_FILE, EUCLIDEAN, TANIMOTO, RUN_TIME, START_SPLINTER_NODES, TEST_ATTRIBUTE, TEST_ATTRIBUTE_VALUES, SPLINTER_NUMBER, OUTPUT_FILE, TRIMMED_MEAN_PERCENT, ERROR_THRESHOLD, ERROR_CALCULATION};
+    protected final String[] PROPERTY_NAMES = {ARFF_FILE, EUCLIDEAN, TANIMOTO, RUN_TIME, START_SPLINTER_NODES, TEST_ATTRIBUTE, TEST_ATTRIBUTE_VALUES, NUMBER_OF_CLUSTERS, OUTPUT_FILE, TRIMMED_MEAN_PERCENT, ERROR_THRESHOLD, ERROR_CALCULATION};
    
     protected List<DistanceMeasureSelection> dataInformationList = new ArrayList<DistanceMeasureSelection>();
     protected List<DataItem<Object>> initialCluster = new ArrayList<DataItem<Object>>();
@@ -122,7 +126,7 @@ class ChemicalClustering implements java.io.Serializable
         // set-up for the Goodness calculatation
         if (properties.getProperty(TEST_ATTRIBUTE) != null)
         {
-            resultHandle = new ResultHandlerStringValues<Object>(properties, TEST_ATTRIBUTE_VALUES, SPLINTER_NUMBER, OUTPUT_FILE);
+            resultHandle = new ResultHandlerStringValues<Object>(properties, TEST_ATTRIBUTE_VALUES, NUMBER_OF_CLUSTERS, OUTPUT_FILE);
         }
         
         // 3. read in the data from the ARFF_FILE
@@ -395,10 +399,10 @@ class ChemicalClustering implements java.io.Serializable
             diana.setNumberOfStartSplinterNodes(Integer.parseInt(properties.getProperty(START_SPLINTER_NODES)));
         }
         
-        // SPLINTER_NUMBER
-        if (properties.getProperty(SPLINTER_NUMBER) != null)
+        // NUMBER_OF_CLUSTERS
+        if (properties.getProperty(NUMBER_OF_CLUSTERS) != null)
         {
-            diana.setNumberOfClusters(Integer.parseInt(properties.getProperty(SPLINTER_NUMBER)));
+            diana.setNumberOfClusters(Integer.parseInt(properties.getProperty(NUMBER_OF_CLUSTERS)));
         }
         
         // TRIMMED_MEAN_PERCENT - might be single or list of integer values
@@ -442,6 +446,11 @@ class ChemicalClustering implements java.io.Serializable
     
     public static void main(final String[] args)
     {
+        if (args.length <= 0)
+        {
+            System.out.println("Path name of .properties file is requiered");
+            exit(1);
+        }
         String fileName = args[0];
         ChemicalClustering chemicalClustering = new ChemicalClustering();
         chemicalClustering.runChemicalClustering(fileName);

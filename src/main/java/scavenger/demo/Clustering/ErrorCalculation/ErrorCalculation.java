@@ -9,7 +9,7 @@ import java.util.HashMap;
 
 
 /**
- * Interface for checking if final clusters are "good".
+ * Interface for checking if clusters are "good".
  *
  * @author Helen Harman
  */

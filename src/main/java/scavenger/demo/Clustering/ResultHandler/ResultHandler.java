@@ -1,6 +1,7 @@
 package scavenger.demo.clustering.resultHandler;
 
 import scavenger.demo.clustering.*;
+import scavenger.demo.clustering.bottomUp.*;
 
 import java.util.List;
 

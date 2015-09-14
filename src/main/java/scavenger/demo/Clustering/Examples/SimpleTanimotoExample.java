@@ -78,6 +78,7 @@ class SimpleTanimotoExample implements java.io.Serializable
         
         // 4. Perform clustering
         Diana<BitSet> diana = new Diana<BitSet>(distanceMeasure); 
+        diana.setNumberOfClusters(4);
         TreeNode<BitSet> node = diana.runClustering(input);
         diana.endClustering();
         

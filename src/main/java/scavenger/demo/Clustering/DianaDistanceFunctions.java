@@ -52,11 +52,9 @@ public class DianaDistanceFunctions<T> implements java.io.Serializable
         
         trimmedMeanPercents.add(5);
     }
+    
     public DianaDistanceFunctions(){}
-    /*public void setTrimmedMeanPercent(int trimmedMeanPercent)
-    {
-        this.trimmedMeanPercent = trimmedMeanPercent;
-    }*/
+
     
     public void setTrimmedMeanPercent(List<Integer> trimmedMeanPercents)
     {
@@ -84,37 +82,6 @@ public class DianaDistanceFunctions<T> implements java.io.Serializable
             }
         }
         return largestDiameterIndex;
-        /*
-        List<Double> diameters = calculateClusterDiameters(clusters);
-        for(int j = 0; j < diameters.size(); j++)
-        {
-            double diameter = diameters.get(j);
-            if (diameter > largestDiameter)
-            {
-                largestDiameter = diameter;
-                largestDiameterIndex = j;
-            }
-        }
-        //System.out.println("largestDiameterIndex : " + largestDiameterIndex);
-        return largestDiameterIndex;*/
-    }
-    
-    /**
-     * Calculates the diameters of all the given clusters
-     * Uses scavenger. Means that if the diameter of a cluster has already been calculated it is not re-calculated.
-     * 
-     * @param clusters The clusters who's diameters are to be calculated
-     * @return the diameters of the clusters
-     */
-    public List<Double> calculateClusterDiameters(List<TreeNode<T>> clusters)
-    {
-        List<Double> distances = new ArrayList<Double>(clusters.size());
-        
-        for(int j = 0; j < clusters.size(); j++)
-        {
-            distances.add(calculateClusterDiameter(clusters.get(j)));
-        }        
-        return distances;    
     }
     
     /** 
@@ -136,8 +103,6 @@ public class DianaDistanceFunctions<T> implements java.io.Serializable
         }
         return noneLeafNodes;
     }
-    
-    
     
     /**
      * Max distance between two elements in a cluster
@@ -421,7 +386,8 @@ public class DianaDistanceFunctions<T> implements java.io.Serializable
     ///////////////// Methods used for Bottom-Up clustering //////////////////////
     
     /**
-     * 
+     * Finds the clusters that are closest to each other. 
+     *
      * @param treeNodeList Contains a list of the nodes that could be joined
      * @param numberOfClusters The number of clusters that should be created
      * @param startNumberOfTreeNodes The number of clusters started with
@@ -432,7 +398,7 @@ public class DianaDistanceFunctions<T> implements java.io.Serializable
     {
         List<Integer[]> joinNodes = new ArrayList<Integer[]>();
         List<Double> smallestDistances = new ArrayList<Double>();
-        if(treeNodeList.size() > numberOfClusters)
+        if((treeNodeList.size() > numberOfClusters) || (numberOfClusters <= 0)) // else clustering should finish
         {
             for(int i = 0; i < treeNodeList.size(); i++)
             {
@@ -444,6 +410,7 @@ public class DianaDistanceFunctions<T> implements java.io.Serializable
                     }
                     double distance = calculateDistanceBetweenTwoClusters(treeNodeList.get(i), treeNodeList.get(j));
                     
+                    // check if the distance should be added to smallestDistances
                     if(smallestDistances.size() < numberOfStartSplinterNodes)
                     {
                         Integer[] array = {i, j};

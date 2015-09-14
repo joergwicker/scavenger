@@ -3,27 +3,20 @@ package scavenger.demo.clustering.examples;
 import scavenger.demo.clustering.distance.*;
 import scavenger.demo.clustering.*;
 import scavenger.demo.clustering.enums.*;
+import scavenger.demo.clustering.bottomUp.*;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.HashMap;
-import java.util.Queue;
-import java.util.LinkedList;
 import java.util.Date;
-import java.net.URL;
-import java.util.Scanner;
-import java.io.IOException;
-import java.util.BitSet;
-import java.io.File;
-
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.Properties;
 
+
 /**
- * Clustering of chemical data
+ * Bottom up clustering of chemical data
+ * 
+ * File path name of a .properties file is requiered. For an example see src/main/java/scavenger/demo/Clustering/examples/chemicalClustering/PropertiesFiles/*.properties
+ *
+ * Should work for any ARFF file (not just chemical data).
  */
 class ChemicalClusteringBottomUp extends ChemicalClustering implements java.io.Serializable
 {   
@@ -66,9 +59,6 @@ class ChemicalClusteringBottomUp extends ChemicalClustering implements java.io.S
     
     public static void main(final String[] args)
     {
-        //String fileName = "/Users/helen/Documents/MainzUni/scavengerClean/scavenger/src/main/java/scavenger/demo/Clustering/clustering.properties";//args[1];
-        //String fileName = "/Users/helen/Documents/MainzUni/scavengerClean/scavenger/src/main/java/scavenger/demo/Clustering/clusteringEuclidean.properties";
-        //String fileName = "/Users/helen/Documents/MainzUni/scavengerClean/scavenger/src/main/java/scavenger/demo/Clustering/clusteringEuclideanAndTanimoto.properties";
         String fileName = args[0];
         ChemicalClusteringBottomUp chemicalClustering = new ChemicalClusteringBottomUp();
         chemicalClustering.runChemicalClusteringBottomUp(fileName);

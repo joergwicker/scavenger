@@ -5,7 +5,7 @@ import java.util.Arrays;
 import java.lang.Math;
 
 /**
- * Used to calculate the Tanimoto distance between two BitSets
+ * Calculates the distance between the positions two strings appear in an ordered list of strings.
  */
 public class OrdinalStringDistance extends DistanceMeasure<String>
 {
@@ -16,8 +16,6 @@ public class OrdinalStringDistance extends DistanceMeasure<String>
     {
         this.valueOrder = valueOrder;
     }
-      
-       
         
     /**
      * 
@@ -30,14 +28,10 @@ public class OrdinalStringDistance extends DistanceMeasure<String>
         double indexValue1 = valueOrder.indexOf(value1);
         double indexValue2 = valueOrder.indexOf(value2);
         
-        
         double difference = Math.abs(indexValue1 - indexValue2);
-        
         
         double distance = Math.pow(difference, 2) / Math.pow(valueOrder.size()-1, 2);
         //System.out.println("calculateDistance " + value1 + " and " + value2 + " = " + distance);
         return distance;
     }
-    
- 
 }

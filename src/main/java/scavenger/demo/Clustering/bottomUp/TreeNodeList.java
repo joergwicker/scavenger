@@ -1,5 +1,7 @@
-package scavenger.demo.clustering;
+package scavenger.demo.clustering.bottomUp;
+
 import scavenger.demo.clustering.distance.*;
+import scavenger.demo.clustering.*;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -22,6 +24,7 @@ public class TreeNodeList<T> implements java.io.Serializable, Comparator<TreeNod
     
     /**
      *
+     * @param treeNodeData
      */
     public TreeNodeList(List<TreeNode<T>> treeNodeData)
     {
@@ -30,6 +33,8 @@ public class TreeNodeList<T> implements java.io.Serializable, Comparator<TreeNod
     
     /**
      *
+     * @param treeNodeData
+     * @param joinNodes
      */
     public TreeNodeList(List<TreeNode<T>> treeNodeData, List<Integer[]> joinNodes)
     {

@@ -19,6 +19,8 @@ A different error calculation can be used by extending *scavenger.demo.clusterin
 
 ##Chemical Clustering##
 
+To test out the clustering data sets from http://www.epa.gov/comptox/dsstox/ have been. Ches-mapper (http://ches-mapper.org) was used to extract the features. 
+
 ###Properties file###
 Examples of the properties files can be found in *src/main/java/scavenger/demo/Clustering/examples/chemicalClustering/PropertiesFiles*
 

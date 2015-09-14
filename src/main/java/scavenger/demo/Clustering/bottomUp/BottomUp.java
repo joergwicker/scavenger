@@ -1,10 +1,11 @@
-package scavenger.demo.clustering;
+package scavenger.demo.clustering.bottomUp;
 
 import scavenger.demo.clustering.distance.*;
 import scavenger.demo.clustering.errorCalculation.*;
 import scavenger.demo.clustering.enums.*;
 import scavenger.*;
 import scavenger.app.ScavengerAppJ;
+import scavenger.demo.clustering.*;
 
 import java.util.ArrayList;
 import java.util.List;

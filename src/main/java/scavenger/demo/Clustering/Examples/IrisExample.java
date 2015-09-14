@@ -95,6 +95,7 @@ class IrisExample implements java.io.Serializable
         
         // 4. Run the clustering
         Diana<List<Double>> diana = new Diana<List<Double>>(dataInformationList); 
+        diana.setNumberOfClusters(4);
         TreeNode<List<Double>> node = diana.runClustering(input);        
         diana.endClustering();
         

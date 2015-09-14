@@ -3,16 +3,15 @@ import scavenger.demo.clustering.*;
 import java.util.BitSet;
 
 /**
- * Used to calculate the Tanimoto distance between two BitSets
+ * Used to calculate distance between two BitSets
  */
 public class BinaryOrdinalDistance extends DistanceMeasure<BitSet>
 {
-    // Edited version of : http://showme.physics.drexel.edu/usefulchem/Software/Drexel/Cheminformatics/Java/cdk/src/org/openscience/cdk/similarity/Tanimoto.java
     /**
      * 
      * @param value1
      * @param value2
-     * @return Tanimoto distance between value1 and value2
+     * @return distance between value1 and value2
      */
     public double calculateDistance(BitSet value1, BitSet value2)
     {

@@ -54,29 +54,15 @@ public class TreeNode<T> implements java.io.Serializable, Comparator<TreeNode<T>
         this.parent = parent;
     }
     
-    public void setUpSplinterInfo(List<Integer> toBeSplitOn)//, int numberOfSplinters)
+    public void setUpSplinterInfo(List<Integer> toBeSplitOn)
     {
-        //splitNumber = countSplits(getRoot());
-        //System.out.println("splitNumber : " + splitNumber + ", numberOfSplinters : " + numberOfSplinters);
-        //if ((numberOfSplinters <= 0) || (splitNumber < numberOfSplinters))
-        //{
-            //System.out.println("2 splitNumber : " + splitNumber + ", numberOfSplinters : " + numberOfSplinters);
-            this.toBeSplitOn = toBeSplitOn;
-        //}
+        this.toBeSplitOn = toBeSplitOn;
     }
     
     public int countSplits()
     {
         splitNumber = getRoot().findLeafNodes().size();
         return splitNumber;
-        /*int count = 0;
-        if (root.getChildLeft() != null)
-        {     
-            count = count + 1;
-            count = count + countSplits(root.getChildLeft());
-            count = count + countSplits(root.getChildRight());
-        }
-        return count;*/
     }
     
     
@@ -162,88 +148,14 @@ public class TreeNode<T> implements java.io.Serializable, Comparator<TreeNode<T>
     /////////////////
     
     
-    public void setSplitHappenedOn(int splitHappenedOnIndex)
-    {
-        this.splitHappenedOnIndex = splitHappenedOnIndex;
-    }
     
-    public int getSplitHappenedOn()
-    {
-        return splitHappenedOnIndex;
-    }
-    
-    public String getSplitHappenedOnDataId()
-    {
-        return data.get(getSplitHappenedOnIndex()).getId();
-    }
-    
-    public int getSplitHappenedOnIndex()
-    {
-        for(int i = 0; i < toBeSplitOn.size(); i++)
-        {
-            if(toBeSplitOn.get(i).equals(splitHappenedOnIndex))
-            {
-                return i;
-            }
-        }
-        return -1;
-    }
-    
-    public String print() 
-    {
-        String str = "";
-        for (DataItem value : data)
-        {
-            str = str + ", " + value.getId();
-            System.out.print(", " + value.getId());
-        }
-        str = str + " : made on " + splitNumber;
-        if (childLeft != null)
-        {
-            if (toBeSplitOn.size() > 0)
-            {
-                str = str + ", child started using " + getSplitHappenedOnDataId() + " the " + (getSplitHappenedOnIndex()+1) + " furthest item";
-            }
-        }
-        else if ((parent != null) && (toBeSplitOn.size() == 0))//Bottom-up was used
-        {
-            str = str + ", created using the " + (splitHappenedOnIndex+1) + " furthest items";
-        }
-        str = str + "\n";
-        System.out.println(" : " + splitNumber);
-        return str;
-    }
-    
-    
-    public String printTree()
-    {
-        String str = "";
-        Queue<TreeNode> queue = new LinkedList<TreeNode>();
-        queue.add(this);
-        while(!queue.isEmpty())
-        {
-            TreeNode r = queue.remove(); 
-            str = str + r.print();
-            if (r.getChildLeft() != null)
-            {
-                queue.add(r.getChildLeft());
-                queue.add(r.getChildRight());
-            }
-        }
-        return str;
-    }
-    
-    
+    /**
+     * Finds this trees leaf nodes
+     */
     public List<TreeNode<T>> findLeafNodes()
     {
         return findLeafNodes(this);
-    }
-    
-    public List<TreeNode<T>> findLeafNodes(int splinterNumber)
-    {
-        return findLeafNodes(this, splinterNumber);
-    }
-    
+    }    
     
     /**
      *
@@ -267,6 +179,23 @@ public class TreeNode<T> implements java.io.Serializable, Comparator<TreeNode<T>
         return leaves;
     }
     
+    
+    /**
+     * Finds the all the leaf nodes that were created before splinterNumber
+     *
+     * @param splinterNumber
+     */
+    public List<TreeNode<T>> findLeafNodes(int splinterNumber)
+    {
+        return findLeafNodes(this, splinterNumber);
+    }
+    
+    /**
+     * Finds the all the leaf nodes that were created before splinterNumber
+     * 
+     * @param tree
+     * @param splinterNumber
+     */
     private List<TreeNode<T>> findLeafNodes(TreeNode<T> tree, int splinterNumber) 
     {
         List<TreeNode<T>> leaves = new ArrayList<TreeNode<T>>();
@@ -289,13 +218,108 @@ public class TreeNode<T> implements java.io.Serializable, Comparator<TreeNode<T>
     
     
     
-    
+    /**
+     * Used by the Diana.PriorityQueue
+     */
     public int compare(TreeNode<T> node1, TreeNode<T> node2)
-     {
+    {
         if (node1.getError() < node2.getError()) return -1;
         if (node1.getError() > node2.getError()) return 1;
         return 0;
-     } 
+    }
+    
+    
+    
+    //////////////// Printing ///////////////////
+    
+    /**
+     * Prints out this tree node
+     * @return The sting printed. To allow saving the output to file.
+     */
+    public String print() 
+    {
+        String str = "";
+        for (DataItem value : data)
+        {
+            str = str + ", " + value.getId();
+            System.out.print(", " + value.getId());
+        }
+        str = str + " : made on " + splitNumber;
+        if (childLeft != null)
+        {
+            if (toBeSplitOn.size() > 0)
+            {
+                str = str + ", child started using " + getSplitHappenedOnDataId() + " the " + (getSplitHappenedNthFurthest()+1) + " furthest item";
+            }
+        }
+        else if ((parent != null) && (toBeSplitOn.size() == 0))//Bottom-up was used
+        {
+            str = str + ", created using the " + (splitHappenedOnIndex+1) + " furthest items";
+        }
+        str = str + "\n";
+        System.out.println(" : " + splitNumber);
+        return str;
+    }
+    
+    /**
+     * Prints this tree node, then the child tree nodes
+     * @return The sting printed. To allow saving the output to file.
+     */
+    public String printTree()
+    {
+        String str = "";
+        Queue<TreeNode> queue = new LinkedList<TreeNode>();
+        queue.add(this);
+        while(!queue.isEmpty())
+        {
+            TreeNode r = queue.remove(); 
+            str = str + r.print();
+            if (r.getChildLeft() != null)
+            {
+                queue.add(r.getChildLeft());
+                queue.add(r.getChildRight());
+            }
+        }
+        return str;
+    }
+    
+    
+    /**
+     * Gets the id of the data the split happened on
+     */
+    public String getSplitHappenedOnDataId()
+    {
+        return data.get(getSplitHappenedNthFurthest()).getId();
+    }
+    
+    /**
+     * The splitHappenedOnIndex is the index of the item in data,
+     *      when showing the results we want to know if this was the furthest item 
+     *          (to show the point of using the n furthest points)
+     */
+    public int getSplitHappenedNthFurthest()
+    {
+        for(int i = 0; i < toBeSplitOn.size(); i++)
+        {
+            if(toBeSplitOn.get(i).equals(splitHappenedOnIndex))
+            {
+                return i;
+            }
+        }
+        return -1;
+    }
+    
+    public void setSplitHappenedOn(int splitHappenedOnIndex)
+    {
+        this.splitHappenedOnIndex = splitHappenedOnIndex;
+    }
+    
+    public int getSplitHappenedOn()
+    {
+        return splitHappenedOnIndex;
+    }
+    
+    //////////////////////////////////////
      
     /*public void removeHigherSplitNodes(TreeNode<T> root)
     {

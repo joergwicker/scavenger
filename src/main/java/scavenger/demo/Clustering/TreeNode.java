@@ -17,13 +17,14 @@ public class TreeNode<T> implements java.io.Serializable, Comparator<TreeNode<T>
     private TreeNode childLeft = null;
     private TreeNode childRight = null;
     
+    
+    // Used by Diana (not by bottom up clustering)
     private int splitNumber;    
     private List<Integer> toBeSplitOn = new ArrayList<Integer>(); // indexes of items
     private int splitHappenedOnIndex = 0;
-    
     private double error = 1;
     
-    public TreeNode(){}// for the Comparator
+    public TreeNode(){} // for the Comparator
 
     /**
      * Constructor for the root node.
@@ -254,7 +255,7 @@ public class TreeNode<T> implements java.io.Serializable, Comparator<TreeNode<T>
         }
         else if ((parent != null) && (toBeSplitOn.size() == 0))//Bottom-up was used
         {
-            str = str + ", created using the " + (splitHappenedOnIndex+1) + " furthest items";
+            str = str + ", created using the " + (splitHappenedOnIndex+1) + " nearest items";
         }
         str = str + "\n";
         System.out.println(" : " + splitNumber);

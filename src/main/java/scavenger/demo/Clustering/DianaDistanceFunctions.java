@@ -32,7 +32,7 @@ import static akka.dispatch.Futures.sequence;*/
  */
 public class DianaDistanceFunctions<T> implements java.io.Serializable
 {
-    private DistanceMeasureSelection[] dataInfo;
+    private DistanceMeasureSelection[] distanceMeasureSelection;
     private int numberOfStartSplinterNodes = 0;
     
     private DiameterMeasure distanceDiameter = DiameterMeasure.TRIMMED_MEAN;
@@ -40,19 +40,22 @@ public class DianaDistanceFunctions<T> implements java.io.Serializable
     
     /**
      *
-     * @param dataInfo
+     * @param distanceMeasureSelection
      * @param numberOfStartSplinterNodes
      * @param distanceDiameter
      */
-    public DianaDistanceFunctions(DistanceMeasureSelection[] dataInfo, int numberOfStartSplinterNodes, DiameterMeasure distanceDiameter )
+    public DianaDistanceFunctions(DistanceMeasureSelection[] distanceMeasureSelection, int numberOfStartSplinterNodes, DiameterMeasure distanceDiameter )
     {
-        this.dataInfo = dataInfo;
+        this.distanceMeasureSelection = distanceMeasureSelection;
         this.numberOfStartSplinterNodes = numberOfStartSplinterNodes;
         this.distanceDiameter = distanceDiameter;
         
         trimmedMeanPercents.add(5);
     }
     
+    /**
+     * empty constructor
+     */
     public DianaDistanceFunctions(){}
 
     
@@ -111,7 +114,7 @@ public class DianaDistanceFunctions<T> implements java.io.Serializable
      * @param cluster The cluster who's diameter is to be calculated
      * @return the diameter of the cluster
      */
-    public double calculateClusterDiameter(TreeNode<T> node)//List<DataItem<T>> cluster)
+    public double calculateClusterDiameter(TreeNode<T> node)
     {
         List<DataItem<T>> cluster = node.getData();
         if(distanceDiameter == DiameterMeasure.LARGEST_AVERAGE_DISTANCE)
@@ -208,9 +211,9 @@ public class DianaDistanceFunctions<T> implements java.io.Serializable
      */ 
     public double calculateAverage(List<DataItem<T>> cluster, int index)
     {
-        if (dataInfo.length == 1 )
+        if (distanceMeasureSelection.length == 1 )
         {
-            return calculateAverageSimple(cluster, index, dataInfo[0].getDistanceMeasure()); 
+            return calculateAverageSimple(cluster, index, distanceMeasureSelection[0].getDistanceMeasure()); 
         }
         else
         {
@@ -237,7 +240,7 @@ public class DianaDistanceFunctions<T> implements java.io.Serializable
             
             total = total + distanceMeasure.getDistance(cluster.get(index).getData(), cluster.get(i).getData()); 
             
-            //total = total + getDistance(cluster.get(index).getData(), cluster.get(i).getData(), dataInfo[0].getDistanceMeasure());            
+            //total = total + getDistance(cluster.get(index).getData(), cluster.get(i).getData(), distanceMeasureSelection[0].getDistanceMeasure());            
         }
         return total / cluster.size();
     }
@@ -262,7 +265,7 @@ public class DianaDistanceFunctions<T> implements java.io.Serializable
             {
                 continue;
             }
-            for(DistanceMeasureSelection distanceMeasure : dataInfo)
+            for(DistanceMeasureSelection distanceMeasure : distanceMeasureSelection)
             {
                 for(String id : distanceMeasure.getIds()) 
                 {
@@ -301,7 +304,7 @@ public class DianaDistanceFunctions<T> implements java.io.Serializable
     }
     
     /**
-     *
+     * Gets the data item indexes that the new splinters will be created using.
      * @param cluster
      * @return The points with the largest average distance
      */  

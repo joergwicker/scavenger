@@ -6,6 +6,7 @@ import scala.concurrent.duration._
 import scala.language.postfixOps
 import scavenger.backend._
 import scavenger.backend.seed.Seed.MasterRef
+import scavenger.backend.seed.Seed.MasterShutdown
 
 /** Helps to join the master node.
   *
@@ -71,6 +72,15 @@ with SeedJoin {
         "Sent handshake to the master, switching into normal operation mode"
       )
       context.become(nextBehavior orElse handleHandshakeRemnants)
+    }
+    
+    // after master shut down, seed will send a message
+    case MasterShutdown() => {
+      master = null
+      log.info(
+        "Master shut down, waiting for another master!"
+      )
+      context.become(handleHandshakeRemnants)
     }
   }: Receive)
 

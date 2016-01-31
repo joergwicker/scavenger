@@ -37,10 +37,18 @@ class Seed extends Actor with ActorLogging {
       context.watch(sender)
       workers ::= sender
     
-    case Terminated(worker) =>
-      workers = workers.filterNot(_ == worker)
-
-    // TODO: Shutdown
+    case Terminated(term) =>
+      log.info("Actor = {} terminated!", term)
+      if( workers.contains(term)){
+        log.info("Identified {} as Worker!", term)
+        workers = workers.filterNot(_ == term)
+      }
+      if( Some(term) == master){
+        log.info("Identified {} as Master!", term)
+        master = None
+        for (w <- workers) w ! MasterShutdown()
+      }
+      log.info("My Master is {}", master)
   }
 }
 
@@ -49,4 +57,5 @@ object Seed {
   def props = Props[Seed]
   
   private[backend] case class MasterRef(master: ActorRef)
+  private[backend] case class MasterShutdown()
 }

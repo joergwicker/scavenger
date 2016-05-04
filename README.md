@@ -17,48 +17,55 @@ deals with issues of the parallel execution,  load balancing, and
 with the backup of partial results for the case of implementation or
 runtime errors.
 
-Build and Run
-=============
+Build
+=====
 
-sbt can be used to build and run scavenger. To install scavenger on OS-X run :
-```
-brew install sbt
-```
-For other operating systems see : http://www.scala-sbt.org/download.html
-
-The following command can be used to clean compile and run scavenger :
+Scavenger is in Maven central, include the dependency in your pom.xml:
 
 ```
-sbt clean compile run
-```
-
-Create and run JAR file
------------------------
-
-In order to run scavenger on mogon a jar file is required. 
-
-To create a jar file run :
+<dependency>	
+    <groupId>org.kramerlab</groupId>
+    <artifactId>scavenger</artifactId>
+    <version>2.1</version>
+</dependency>
 
 ```
-sbt assembly
-```
 
-To run a seed from the jar run :
+if you do not use Maven, you can use
 
 ```
-java -cp target/scala-2.10/scavenger-assembly-2.1.jar scavenger.app.SeedMain
+mvn clean install
 ```
 
-To run a worker from the jar run :
+to build the jar files.
+
+Run
+===
+
+Depending on your projects configuration, you can run the seed via:
+
 
 ```
-java -cp target/scala-2.10/scavenger-assembly-2.1.jar scavenger.app.WorkerMain
+java -cp <jar-files> scavenger.app.SeedMain
+```
+
+or
+
+```
+mvn exec:exec scavenger.app.SeedMain
+```
+
+
+The worker is in the class:
+
+```
+scavenger.app.WorkerMain
 ```
 
 For the basic demo run :
 
 ```
-java -cp target/scala-2.10/scavenger-assembly-2.1.jar scavenger.demo.Demo
+mvn exec:exec scavenger.demo.Demo
 ```
 
 Examples

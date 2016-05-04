@@ -20,7 +20,7 @@ runtime errors.
 Build
 =====
 
-Scavenger is in Maven central, include the dependency in your pom.xml:
+Scavenger is in Maven central, include the following dependency in your pom.xml:
 
 ```
 <dependency>	

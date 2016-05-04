@@ -31,7 +31,7 @@ Scavenger is in Maven central, include the following dependency in your pom.xml:
 
 ```
 
-if you do not use Maven, you can use
+if you do not use Maven in your project, you can use
 
 ```
 mvn clean install

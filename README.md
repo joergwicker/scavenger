@@ -93,9 +93,7 @@ booktitle = {Machine Learning and Knowledge Discovery in Databases},
 volume = {9286},
 pages = {325-328},
 publisher = {Springer International Publishing},
-series = {Lecture Notes in Computer Science},
-pubstate = {published},
-tppubtype = {inproceedings}
+series = {Lecture Notes in Computer Science}
 }
 ```
 

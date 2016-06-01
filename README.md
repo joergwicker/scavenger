@@ -42,6 +42,7 @@ to build the jar files.
 Run
 ===
 
+
 Depending on your projects configuration, you can run the seed via:
 
 
@@ -49,23 +50,34 @@ Depending on your projects configuration, you can run the seed via:
 java -cp <jar-files> scavenger.app.SeedMain
 ```
 
-or
+or, using
 
 ```
-mvn exec:exec scavenger.app.SeedMain -Dconfig.file=<configFile>
+<plugin>
+  <groupId>org.codehaus.mojo</groupId>
+  <artifactId>exec-maven-plugin</artifactId>
+  <version>1.1</version>
+  <executions><execution>
+  </execution></executions>
+</plugin>
+```
+
+
+```
+mvn exec:exec -Dexec.mainClass="scavenger.app.SeedMain" -Dconfig.file=<configFile>
 ```
 
 
 The worker is in the class:
 
 ```
-mvn exec:exec scavenger.app.WorkerMain -Dakka.remote.netty.tcp.hostname=<host> -Dakka.remote.netty.tcp.port=<port> -Dconfig.file=<configFile>
+mvn exec:exec -Dexec.mainClass="scavenger.app.WorkerMain" -Dakka.remote.netty.tcp.hostname=<host> -Dakka.remote.netty.tcp.port=<port> -Dconfig.file=<configFile>
 ```
 
 For the basic demo run :
 
 ```
-mvn exec:exec scavenger.demo.Demo -Dakka.remote.netty.tcp.hostname=<host> -Dakka.remote.netty.tcp.port=<port>  -Dconfig.file=<configFile>
+mvn exec:exec -Dexec.mainClass="scavenger.demo.Demo" -Dakka.remote.netty.tcp.hostname=<host> -Dakka.remote.netty.tcp.port=<port>  -Dconfig.file=<configFile>
 ```
 
 Examples

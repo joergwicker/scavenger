@@ -52,26 +52,26 @@ java -cp <jar-files> scavenger.app.SeedMain
 or
 
 ```
-mvn exec:exec scavenger.app.SeedMain
+mvn exec:exec scavenger.app.SeedMain -Dconfig.file=<configFile>
 ```
 
 
 The worker is in the class:
 
 ```
-scavenger.app.WorkerMain
+mvn exec:exec scavenger.app.WorkerMain -Dakka.remote.netty.tcp.hostname=<host> -Dakka.remote.netty.tcp.port=<port> -Dconfig.file=<configFile>
 ```
 
 For the basic demo run :
 
 ```
-mvn exec:exec scavenger.demo.Demo
+mvn exec:exec scavenger.demo.Demo -Dakka.remote.netty.tcp.hostname=<host> -Dakka.remote.netty.tcp.port=<port>  -Dconfig.file=<configFile>
 ```
 
 Examples
 ====
 
-We have a seperate demo git repository with a few examples and more documentation at https://github.com/joergwicker/scavenger_demo 
+We have a seperate demo git repository with a few examples at https://github.com/joergwicker/scavenger_demo (note that the README file uses sbt, but Scavenger uses Maven).
 
 
 Cite

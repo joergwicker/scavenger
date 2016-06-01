@@ -64,20 +64,22 @@ or, using
 
 
 ```
-mvn exec:exec -Dexec.mainClass="scavenger.app.SeedMain" -Dconfig.file=<configFile>
+mvn exec:java -Dexec.mainClass="scavenger.app.SeedMain" -Dconfig.file=<configFile>
 ```
 
 
 The worker is in the class:
 
 ```
-mvn exec:exec -Dexec.mainClass="scavenger.app.WorkerMain" -Dakka.remote.netty.tcp.hostname=<host> -Dakka.remote.netty.tcp.port=<port> -Dconfig.file=<configFile>
+mvn exec:java -Dexec.mainClass="scavenger.app.WorkerMain" -Dakka.remote.netty.tcp.hostname=<host> -Dakka.remote.netty.tcp.port=<port> -Dconfig.file=<configFile>
 ```
 
-For the basic demo run :
+<port> is any arbitrary port that the worker uses to communicate with the seed.
+
+For the basic demo run:
 
 ```
-mvn exec:exec -Dexec.mainClass="scavenger.demo.Demo" -Dakka.remote.netty.tcp.hostname=<host> -Dakka.remote.netty.tcp.port=<port>  -Dconfig.file=<configFile>
+mvn exec:java -Dexec.mainClass="scavenger.demo.Demo" -Dakka.remote.netty.tcp.hostname=<host> -Dakka.remote.netty.tcp.port=<port>  -Dconfig.file=<configFile>
 ```
 
 Examples
@@ -109,3 +111,63 @@ series = {Lecture Notes in Computer Science}
 }
 ```
 
+Mixed Java and Scala Classes
+============================
+
+If you have a maven project with java and scala classes, this seems to work:
+
+```
+   <dependency>
+      <groupId>org.scala-lang</groupId>
+    <artifactId>scala-library</artifactId>
+      ...
+
+  <pluginManagement>
+        <plugins>
+            <plugin>
+                <groupId>org.scala-tools</groupId>
+                <artifactId>maven-scala-plugin</artifactId>
+                <version>2.15.2</version>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.5.1</version>
+            </plugin>
+        </plugins>
+    </pluginManagement>
+    <plugins>
+        <plugin>
+            <groupId>org.scala-tools</groupId>
+            <artifactId>maven-scala-plugin</artifactId>
+            <executions>
+                <execution>
+                    <id>scala-compile-first</id>
+                    <phase>process-resources</phase>
+                    <goals>
+                        <goal>add-source</goal>
+                        <goal>compile</goal>
+                    </goals>
+                </execution>
+                <execution>
+                    <id>scala-test-compile</id>
+                    <phase>process-test-resources</phase>
+                    <goals>
+                        <goal>testCompile</goal>
+                    </goals>
+                </execution>
+            </executions>
+        </plugin>
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <executions>
+                <execution>
+                    <phase>compile</phase>
+                    <goals>
+                        <goal>compile</goal>
+                    </goals>
+                </execution>
+            </executions>
+        </plugin>
+```

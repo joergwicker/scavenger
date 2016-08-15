@@ -13,7 +13,7 @@
   <!-- name of the project -->
   <artifactId>scavenger</artifactId>
   <!-- version of the project -->
-  <version>2.1</version>
+  <version>2.1.1-SNAPSHOT</version>
   <!-- Name of the project again...? -->
   <name>${project.artifactId}</name>
   <description>

@@ -2,7 +2,7 @@ lazy val root = (project in file(".")).
   settings(
     organization := "org.scavenger",
     name := "scavenger",
-    version := "2.1",
+    version := "2.1.1-SNAPSHOT",
     scalaVersion := "2.10.4",
     libraryDependencies ++= Seq(
       "com.typesafe.akka" % "akka-actor_2.10" % "2.3.9",

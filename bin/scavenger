@@ -3,6 +3,26 @@
 # This script can be used to start seed and worker nodes of
 # the Scavenger 2.x framework.
 
+if [ -z "$SCAVENGER_HOME" ] 
+then
+  echo "The SCAVENGER_HOME environment variable is not set."
+  echo "It has to point to the directory that contains"
+  echo "bin/plumbing/start{Master,Seed,Worker}.sh"
+  echo ""
+  echo "Hint:"
+  echo "If you are on Linux, do the following:"
+  echo "1) Locate the downloaded (or cloned) directory with scavenger"
+  echo "2) Add these two lines to your ~/.bashrc :"
+  echo 'SCAVENGER_HOME="/the/directory/to/scavenger"'
+  echo 'PATH="$PATH:$SCAVENGER_HOME/bin"'
+  echo "3) Restart the shell"
+  echo ""
+  echo "Cannot proceed until the path is adjusted."
+  echo ""
+  echo "Exit."
+  exit 1
+fi
+
 source $SCAVENGER_HOME/bin/plumbing/help.sh
 source $SCAVENGER_HOME/bin/plumbing/startSeed.sh
 source $SCAVENGER_HOME/bin/plumbing/startWorker.sh 

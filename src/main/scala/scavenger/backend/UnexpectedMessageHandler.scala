@@ -16,11 +16,13 @@ trait UnexpectedMessageHandler extends Actor with ActorLogging {
             exc.getMessage + "\n" + stackTrace
           )
         }
+        case somethingElse => {
+          log.error(
+           "Received something unexpected: " + unexpectedMessage + " " + 
+           "The class of this thing is: " + unexpectedMessage.getClass + " "
+          )
+        }
       }
-      log.error(
-        "Received something unexpected: " + unexpectedMessage + " " + 
-        "The class of this thing is: " + unexpectedMessage.getClass + " "
-      )
     }
   }: Receive)
 }

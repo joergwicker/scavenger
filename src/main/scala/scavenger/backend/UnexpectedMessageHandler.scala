@@ -17,7 +17,7 @@ trait UnexpectedMessageHandler extends Actor with ActorLogging {
           )
         }
         case somethingElse => {
-          log.error(
+          log.warning(
            "Received something unexpected: " + unexpectedMessage + " " + 
            "The class of this thing is: " + unexpectedMessage.getClass + " "
           )

@@ -51,7 +51,7 @@ with SeedJoin {
     */
   def connectingToMaster(
     seedMsg: HandshakeMessage,
-    masterMsg: HandshakeMessage,
+    handshakeToMaster: HandshakeMessage,
     nextBehavior: Receive
   ): Receive = ({
 
@@ -67,9 +67,9 @@ with SeedJoin {
     // and switch to the next behavior
     case MasterRef(ref) => {
       master = ref
-      master ! masterMsg
+      master ! handshakeToMaster
       log.info(
-        "Sent handshake to the master, switching into normal operation mode"
+        "Received Master-ActorRef from seed; Sent handshake to the master; switching into normal operation mode"
       )
       context.become(nextBehavior orElse handleHandshakeRemnants)
     }

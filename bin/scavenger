@@ -42,7 +42,8 @@ port="2552"
 verbose="false"
 jars=""
 main=""
-verbose="false"
+# logLevel="error"
+# memory option for jvm
 
 # parse arguments passed to this script
 while (( $# > 0 ))

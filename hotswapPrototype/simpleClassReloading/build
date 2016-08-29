@@ -1,0 +1,6 @@
+#!/bin/bash
+rm *.class
+javac ConvergeOne.java
+javac ConvergeZero.java
+javac ReloadingExample.java
+java ReloadingExample

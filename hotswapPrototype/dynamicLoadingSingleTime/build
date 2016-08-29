@@ -1,0 +1,5 @@
+#!/bin/bash
+rm *.class
+javac Baz.java
+javac MyClassLoader.java
+java MyClassLoader

@@ -115,6 +115,6 @@ private[app] trait ScavengerNode {
   }
 
   def scavengerShutdown(): Unit = {
-    actorSystem.shutdown()
+    actorSystem.terminate()
   }
 }

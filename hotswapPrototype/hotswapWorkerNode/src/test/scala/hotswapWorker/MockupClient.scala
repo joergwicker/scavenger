@@ -41,9 +41,10 @@ case class FakeJobClass(
   def sourceCode: String = {
     val skeleton = """
     import java.io.Serializable;
+    import hotswapWorker.Job;
 
     public class <CLASS_NAME> 
-    implements Serializable {
+    implements Job<String>, Serializable {
       <MEMBERS>
       public <CLASS_NAME>(<CONSTRUCTOR_ARGS>) {
         <CONSTRUCTOR_IMPL>
@@ -51,7 +52,16 @@ case class FakeJobClass(
       @Override
       public String toString() {
         String res = "<CLASS_NAME>" + "{<RELOADABLE_PIECE>}" + "(";
-          <TO_STRING_IMPL>
+        <TO_STRING_IMPL>
+        if (res.charAt(res.length() - 1) == ',') {
+          res = res.substring(0, res.length() - 1);
+        }
+        res = res + ")";
+        return res;
+      }
+      public String doJob() {
+        String res = "<RELOADABLE_PIECE>" + "(";
+        <DO_JOB_IMPL>
         if (res.charAt(res.length() - 1) == ',') {
           res = res.substring(0, res.length() - 1);
         }
@@ -82,6 +92,13 @@ case class FakeJobClass(
         "res += %s.toString();".format(lc)
       }
     ).mkString("\n")
+    val do_job_impl = (
+      for (dep <- dependencies) 
+      yield {
+        val lc = dep.clazzname.toLowerCase 
+        "res += %s.doJob();".format(lc)
+      }
+    ).mkString("\n")
 
     skeleton.
       replaceAll("<CLASS_NAME>", clazzname).
@@ -89,7 +106,8 @@ case class FakeJobClass(
       replaceAll("<MEMBERS>", members).
       replaceAll("<CONSTRUCTOR_ARGS>", constructor_args).
       replaceAll("<CONSTRUCTOR_IMPL>", constructor_impl). 
-      replaceAll("<TO_STRING_IMPL>", to_string_impl)
+      replaceAll("<TO_STRING_IMPL>", to_string_impl).
+      replaceAll("<DO_JOB_IMPL>", do_job_impl)
   }
   def instantiationCode: String = "new %s(%s)".format(
     fullName,

@@ -42,8 +42,8 @@ with MockupClient {
     })
   }
 
-  ignore should "report back list of loaded isolated classes" in {
-    // TODO
+  it should "report back list of loaded isolated classes" in {
+    
   }
 
 }

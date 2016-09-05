@@ -55,25 +55,25 @@ public class ScavengerSingleApp extends ScavengerAppJ
     {
         scavengerShutdown();
     }
-    
-    /**
-     * Used to create a scavenger algorithm
-     * @return 
-     */
-    public package$ getAlgorithm()
-    {
-        return scavengerAlgorithm;
-    }
-    
-    /**
-     * Used to create a scavenger computation
-     * @return 
-     */
-    public Computation$ getComputation()
-    {
-        return scavengerComputation;
-    }
-    
+//     TODO: deactivated, could not find `package$` and `Computation$`
+//     /**
+//      * Used to create a scavenger algorithm
+//      * @return 
+//      */
+//     public package$ getAlgorithm()
+//     {
+//         return scavengerAlgorithm;
+//     }
+//     
+//     /**
+//      * Used to create a scavenger computation
+//      * @return 
+//      */
+//     public Computation$ getComputation()
+//     {
+//         return scavengerComputation;
+//     }
+//     
     /**
      * scavengerContext() is used to submit jobs to scavenger
      * @return 

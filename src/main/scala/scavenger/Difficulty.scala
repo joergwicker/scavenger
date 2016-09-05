@@ -3,8 +3,8 @@ package scavenger
 /** Describes the difficulty of a computation.
   *
   * This enumeration describes three types of difficulty
-  * of the jobs. If a job is trivial, it can be executed
-  * on either master and worker nodes.
+  * of the jobs. If a job is cheap, it can be executed
+  * either on master or worker nodes.
   * If job is marked as parallelizable, it should be taken
   * care by the master.
   * If job is marked as expensive, it should be
@@ -14,6 +14,19 @@ package scavenger
   * @author Andrey Tyukin
   */
 sealed trait Difficulty
-case object Expensive extends Difficulty
-case object Parallel extends Difficulty
+
+/** A cheap algorithm can be executed on both master 
+  * and worker nodes.
+  */
 case object Cheap extends Difficulty
+
+/** Expensive computations are always delegated to 
+  * the worker nodes
+  */
+case object Expensive extends Difficulty
+
+/** Parallel computations (i.e. algorithms that 
+  * submit further jobs) are always executed on
+  * the master node.
+  */
+case object Parallel extends Difficulty

@@ -31,7 +31,8 @@ trait Context {
   def submit[X](job: Computation[X]): Future[X]
   
   /** Similar to `submit`, but the resulting value is
-    * wrapped into a `Value`-`Computation`
+    * wrapped as an `ExplicitComputation`, which is 
+    * essentially just a value somewhere in memory.
     */
   def asExplicitComputation[X](job: Computation[X]): 
     Future[ExplicitComputation[X]]

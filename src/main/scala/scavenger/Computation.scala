@@ -172,6 +172,21 @@ trait Computation[+X] extends scala.Serializable { outer =>
 
 }
 
+/** Computation that does not submit smaller sub-computations to the
+  * master node, and therefore can be done in one piece on a worker node.
+  */
+trait ConcentratedComputation[+X] extends Computation[X] {
+  def compute(): Future[X]
+
+  /** Forbids to access the master node */
+  final def compute(ctx: Context): Future[X] = this.compute()
+}
+
+/** Computation that does not submit smaller sub-jobs, and moreover is
+  * very simple, so it can be executed on both the master and the worker node.
+  */
+trait TrivialComputation[+X] extends ConcentratedComputation[X]
+
 object Computation {
   def apply[X](id: String, x: X): Computation[X] = 
     Value(new formalccc.Atom(id), x, CachingPolicy.Nowhere)

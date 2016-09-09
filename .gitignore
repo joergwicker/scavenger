@@ -2,6 +2,7 @@
 \[orange\]
 target/
 .DS_Store
+.class
 output/
 *.aux
 *.log

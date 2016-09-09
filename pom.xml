@@ -1,10 +1,10 @@
+<?xml version="1.0"?>
 <project 
-    xmlns="http://maven.apache.org/POM/4.0.0" 
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-  
+  xmlns="http://maven.apache.org/POM/4.0.0" 
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
   <!-- GENERAL -->
-  
   <!-- Version of the POM model is required for maven backward compatibility -->
   <modelVersion>4.0.0</modelVersion>
   <!-- Id of the group -->
@@ -15,18 +15,17 @@
   <version>2.2.0-SNAPSHOT</version>
   <!-- Name of the project again...? -->
   <name>${project.artifactId}</name>
-  <description>
-    Scavernger</description>
+  <description>Scavenger 2.x</description>
   <inceptionYear>2015</inceptionYear>
   <url>https://github.com/joergwicker/scavenger</url>
-
+  
   <scm>
     <connection>scm:git:https://github.com/joergwicker/scavenger.git</connection>
     <developerConnection>scm:git:https://github.com/joergwicker/scavenger.git</developerConnection>
     <url>https://github.com/joergwicker/scavenger</url>
     <tag>HEAD</tag>
   </scm>
-  
+
   <developers>
     <developer>
       <name>Joerg Wicker</name>
@@ -36,8 +35,7 @@
       <organizationUrl>http://www.dm.informatik.uni-mainz.de</organizationUrl>
     </developer>
   </developers>
-  
-  <!-- LICENCES -->
+
   <licenses>
     <license>
       <name>The GNU General Public License, Version 3</name>
@@ -45,27 +43,15 @@
       <distribution>repo</distribution>
     </license>
   </licenses>
-
-  <!-- REPOSITORIES -->
-  <!-- needed to download the scalatest plugin (?) -->
   <pluginRepositories>
-    
     <pluginRepository>
       <id>doesAnybodyCareAboutThisIdAtAll</id>
       <url>oss.sonatype.org/content/groups/public</url>
     </pluginRepository>
   </pluginRepositories>
-  
-  
-  <!-- PROPERTIES -->
-  
+
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <!-- Don't use 1.7 with maven 2.x, it cannot parse some messages or something.
-	 This sets the target JVM version for the used compiler. Notice that although
-	 javac is the default compiler, this setting can be changed, so that we can
-	 use other compilers (e.g. for AspectJ, C#, Scala).
-    -->  
     <maven.compiler.source>1.7</maven.compiler.source>
     <maven.compiler.target>1.7</maven.compiler.target>
     <encoding>UTF-8</encoding>
@@ -74,42 +60,40 @@
     <surefire-plugin.version>2.10</surefire-plugin.version>
   </properties>
 
-  <!-- DEPENDENCIES -->
-  
   <dependencies>
     <dependency>
-        <groupId>com.typesafe.akka</groupId>
-        <artifactId>akka-actor_2.11</artifactId>
-        <version>2.4.8</version>
+      <groupId>com.typesafe.akka</groupId>
+      <artifactId>akka-actor_2.11</artifactId>
+      <version>2.4.8</version>
     </dependency>
     <dependency>
-        <groupId>com.typesafe.akka</groupId>
-        <artifactId>akka-contrib_2.11</artifactId>
-        <version>2.4.9</version>
+      <groupId>com.typesafe.akka</groupId>
+      <artifactId>akka-contrib_2.11</artifactId>
+      <version>2.4.9</version>
     </dependency>
     <dependency>
-        <groupId>com.typesafe</groupId>
-        <artifactId>config</artifactId>
-        <version>1.3.0</version>
+      <groupId>com.typesafe</groupId>
+      <artifactId>config</artifactId>
+      <version>1.3.0</version>
     </dependency>
     <dependency>
       <groupId>org.scala-lang</groupId>
       <artifactId>scala-library</artifactId>
       <version>2.11.8</version>
     </dependency>
-
-    <!-- Test -->
-    <!-- is it cruft?
     <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>4.11</version>
-      <scope>test</scope>
+      <groupId>com.typesafe.akka</groupId>
+      <artifactId>akka-testkit_2.11</artifactId>
+      <version>2.4.9</version>
     </dependency>
-    -->
-    
+    <dependency>
+      <groupId>commons-io</groupId>
+      <artifactId>commons-io</artifactId>
+      <version>2.5</version>
+    </dependency>
+    <!-- Testing -->
     <!-- Copied from this pretty sophisticated looking complete POM-file:
-	 https://scalatest-users.googlegroups.com/attach/afaab01480be8def/pom.xml?view=1&part=4
+	       https://scalatest-users.googlegroups.com/attach/afaab01480be8def/pom.xml?view=1&part=4
     -->
     <dependency>
       <groupId>org.scalatest</groupId>
@@ -117,26 +101,8 @@
       <version>3.0.0</version>
       <scope>test</scope>
     </dependency>
-
-    <!-- Copied from the central maven repository:
-	 http://mvnrepository.com/artifact/org.scalatest/scalatest-maven-plugin/1.0-M2 
-    <dependency>
-      <groupId>org.scalatest</groupId>
-      <artifactId>scalatest-maven-plugin</artifactId>
-      <version>${scalatest-plugin.version}</version>
-    </dependency>
-    -->
-
-    <!-- Twirl source code generator -->
-    <dependency>
-      <groupId>com.typesafe.play</groupId>
-      <artifactId>twirl-api_2.11</artifactId>
-      <version>1.1.1</version>
-    </dependency> 
   </dependencies>
 
-  <!-- BUILD -->
-  
   <build>
     <sourceDirectory>src/main/scala</sourceDirectory>
     <testSourceDirectory>src/test/scala</testSourceDirectory>
@@ -144,22 +110,22 @@
       <!-- scala maven plugin -->
       <plugin>
         <!-- [sic] see http://davidb.github.com/scala-maven-plugin [/sic]
-	     See also http://davidb.github.com/scala-maven-plugin/usage.html
-	-->
+	           See also http://davidb.github.com/scala-maven-plugin/usage.html
+	      -->
         <groupId>net.alchim31.maven</groupId>
         <artifactId>scala-maven-plugin</artifactId>
         <version>3.2.1</version>
         <executions>
           <execution>
-	    <id>attach-javadocs</id>	    
+            <id>attach-javadocs</id>
             <goals>
-	      <goal>doc-jar</goal>
+              <goal>doc-jar</goal>
               <goal>compile</goal>
               <goal>testCompile</goal>
             </goals>
             <configuration>
               <args>
-                <!-- this crashes the compiler
+                <!-- this is recommended elsewhere, but crashes the compiler
                 <arg>-make:transitive</arg>
                 -->
                 <arg>-dependencyfile</arg>
@@ -168,8 +134,8 @@
             </configuration>
           </execution>
         </executions>
-	<configuration>
-	  <reportPlugins>
+        <configuration>
+          <reportPlugins>
             <plugin>
               <artifactId>maven-project-info-reports-plugin</artifactId>
               <version>2.2</version>
@@ -186,20 +152,18 @@
               </configuration>
             </plugin>
           </reportPlugins>
-	  <scalaVersion>${scala.version}</scalaVersion>
-	</configuration>
+          <scalaVersion>${scala.version}</scalaVersion>
+        </configuration>
       </plugin>
-      
       <!-- overriding default settings of the surefire plugin -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
         <version>${surefire-plugin.version}</version>
         <configuration>
-	  <skipTests>true</skipTests>
+          <skipTests>true</skipTests>
         </configuration>
       </plugin>
-      
       <!-- scala test plugin -->
       <!-- All this was simply copied from the scalatest website: 
 	   http://www.scalatest.org/user_guide/using_the_scalatest_maven_plugin
@@ -207,27 +171,22 @@
 	   awesome...)
       -->
       <plugin>
-	<groupId>org.scalatest</groupId>
-	<artifactId>scalatest-maven-plugin</artifactId>
-	<version>${scalatest-plugin.version}</version>
-	<configuration>
-	  <reportsDirectory>
-	    ${project.build.directory}/reports
-	  </reportsDirectory>
-	  <!-- <junitxml>.</junitxml> What's that for? -->
-	  <!-- <filereports>WDF TestSuite.txt</filereports> What's that for?-->
-	  <stdout>WD</stdout>
-	</configuration>
-	<executions>
-	  <execution>
-	    <id>test</id>
-	    <goals>
-	      <goal>test</goal>
-	    </goals>
-	  </execution>
-	</executions>
+        <groupId>org.scalatest</groupId>
+        <artifactId>scalatest-maven-plugin</artifactId>
+        <version>${scalatest-plugin.version}</version>
+        <configuration>
+          <reportsDirectory>${project.build.directory}/reports</reportsDirectory>
+          <stdout>WD</stdout>
+        </configuration>
+        <executions>
+          <execution>
+            <id>test</id>
+            <goals>
+              <goal>test</goal>
+            </goals>
+          </execution>
+        </executions>
       </plugin>
-      
       <!-- This chunk of configuration has just been copied from here: 
 	   https://www.assembla.com/wiki/show/scala-ide/With_Maven_CLI
 	   it's for maven-eclipse integration -->
@@ -241,25 +200,15 @@
           <downloadSources>true</downloadSources>
           <downloadJavadocs>true</downloadJavadocs>
           <projectnatures>
-            <projectnature>
-	      org.scala-ide.sdt.core.scalanature
-	    </projectnature>
-            <projectnature>
-	      org.eclipse.jdt.core.javanature
-	    </projectnature>
+            <projectnature>org.scala-ide.sdt.core.scalanature</projectnature>
+            <projectnature>org.eclipse.jdt.core.javanature</projectnature>
           </projectnatures>
           <buildcommands>
-            <buildcommand>
-	      org.scala-ide.sdt.core.scalabuilder
-	    </buildcommand>
+            <buildcommand>org.scala-ide.sdt.core.scalabuilder</buildcommand>
           </buildcommands>
           <classpathContainers>
-            <classpathContainer>
-	      org.scala-ide.sdt.launching.SCALA_CONTAINER"
-	    </classpathContainer>
-            <classpathContainer>
-	      org.eclipse.jdt.launching.JRE_CONTAINER
-	    </classpathContainer>
+            <classpathContainer>org.scala-ide.sdt.launching.SCALA_CONTAINER"</classpathContainer>
+            <classpathContainer>org.eclipse.jdt.launching.JRE_CONTAINER</classpathContainer>
           </classpathContainers>
           <excludes>
             <exclude>org.scala-lang:scala-library</exclude>
@@ -271,22 +220,6 @@
           </sourceIncludes>
         </configuration>
       </plugin>
-      
-      <!-- this is for packaging all dependencies into the jar -->
-      <plugin>
-        <artifactId>maven-jar-plugin</artifactId>
-        <version>2.4</version>
-        <configuration>
-          <archive>
-            <manifest>
-              <addClasspath>true</addClasspath>
-              <classpathPrefix>lib/</classpathPrefix>
-              <mainClass>edu.tyukiand.App</mainClass>
-            </manifest>
-          </archive>
-        </configuration>
-      </plugin>
-
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-dependency-plugin</artifactId>
@@ -295,7 +228,9 @@
           <execution>
             <id>copy-dependencies</id>
             <phase>package</phase>
-            <goals><goal>copy-dependencies</goal></goals>
+            <goals>
+              <goal>copy-dependencies</goal>
+            </goals>
             <configuration>
               <outputDirectory>${project.build.directory}/lib</outputDirectory>
               <overWriteReleases>false</overWriteReleases>
@@ -306,13 +241,14 @@
           </execution>
         </executions>
       </plugin>
-
       <plugin>
         <artifactId>maven-assembly-plugin</artifactId>
         <executions>
           <execution>
             <phase>package</phase>
-            <goals><goal>single</goal></goals>
+            <goals>
+              <goal>single</goal>
+            </goals>
           </execution>
         </executions>
         <configuration>
@@ -321,23 +257,22 @@
           </descriptorRefs>
         </configuration>
       </plugin>
-      
       <plugin>
-	<groupId>org.sonatype.plugins</groupId>
-	<artifactId>nexus-staging-maven-plugin</artifactId>
-	<version>1.6.3</version>
-	<extensions>true</extensions>
-	<configuration>
-	  <serverId>ossrh</serverId>
-	  <nexusUrl>https://oss.sonatype.org/</nexusUrl>
-	  <autoReleaseAfterClose>true</autoReleaseAfterClose>
-	</configuration>
+        <groupId>org.sonatype.plugins</groupId>
+        <artifactId>nexus-staging-maven-plugin</artifactId>
+        <version>1.6.3</version>
+        <extensions>true</extensions>
+        <configuration>
+          <serverId>ossrh</serverId>
+          <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+          <autoReleaseAfterClose>true</autoReleaseAfterClose>
+        </configuration>
       </plugin>
       <plugin>
-	<groupId>org.apache.maven.plugins</groupId>
-	<artifactId>maven-gpg-plugin</artifactId>
-	<version>1.5</version>
-	<executions>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-gpg-plugin</artifactId>
+        <version>1.5</version>
+        <executions>
           <execution>
             <id>sign-artifacts</id>
             <phase>verify</phase>
@@ -345,77 +280,49 @@
               <goal>sign</goal>
             </goals>
           </execution>
-	</executions>
+        </executions>
       </plugin>
       <plugin>
-	<groupId>org.apache.maven.plugins</groupId>
-	<artifactId>maven-source-plugin</artifactId>
-	<version>2.2.1</version>
-	<executions>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-source-plugin</artifactId>
+        <version>2.2.1</version>
+        <executions>
           <execution>
             <id>attach-sources</id>
             <goals>
               <goal>jar-no-fork</goal>
             </goals>
           </execution>
-	</executions>
+        </executions>
       </plugin>
       <plugin>
-	<groupId>org.apache.maven.plugins</groupId>
-	<artifactId>maven-javadoc-plugin</artifactId>
-	<version>2.9.1</version>
-	<executions>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-javadoc-plugin</artifactId>
+        <version>2.9.1</version>
+        <executions>
           <execution>
             <id>attach-javadocs</id>
             <goals>
               <goal>jar</goal>
             </goals>
           </execution>
-	</executions>
-      </plugin>
-
-      <!-- Twirl plugin (Play's template engine for code generation -->
-      <plugin>
-        <groupId>com.jakewharton.twirl</groupId>
-        <artifactId>twirl-maven-plugin</artifactId>
-        <version>1.0.5</version>
-        <executions>
-          <execution>
-            <phase>generate-sources</phase>
-            <goals>
-              <goal>compile</goal>
-            </goals>
-          </execution>
         </executions>
       </plugin>
     </plugins>
   </build>
-  
-  
-  <!-- REPORTING -->
-  
+
   <reporting>
-    <!-- This is basically copied from the page of scala-maven-plugin: 
-	 http://davidb.github.com/scala-maven-plugin/plugin-info.html
-	 We want to have scala doc, so we need this reporting stuff.
-    -->
+    <!-- Scaladoc generation -->
     <plugins>
       <plugin>
-	<groupId>net.alchim31.maven</groupId>
-	<artifactId>scala-maven-plugin</artifactId>
-	<version>3.2.1</version>
+        <groupId>net.alchim31.maven</groupId>
+        <artifactId>scala-maven-plugin</artifactId>
+        <version>3.2.1</version>
       </plugin>
     </plugins>
   </reporting>
-  
-  
-  <!-- PACKAGING -->
-  
-  <!-- how is it meant? How is this thing supposed to know how to package 
-       jars from scala? 
-  -->
+
   <packaging>jar</packaging>
-  
   <distributionManagement>
     <snapshotRepository>
       <id>ossrh</id>
@@ -426,5 +333,4 @@
       <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
     </repository>
   </distributionManagement>
-
 </project>

@@ -21,5 +21,14 @@ lazy val root = (project in file(".")).
     scalacOptions in (Compile,doc) ++= Seq("-groups", "-implicits"),
 
     //packAutoSettings,
-    javaOptions += "-Xmx8G"
+    javaOptions += "-Xmx8G", 
+
+    sourceGenerators in Compile <+= sourceManaged in Compile map {
+      baseDir => 
+      val file = baseDir / "scavenger" / "HelloGen.scala"
+      IO.write(file, """
+        object HelloGen { def main(a: Array[String]) = println("hey") }
+      """)
+      Seq(file)
+    }
   )

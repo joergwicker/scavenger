@@ -107,6 +107,59 @@
     <sourceDirectory>src/main/scala</sourceDirectory>
     <testSourceDirectory>src/test/scala</testSourceDirectory>
     <plugins>
+
+      <!-- compile code-generator, run code-generator -->
+      <plugin>
+        <artifactId>exec-maven-plugin</artifactId>
+        <version>1.5.0</version>
+        <groupId>org.codehaus.mojo</groupId>
+        <executions>
+          <execution><!-- Compile the code generator -->
+            <id>compile-code-generator</id>
+            <phase>generate-sources</phase>
+            <goals>
+              <goal>exec</goal>
+            </goals>
+            <configuration>
+              <executable>javac</executable>
+              <commandlineArgs>${basedir}/codegen/GenerateScavengerComputationAPI.java</commandlineArgs>
+            </configuration>
+          </execution>
+          <execution>
+            <id>run-code-generator</id>
+            <phase>generate-sources</phase>
+            <goals>
+              <goal>exec</goal>
+            </goals>
+            <configuration>
+              <executable>java</executable>
+              <commandlineArgs>-cp ${basedir}/codegen/ GenerateScavengerComputationAPI ${basedir}/target/sourceManaged/</commandlineArgs>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+      <!-- include the generated source code into the build process -->
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>build-helper-maven-plugin</artifactId>
+        <version>1.7</version>
+        <executions>
+          <execution>
+            <id>add-source</id>
+            <phase>generate-sources</phase>
+            <goals>
+              <goal>add-source</goal>
+            </goals>
+            <configuration>
+              <sources>
+                <source>${basedir}/target/sourceManaged</source>
+              </sources>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
       <!-- scala maven plugin -->
       <plugin>
         <!-- [sic] see http://davidb.github.com/scala-maven-plugin [/sic]

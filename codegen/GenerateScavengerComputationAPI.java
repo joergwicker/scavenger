@@ -20,35 +20,31 @@ import static java.lang.System.*;
  * As argument, it takes the path to the directory in which to put 
  * the generated source files (together with `/` in the end) 
  * (sbt and maven might use different directories for the same purpose).
+ * 
+ * It then grabs some of the templates in `/src/main/codegen/`, 
+ * fills out the gaps, and saves the generated files in 
+ * `${sourceManaged}/main/scala/`.
  */
 public class GenerateScavengerComputationAPI {
 
-  static class GeneratedCode {
-    String code;
-    String relativePath;
-    public GeneratedCode(String _relPath, String _code) {
-      code = _code;
-      relativePath = _relPath;
-    }
-    public void saveTo(String sourceManagedDir) 
-    throws IOException {
-      File f = new File(sourceManagedDir + relativePath);
-      f.getParentFile().mkdirs();
-      PrintWriter pw = new PrintWriter(new FileOutputStream(f));
-      pw.write(code);
-      pw.flush();
-      pw.close();
-    }
-  }
+  final static int DISTRIBUTED = 3;
+  final static int LOCAL = 2;
+  final static int SIMPLE = 1;
+  final static int TRIVIAL = 0;
+  final static String[] prefixes = 
+                              {"Trivial", "Simple", "Local", "Distributed"};
+  final static int[] levels = { TRIVIAL ,  SIMPLE ,  LOCAL ,  DISTRIBUTED };
 
-  public static LinkedList<GeneratedCode> generateCode() {
-    LinkedList<GeneratedCode> result = new LinkedList<GeneratedCode>();
-    result.add(
-      new GeneratedCode(
-        "main/scala/HelloGencode.scala",
-        "object HelloGencode { def main(args: Array[String]) = println('y') }"
-      )  
-    );
+  public static LinkedList<Template> generateCode() 
+  throws IOException {
+    LinkedList<Template> result = new LinkedList<Template>();
+    for (int i : new int[]{TRIVIAL}) {
+      String prefix = prefixes[i];
+      Template t = new Template(
+        "main/codegen-scala/scavenger/" + prefix + "Algorithm.scala"
+      );
+      result.add(t.subst("body", "/* a comment for " + i + " */"));
+    }
     return result;
   }
 
@@ -56,7 +52,7 @@ public class GenerateScavengerComputationAPI {
     out.println("Code generation runs");
     String pathToSourceManaged = args[0];
     try {
-      for (GeneratedCode sd: generateCode()) {
+      for (Template sd: generateCode()) {
         out.println("Generating " + sd.relativePath);
         sd.saveTo(pathToSourceManaged);
       }

@@ -56,7 +56,7 @@
     <maven.compiler.target>1.7</maven.compiler.target>
     <encoding>UTF-8</encoding>
     <scala.version>2.11.8</scala.version>
-    <scalatest-plugin.version>1.0-M2</scalatest-plugin.version>
+    <scalatest-plugin.version>1.0</scalatest-plugin.version>
     <surefire-plugin.version>2.10</surefire-plugin.version>
   </properties>
 
@@ -91,10 +91,6 @@
       <artifactId>commons-io</artifactId>
       <version>2.5</version>
     </dependency>
-    <!-- Testing -->
-    <!-- Copied from this pretty sophisticated looking complete POM-file:
-	       https://scalatest-users.googlegroups.com/attach/afaab01480be8def/pom.xml?view=1&part=4
-    -->
     <dependency>
       <groupId>org.scalatest</groupId>
       <artifactId>scalatest_2.11</artifactId>
@@ -106,6 +102,24 @@
   <build>
     <sourceDirectory>src/main/scala</sourceDirectory>
     <testSourceDirectory>src/test/scala</testSourceDirectory>
+
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>net.alchim31.maven</groupId>
+          <artifactId>scala-maven-plugin</artifactId>
+          <version>3.2.1</version>
+        </plugin>
+        
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-compiler-plugin</artifactId>
+          <version>2.0.2</version>
+        </plugin>
+
+      </plugins>
+    </pluginManagement>
+
     <plugins>
 
       <!-- compile code-generator, run code-generator -->
@@ -114,7 +128,7 @@
         <version>1.5.0</version>
         <groupId>org.codehaus.mojo</groupId>
         <executions>
-          <execution><!-- Compile the code generator -->
+          <execution>
             <id>compile-code-generator</id>
             <phase>generate-sources</phase>
             <goals>
@@ -122,9 +136,13 @@
             </goals>
             <configuration>
               <executable>javac</executable>
-              <commandlineArgs>${basedir}/codegen/Template.java ${basedir}/codegen/GenerateScavengerComputationAPI.java</commandlineArgs>
+              <arguments>
+                <argument>${basedir}/codegen/Template.java</argument>
+                <argument>${basedir}/codegen/GenerateScavengerComputationAPI.java</argument>
+              </arguments>
             </configuration>
           </execution>
+
           <execution>
             <id>run-code-generator</id>
             <phase>generate-sources</phase>
@@ -133,20 +151,26 @@
             </goals>
             <configuration>
               <executable>java</executable>
-              <commandlineArgs>-cp ${basedir}/codegen/ GenerateScavengerComputationAPI ${basedir}/target/sourceManaged/</commandlineArgs>
+              <arguments>
+                <argument>-cp</argument>
+                <argument>${basedir}/codegen/</argument>
+                <argument>GenerateScavengerComputationAPI</argument>
+                <argument>${basedir}/target/sourceManaged/</argument>
+              </arguments>
             </configuration>
           </execution>
         </executions>
       </plugin>
 
-      <!-- include the generated source code into the build process -->
+      <!-- add generated source code to build -->
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>build-helper-maven-plugin</artifactId>
         <version>1.7</version>
         <executions>
+          
           <execution>
-            <id>add-source</id>
+            <id>add-generated-sources</id>
             <phase>generate-sources</phase>
             <goals>
               <goal>add-source</goal>
@@ -157,57 +181,70 @@
               </sources>
             </configuration>
           </execution>
-        </executions>
-      </plugin>
 
-      <!-- scala maven plugin -->
-      <plugin>
-        <!-- [sic] see http://davidb.github.com/scala-maven-plugin [/sic]
-	           See also http://davidb.github.com/scala-maven-plugin/usage.html
-	      -->
-        <groupId>net.alchim31.maven</groupId>
-        <artifactId>scala-maven-plugin</artifactId>
-        <version>3.2.1</version>
-        <executions>
           <execution>
-            <id>attach-javadocs</id>
+            <id>add-src-test-java</id>
+            <phase>process-test-sources</phase>
             <goals>
-              <goal>doc-jar</goal>
-              <goal>compile</goal>
-              <goal>testCompile</goal>
+              <goal>add-test-source</goal>
             </goals>
             <configuration>
-              <args>
-                <!-- this is recommended elsewhere, but crashes the compiler
-                <arg>-make:transitive</arg>
-                -->
-                <arg>-dependencyfile</arg>
-                <arg>${project.build.directory}/.scala_dependencies</arg>
-              </args>
+              <sources>
+                <source>${basedir}/src/test/java</source>
+              </sources>
             </configuration>
           </execution>
         </executions>
-        <configuration>
-          <reportPlugins>
-            <plugin>
-              <artifactId>maven-project-info-reports-plugin</artifactId>
-              <version>2.2</version>
-            </plugin>
-            <plugin>
-              <groupId>net.alchim31.maven</groupId>
-              <artifactId>scala-maven-plugin</artifactId>
-              <version>3.2.1</version>
-              <configuration>
-                <jvmArgs>
-                  <jvmArg>-Xms64m</jvmArg>
-                  <jvmArg>-Xmx1024m</jvmArg>
-                </jvmArgs>
-              </configuration>
-            </plugin>
-          </reportPlugins>
-          <scalaVersion>${scala.version}</scalaVersion>
-        </configuration>
       </plugin>
+
+      <plugin>
+        <groupId>net.alchim31.maven</groupId>
+        <artifactId>scala-maven-plugin</artifactId>
+        <executions>
+        
+          <execution>
+            <id>compile-scala-main</id>
+            <phase>compile</phase>
+            <goals>
+              <goal>compile</goal>
+            </goals>
+          </execution>
+          
+          <execution>
+            <id>compile-scala-test</id>
+            <phase>test-compile</phase>
+            <goals>
+              <goal>testCompile</goal>
+            </goals>
+          </execution>
+        
+        </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <executions>
+
+          <execution>
+            <id>compile-java-main</id>
+            <phase>compile</phase>
+            <goals>
+              <goal>compile</goal>
+            </goals>
+          </execution>
+
+          <execution>
+            <id>compile-java-test</id>
+            <phase>process-test-sources</phase>
+            <goals>
+              <goal>testCompile</goal>
+            </goals>
+          </execution>
+
+        </executions>        
+      </plugin>
+
       <!-- overriding default settings of the surefire plugin -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -217,12 +254,8 @@
           <skipTests>true</skipTests>
         </configuration>
       </plugin>
+
       <!-- scala test plugin -->
-      <!-- All this was simply copied from the scalatest website: 
-	   http://www.scalatest.org/user_guide/using_the_scalatest_maven_plugin
-	   (maven-scalatest-plugin <-> scalatest-maven-plugin seems to be a typo, 
-	   awesome...)
-      -->
       <plugin>
         <groupId>org.scalatest</groupId>
         <artifactId>scalatest-maven-plugin</artifactId>
@@ -240,39 +273,7 @@
           </execution>
         </executions>
       </plugin>
-      <!-- This chunk of configuration has just been copied from here: 
-	   https://www.assembla.com/wiki/show/scala-ide/With_Maven_CLI
-	   it's for maven-eclipse integration -->
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-eclipse-plugin</artifactId>
-        <version>2.8</version>
-        <!-- see http://maven.apache.org/plugins/
-	     maven-eclipse-plugin/eclipse-mojo.html for more information -->
-        <configuration>
-          <downloadSources>true</downloadSources>
-          <downloadJavadocs>true</downloadJavadocs>
-          <projectnatures>
-            <projectnature>org.scala-ide.sdt.core.scalanature</projectnature>
-            <projectnature>org.eclipse.jdt.core.javanature</projectnature>
-          </projectnatures>
-          <buildcommands>
-            <buildcommand>org.scala-ide.sdt.core.scalabuilder</buildcommand>
-          </buildcommands>
-          <classpathContainers>
-            <classpathContainer>org.scala-ide.sdt.launching.SCALA_CONTAINER"</classpathContainer>
-            <classpathContainer>org.eclipse.jdt.launching.JRE_CONTAINER</classpathContainer>
-          </classpathContainers>
-          <excludes>
-            <exclude>org.scala-lang:scala-library</exclude>
-            <exclude>org.scala-lang:scala-compiler</exclude>
-          </excludes>
-          <sourceIncludes>
-            <sourceInclude>**/*.scala</sourceInclude>
-            <sourceInclude>**/*.java</sourceInclude>
-          </sourceIncludes>
-        </configuration>
-      </plugin>
+
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-dependency-plugin</artifactId>
@@ -294,6 +295,7 @@
           </execution>
         </executions>
       </plugin>
+
       <plugin>
         <artifactId>maven-assembly-plugin</artifactId>
         <executions>
@@ -310,6 +312,7 @@
           </descriptorRefs>
         </configuration>
       </plugin>
+
       <plugin>
         <groupId>org.sonatype.plugins</groupId>
         <artifactId>nexus-staging-maven-plugin</artifactId>
@@ -321,6 +324,7 @@
           <autoReleaseAfterClose>true</autoReleaseAfterClose>
         </configuration>
       </plugin>
+
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-gpg-plugin</artifactId>
@@ -335,6 +339,7 @@
           </execution>
         </executions>
       </plugin>
+
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-source-plugin</artifactId>
@@ -348,6 +353,7 @@
           </execution>
         </executions>
       </plugin>
+
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
@@ -386,4 +392,5 @@
       <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
     </repository>
   </distributionManagement>
+
 </project>

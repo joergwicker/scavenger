@@ -27,21 +27,13 @@ import static java.lang.System.*;
  */
 public class GenerateScavengerComputationAPI {
 
-  final static int DISTRIBUTED = 3;
-  final static int LOCAL = 2;
-  final static int SIMPLE = 1;
-  final static int TRIVIAL = 0;
-  final static String[] prefixes = 
-                              {"Trivial", "Simple", "Local", "Distributed"};
-  final static int[] levels = { TRIVIAL ,  SIMPLE ,  LOCAL ,  DISTRIBUTED };
-
   public static LinkedList<Template> generateCode() 
   throws IOException {
     LinkedList<Template> result = new LinkedList<Template>();
-    for (int i : new int[]{TRIVIAL}) {
-      String prefix = prefixes[i];
+
+    for (int i : Complexity.values()) {
       Template t = new Template(
-        "main/codegen-scala/scavenger/" + prefix + "Algorithm.scala"
+        "main/codegen-scala/scavenger/Id.scala"
       );
       result.add(t.subst("body", "/* a comment for " + i + " */"));
     }

@@ -26,7 +26,7 @@ trait Context {
   implicit def executionContext: ExecutionContext
   
   /** Guarantees to return the same value as if `job.compute(this)`
-    * have been called instead.
+    * has been called instead.
     */
   def submit[X](job: Computation[X]): Future[X]
   
@@ -46,4 +46,22 @@ trait Context {
     */
   private[scavenger] def dumpCacheKeys: 
     List[scavenger.categories.formalccc.Elem] 
+}
+
+
+trait BasicContext {
+  implicit def executionContext: ExecutionContext
+  private[scavenger] def loadFromGlobalCache[X](id: Identifier): Future[X]
+}
+
+trait LocalContext extends BasicContext {
+  implicit def executionContext: ExecutionContext
+  def submit[X](job: LocalComputation[X]): Future[X]
+  def computeValue[X](job: LocalComputation[X]): Future[X]
+}
+
+trait DistributedContext extends BasicContext {
+  implicit def executionContext: ExecutionContext
+  def submit[X](job: DistributedComputation[X]): Future[X]
+  def computeValue[X](job: DistributedComputation[X]): Future[Value[X]]
 }

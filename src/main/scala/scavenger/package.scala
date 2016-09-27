@@ -6,7 +6,7 @@ import scavenger.categories.formalccc
   * Scavenger framework.
   */
 package object scavenger extends Serializable{
-  //type Identifier = formalccc.Elem
+  type Identifier = String
 
   // Three castings into the canonical form of a morphism
   implicit def withoutContextToFull[X, Y](f: X => Future[Y]): 

@@ -100,8 +100,8 @@ final case class LocalApply[X, +Y](
 ) extends LocalComputation[Y] {
   def compute(localEval: LocalEvaluator): Future[Y] = {
     comp match {
-      case finished: TrivialComputation[X] => 
-        for {
+      case finished: TrivialComputation[X] =>
+         for {
           x <- finished.getValue
           y <- alg.compute(x, localEval)
         } yield y

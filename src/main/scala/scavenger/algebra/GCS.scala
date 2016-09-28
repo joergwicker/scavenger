@@ -15,7 +15,7 @@ package scavenger.algebra
  * @since 2.3
  * @author Andrey Tyukin
  */
-case class GCS[X](underlying: Map[X, Double]) 
+private[scavenger] case class GCS[X](underlying: Map[X, Double]) 
 extends (X => Double) {
   def apply(x: X) = underlying.get(x).getOrElse(0.0)
   def +(other: GCS[X]): GCS[X] = {
@@ -29,6 +29,12 @@ extends (X => Double) {
   def *(factor: Double): GCS[X] = {
     GCS(for ((k, v) <- underlying) yield (k, v * factor))
   }
+
+  def max(other: GCS[X]): GCS[X] = {
+    val allKeys = underlying.keySet ++ other.underlying.keySet
+    GCS((for (k <- allkeys) yield (k, math.max(this(k), other(k)))).toMap)
+  }
+
   override def toString = {
     underlying.
     toList.
@@ -60,10 +66,13 @@ extends (X => Double) {
 
 }
 
-object GCS {
+private[scavenger] object GCS {
 
   /** Zero of the vector space */
   def zero[X]: GCS[X] = GCS(Map.empty[X, Double])
+
+  /** Returns `x`-th canonical basis vector */
+  def basisVector[X](x: X): GCS[X] = GCS(Map(x -> 1.0))
 
   /** Constructor for functions which are non-zero at one single point */
   def apply[X](k: X, v: Double): GCS[X] = GCS(Map(k -> v))

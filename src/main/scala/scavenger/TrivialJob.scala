@@ -1,6 +1,10 @@
 package scavenger
 
 import scala.concurrent.{Future, ExecutionContext}
+import scala.collection.generic.CanBuildFrom
+import scala.collection.TraversableOnce
+import scala.language.higherKinds
+import scavenger.algebra.GCS
 
 /**
  * `TrivialJob` requires only a `BasicContext` to compute its value,
@@ -20,31 +24,78 @@ import scala.concurrent.{Future, ExecutionContext}
  */
 sealed trait TrivialJob[+X] {
   
-  private[scavenger] def optimizeForNetwork: TrivialJob[X] 
-    = TrivialJob.optimizeForNetwork(this)
   def identifier: scavenger.Identifier
 
   /** 
-   * Computes the result 
+   * Computes the result as `NewValue`
    */
   def eval(implicit ctx: BasicContext): Future[NewValue[X]]
+
+  /** Computes and loads the result into memory of this JVM */
+  def evalAndGet(implicit ctx: BasicContext): Future[X] = {
+    for {
+      v <- this.eval
+      res <- v.get
+    } yield res
+  }
+
+  import TrivialJob._
+
+  /** Returns an equivalent job (which is compressed, if possible), 
+    * together with exact size before compression, and an upper bound estimate
+    * for the size after compression.
+    */
+  protected[scavenger] def _compressed(implicit ctx: BasicContext): 
+    Future[(TrivialJob[X], Size, Size)]
+
+  /** Returns an equivalent job which is maximally compressed for the 
+    * serialization (that means: all trivial subjobs that decreased size of
+    * the data have been evaluated).
+    */
+  private[scavenger] def compressed(implicit ctx: BasicContext): 
+    Future[TrivialJob[X]] = {
+      import ctx.executionContext
+      for ((c, _, _) <- _compressed) yield c._1
+    }
 }
 
 /** Application of a trivial algorithm to a trivial computation 
   * is again a trivial computation.
   */
 case class TrivialApply[X, +Y](
-  f: TrivialAtomicAlgorithm[X, Y], 
+  f: TrivialAlgorithm[X, Y], 
   x: TrivialJob[X]
 ) extends TrivialJob[Y] {
   def identifier = ??? // TODO
   def eval(implicit ctx: BasicContext): Future[NewValue[Y]] = {
     import ctx.executionContext
     for {
-      xValue <- x.eval
-      xLoaded <- xValue.get
+      xLoaded <- x.evalAndGet
       yResult <- f.compute(xLoaded)
     } yield InRam(yResult, this.identifier)
+  }
+  protected[scavenger] def _compressed(implicit ctx: BasicContext): 
+  Future[(TrivialJob[Y], Size, Size)] = {
+
+    /* applies `f` to the compressed `x`, if this makes sense */
+    def helper(xCompressed: TrivialJob[X], xBefore: Size, xAfter: Size):
+    Future[(TrivialJob[Y], Size, Size)] = {
+      val yAfter = xAfter * f.compressionFactor
+      val partiallyEvaluated = TrivialApply(f, xCompressed)
+      if (yAfter < xBefore) {
+        for (fullyEvaluated <- partiallyCompressed) yield {
+          (TrivialValue(fullyEvaluated), xBefore, yAfter)
+        }
+      } else {
+        Future { (TrivialApply(xCompressed), xBefore, yAfter) }
+      }
+    }
+
+    import ctx.executionContext
+    for {
+      (xCompressed, xBefore, xAfter) <- x._compressed
+      result <- helper(xCompressed, xBefore, xAfter)
+    } yield result
   }
 }
 
@@ -64,11 +115,66 @@ case class TrivialPair[+X, +Y](
       yVal <- yFut
     } yield ValuePair(xVal, yVal)
   }
+  protected[scavenger] def _compressed(implicit ctx: BasicContext):
+  Future[(TrivialJob[(X, Y)], Size, Size)] = {
+    
+  }
+}
+
+case class TrivialJobs[+X, M[+E] <: TraversableOnce[E]](jobs: M[TrivialJob[X]])
+(implicit 
+  cbf1: CanBuildFrom[M[TrivialJob[X]], Future[NewValue[X]], M[Future[NewValue[X]]]],
+  cbf2: CanBuildFrom[M[Future[NewValue[X]]], NewValue[X], M[NewValue[X]]],
+  cbf3: CanBuildFrom[M[NewValue[X]], Future[X], M[Future[X]]],
+  cbf4: CanBuildFrom[M[Future[X]], X, M[X]],
+  cbf5: CanBuildFrom[M[TrivialJob[X]], TrivialJob[X], M[TrivialJob[X]]]
+) extends TrivialJob[M[X]] {
+  def identifier = ??? // TODO
+  def eval(implicit ctx: BasicContext): Future[NewValue[M[X]]] = {
+    import ctx.executionContext
+    val futsBldr = cbf1(jobs)
+    for (f <- jobs.map({_.eval(ctx)})) {
+      futsBldr += f
+    }
+    val futs = futsBldr.result()
+    val fut = Future.sequence(futs)(cbf2, ctx.executionContext)
+    for (values <- fut) yield Values(values)(cbf3, cbf4)
+  }
+
+  import TrivialJob._
+  protected def _compressed: Future[(TrivialJob[M[X]], Size, Size)] = {
+    val compressedJobs = for (j <- jobs) yield j._compressed
+    var maxBefore = GCS.zero[Identifier]
+    var sumAfter = GCS.zero[Identifier]
+    for ((_, b, a) <- compressedJobs) {
+      maxBefore = maxBefore.max(b)
+      sumAfter += a
+    }
+    val bldr = cbf5(jobs)
+    for (j <- compressedJobs) bldr += j._1
+    (TrivialJobs(bldr.result()), sumBefore, sumAfter)
+  }
+}
+
+/** Wrapper for `Value`; requires no further evaluation. */
+case class TrivialValue[+X](value: NewValue[X]) extends TrivialJob[X] {
+  def identifier = value.identifier
+  def eval(implicit ctx: BasicContext): Future[NewValue[X]] = {
+    import ctx.executionContext
+    Future { value }
+  }
+  protected[scavenger] def _compressed: Future[(TrivialJob[])]
+  protected[scavenger] def _compressed(implicit ctx: BasicContext): 
+  Future[(TrivialJob[X], Size, Size)] = {
+    import ctx.executionContext
+    val bv = GCS.basisVector(value.identifier)
+    Future { (this, GCS.basisVector(value.identifier), G)}
+  }
 }
 
 object TrivialJob {
-  private type T[+X] = TrivialJob[X]
-  private type RelativeSize = algebra.GCS[scavenger.Identifier]
+  // private[TrivialJob] type TJ[+X] = TrivialJob[X]
+  private[scavenger] type Size = algebra.GCS[scavenger.Identifier]
   
   /** Returns essentially the same (possibly optimized) computation, 
     * together with estimates for relative sizes before and after
@@ -76,12 +182,12 @@ object TrivialJob {
     */
   // Refer to [SE V p128] for derivation, notice that "before" and "after" are
   // swapped here.
-  private[TrivialJob] def optimizeForNetwork[X](t: T[X]): T[X] = {
-    ???
-  }
+  // private[TrivialJob] def optimizeForNetwork[X](t: T[X]): T[X] = {
+  //   ???
+  // }
 
-  private[TrivialJob] def optimizeForNetworkHelper[X](t: T[X]): 
-    (T[X], RelativeSize, RelativeSize) = {
-    ??? // TODO
-  }
+  // private[TrivialJob] def optimizeForNetworkHelper[X](t: T[X]): 
+  //   (T[X], Size, Size) = {
+  //   ??? // TODO
+  // }
 }

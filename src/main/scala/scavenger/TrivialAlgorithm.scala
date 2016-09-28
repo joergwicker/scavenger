@@ -7,25 +7,40 @@ sealed trait TrivialAlgorithm[-X, +Y] {
     * parameter `Y`. The application is formal, no actual computation takes
     * place until `eval` is called on the resulting `TrivialJob`.
     */
-  def apply(t: TrivialJob[X]): TrivialJob[Y]
+  def apply(t: TrivialJob[X]): TrivialJob[Y] = TrivialApply(this, t)
+
+  /** Performs the actual computation in the specified context. */
+  def compute(x: X)(implicit ctx: BasicContext): Future[Y]
+
+  import TrivialJob.Size
+
+  /** Takes (before, after)-compression size estimation for the input, 
+    * returns (before, after)-compression size estimation for
+    * the output.
+    *
+    * Notice: the before-compression size can be modified by curried functions.
+    * For example, if `a` is an input of certain size, `b` is an input of 
+    * certain size, and `f` is a two-parameter function, then `f(a, _)` will
+    * transform the estimation `1 * size(b)` into 
+    * `1 * size(b) + 1 * size(a)`. So, the `befor-compression` component 
+    * cannot be omitted.
+    */
+  private[scavenger] def transformSizeEstimates(
+    before: Size, 
+    after: Size
+  ): (Size, Size)
 }
 
 abstract class TrivialAtomicAlgorithm[-X, +Y] extends TrivialAlgorithm[X, Y] {
-
-  def apply(c: TrivialJob[X]): TrivialJob[Y] = TrivialApply(this, c)
 
   /** 
    * An upper bound for `size(x) / size(y)`, where `x` is some input of 
    * type `X`, `y` is the output of type `Y`.
    */
-  def sizeFactorUpperBound: Double
+  def compressionFactor: Double
 
-  /** Computes an `Y` from an `X`, using `ctx`.
-    *
-    * This is the actual hard work done by `TrivialAlgorithm`, everything
-    * else is just formal composition and delegation.
-    */
-  def compute(x: X)(implicit ctx: BasicContext): Future[Y]
+  private[scavenger] def transformSizeEstimates(before: Size, after: Size): 
+  (Size, Size) = (before, s * compressionFactor)
 }
 
 /** Do-nothing morphism.
@@ -36,8 +51,8 @@ abstract class TrivialAtomicAlgorithm[-X, +Y] extends TrivialAlgorithm[X, Y] {
   * different algorithms.
   */
 case class TrivialId[X]() extends TrivialAlgorithm[X, X] {
-
-  def apply(t: TrivialJob[X]): TrivialJob[X] = t
+  private[scavenger] def transformSizeEstimates(before: Size, after: Size): 
+  (Size, Size) = (before, after)
 }
 
 /** Formal composition of two algorithms.
@@ -49,19 +64,47 @@ case class TrivialComposition[-X, Y, +Z](
   second: TrivialAlgorithm[Y, Z],
   first: TrivialAlgorithm[X, Y]
 ) extends TrivialAlgorithm[X, Z] {
-  def apply(x: TrivialJob[X]): TrivialJob[Z] = second(first(x))
+  def compute(x: X)(implicit ctx: BasicContext): Future[Y] = {
+    import ctx.executionContext
+    for {
+      yIntermedRes <- first.compute(x)
+      zRes <- second.compute(yIntermedRes)
+    } yield zRes
+  }
+  private[scavenger] def transformSizeEstimates(before: Size, after: Size): 
+  (Size, Size) = {
+    val (b, a) = first.transformSizeEstimates(before, after)
+    second.transformSizeEstimates(b, a)
+  }
 }
 
 case class TrivialCouple[-X, +A, +B](
   left: TrivialAlgorithm[X, A],
   right: TrivialAlgorithm[X, B]
 ) extends TrivialAlgorithm[X, (A, B)] {
-  def apply(x: TrivialJob[X]): TrivialJob[(A, B)] = 
-    TrivialPair(left(x), right(x))
+  def compute(x: X)(implicit ctx: BasicContext): Future[(A, B)] = {
+    import ctx.executionContext
+    val lFut = left.compute(x)
+    val rFut = right.compute(x)
+    for {
+      lRes <- lFut
+      rRes <- rFut
+    } yield (lRes, rRes)
+  }
+  private[scavenger] def transformSizeEstimates(before: Size, after: Size): 
+  (Size, Size) = {
+    val (lb, la) = transformSizeEstimates(before, after)
+    val (rb, ra) = transformSizeEstimates(before, after)
+    /* the `max` appears because we are essentially computing the characteristic
+       function of a union of two sets: the DAG-leaf nodes used in lb, and 
+       DAG-leaf nodes used in rb.
+    */
+    (lb.max(rb), la + ra)
+  }
 }
 
 case class TrivialProj1[X, -Y](
-  sizeFactorUpperBound: Double = java.lang.Math.nextDown(1.0d)
+  compressionFactor: Double = java.lang.Math.nextDown(1.0d)
 ) extends TrivialAtomicAlgorithm[(X, Y), X] {
   def compute(xy: (X, Y))(implicit ctx: BasicContext): Future[X] = {
     import ctx.executionContext
@@ -70,7 +113,7 @@ case class TrivialProj1[X, -Y](
 }
 
 case class TrivialProj2[-X, Y](
-  sizeFactorUpperBound: Double = java.lang.Math.nextDown(1.0d)
+  compressionFactor: Double = java.lang.Math.nextDown(1.0d)
 ) extends TrivialAtomicAlgorithm[(X, Y), Y] {
   def compute(xy: (X, Y))(implicit ctx: BasicContext): Future[Y] = {
     import ctx.executionContext
@@ -82,9 +125,24 @@ case class TrivialCurry1[A, -B, +Z](
   algorithm: TrivialAlgorithm[(A, B), Z],
   firstArgument: TrivialJob[A]
 ) extends TrivialAlgorithm[B, Z] {
-  def apply(secondArgument: TrivialJob[B]): TrivialJob[Z] = 
-    algorithm(TrivialPair(firstArgument, secondArgument))
+
+  def compute(secondArgument: B)(implicit ctx: BasicContext): Future[Z] = {
+    import ctx.executionContext
+    val aFut = firstArgument.evalAndGet
+    val bFut = secondArgument.evalAndGet
+    for {
+      a <- aFut
+      b <- bFut
+      z <- f.compute((a, b))
+    } yield z
+  }
+
+  private[scavenger] def transformSizeEstimates(before: Size, after: Size):
+  (Size, Size) = {
+    
+  }
 }
+
 
 case class TrivialCurry2[-A, B, +Z](
   algorithm: TrivialAlgorithm[(A, B), Z],

@@ -51,17 +51,15 @@ trait Context {
 
 trait BasicContext {
   implicit def executionContext: ExecutionContext
-  private[scavenger] def loadFromGlobalCache[X](id: Identifier): Future[X]
+  private[scavenger] def loadFromCache[X](id: Identifier): Future[X]
 }
 
 trait LocalContext extends BasicContext {
-  implicit def executionContext: ExecutionContext
   def submit[X](job: LocalComputation[X]): Future[X]
-  def computeValue[X](job: LocalComputation[X]): Future[X]
+  def computeValue[X](job: LocalComputation[X]): Future[NewValue[X]]
 }
 
-trait DistributedContext extends BasicContext {
-  implicit def executionContext: ExecutionContext
+trait DistributedContext extends LocalContext {
   def submit[X](job: DistributedComputation[X]): Future[X]
-  def computeValue[X](job: DistributedComputation[X]): Future[Value[X]]
+  def computeValue[X](job: DistributedComputation[X]): Future[NewValue[X]]
 }

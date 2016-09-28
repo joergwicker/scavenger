@@ -15,7 +15,8 @@ package scavenger.algebra
  * @since 2.3
  * @author Andrey Tyukin
  */
-case class GCS[X](underlying: Map[X, Double]) extends (X => Double) {
+case class GCS[X](underlying: Map[X, Double]) 
+extends (X => Double) {
   def apply(x: X) = underlying.get(x).getOrElse(0.0)
   def +(other: GCS[X]): GCS[X] = {
     val allKeys = underlying.keySet ++ other.underlying.keySet
@@ -41,6 +42,9 @@ case class GCS[X](underlying: Map[X, Double]) extends (X => Double) {
    * at least one coordinate, and smaller or equal in all other coordinates.
    *
    * For example, `3 x + 5 y` is strictly smaller than `3 x + 4 y`.
+   *
+   * Note that this class does not inherit `Ordered`, because the ordering is
+   * partial, not total.
    */
   def <(other: GCS[X]): Boolean = {
     var allLeq = true

@@ -14,24 +14,33 @@ import scala.language.higherKinds
 // TODO: tear down old `Value`, replace by new `Value`
 sealed trait NewValue[+X] {
   def identifier: Identifier
-  def get(ctx: BasicContext): Future[X]
+  def get(implicit ctx: BasicContext): Future[X]
 }
 
-case class InMemory[+X](value: X, identifier: Identifier) extends NewValue[X] {
-  def get(ctx: BasicContext): Future[X] = {
+/** A value that is available in the memory on this JVM.
+  */
+private[scavenger] case class InRam[+X](value: X, identifier: Identifier) 
+extends NewValue[X] {
+  def get(implicit ctx: BasicContext): Future[X] = {
     import ctx.executionContext
     Future { value }
   }
 }
 
-case class InRemoteCache[+X](identifier: Identifier) extends NewValue[X] {
-  def get(ctx: BasicContext): Future[X] = ctx.loadFromGlobalCache(identifier)
+/** A value that can be easily retrieved from a (remote) cache.
+  */
+private[scavenger] case class InCache[+X](identifier: Identifier) 
+extends NewValue[X] {
+  def get(implicit ctx: BasicContext): Future[X] = 
+    ctx.loadFromCache(identifier)
 }
 
+/** Pair of values, where both values can be scattered across multiple nodes.
+  */
 case class ValuePair[+X, +Y](_1: NewValue[X], _2: NewValue[Y]) 
 extends NewValue[(X, Y)] {
   def identifier = ??? // TODO
-  def get(ctx: BasicContext): Future[(X, Y)] = {
+  def get(implicit ctx: BasicContext): Future[(X, Y)] = {
     import ctx.executionContext
     val fx = _1.get(ctx)
     val fy = _2.get(ctx)
@@ -39,13 +48,16 @@ extends NewValue[(X, Y)] {
   }
 }
 
+/** A collection of fully evaluated values, which can be scattered across
+  * multiple nodes.
+  */
 case class Values[+X, M[+E] <: TraversableOnce[E]]
   (values: M[NewValue[X]])
   (implicit cbf1: CanBuildFrom[M[NewValue[X]], Future[X], M[Future[X]]],
    cbf2: CanBuildFrom[M[Future[X]], X, M[X]]) 
 extends NewValue[M[X]] {
   def identifier = ??? // TODO: need better CCC's now...
-  def get(ctx: BasicContext): Future[M[X]] = {
+  def get(implicit ctx: BasicContext): Future[M[X]] = {
     import ctx.executionContext
     val bldr1 = cbf1(values)
     for (v <- values) {

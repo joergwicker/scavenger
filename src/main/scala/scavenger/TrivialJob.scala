@@ -76,25 +76,10 @@ case class TrivialApply[X, +Y](
   }
   protected[scavenger] def _compressed(implicit ctx: BasicContext): 
   Future[(TrivialJob[Y], Size, Size)] = {
-
-    /* applies `f` to the compressed `x`, if this makes sense */
-    def helper(xCompressed: TrivialJob[X], xBefore: Size, xAfter: Size):
-    Future[(TrivialJob[Y], Size, Size)] = {
-      val yAfter = xAfter * f.compressionFactor
-      val partiallyEvaluated = TrivialApply(f, xCompressed)
-      if (yAfter < xBefore) {
-        for (fullyEvaluated <- partiallyCompressed) yield {
-          (TrivialValue(fullyEvaluated), xBefore, yAfter)
-        }
-      } else {
-        Future { (TrivialApply(xCompressed), xBefore, yAfter) }
-      }
-    }
-
     import ctx.executionContext
     for {
       (xCompressed, xBefore, xAfter) <- x._compressed
-      result <- helper(xCompressed, xBefore, xAfter)
+      result <- f._compress(xCompressed, xBefore, xAfter)
     } yield result
   }
 }

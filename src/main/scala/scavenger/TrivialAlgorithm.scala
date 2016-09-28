@@ -14,21 +14,22 @@ sealed trait TrivialAlgorithm[-X, +Y] {
 
   import TrivialJob.Size
 
-  /** Takes (before, after)-compression size estimation for the input, 
-    * returns (before, after)-compression size estimation for
-    * the output.
-    *
-    * Notice: the before-compression size can be modified by curried functions.
-    * For example, if `a` is an input of certain size, `b` is an input of 
-    * certain size, and `f` is a two-parameter function, then `f(a, _)` will
-    * transform the estimation `1 * size(b)` into 
-    * `1 * size(b) + 1 * size(a)`. So, the `befor-compression` component 
-    * cannot be omitted.
+  /** Returns a job that is equivalent to `this.apply(input)`, 
+    * together with the exact size before compression, 
+    * and an upper bound estimate for the size of 
+    * `this.apply(input)` after compression. The returned job is 
+    * fully evaluated if `after < before` holds. Otherwise, 
+    * it can be partially compressed (i.e. some of the sub-jobs can
+    * be replaced by their compressed versions).
     */
-  private[scavenger] def transformSizeEstimates(
+  /* (Somewhat surprisingly, this is exactly the signature of a helper 
+      method that I used in `TrivialApply._compressed`, so this method
+      actually seems quite natural) */
+  protected[scavenger] def _compress(
+    input: TrivialJob[X],
     before: Size, 
     after: Size
-  ): (Size, Size)
+  )(implicit ctx: BasicContext): Future[(TrivialJob[Y], Size, Size)]
 }
 
 abstract class TrivialAtomicAlgorithm[-X, +Y] extends TrivialAlgorithm[X, Y] {
@@ -39,8 +40,22 @@ abstract class TrivialAtomicAlgorithm[-X, +Y] extends TrivialAlgorithm[X, Y] {
    */
   def compressionFactor: Double
 
-  private[scavenger] def transformSizeEstimates(before: Size, after: Size): 
-  (Size, Size) = (before, s * compressionFactor)
+  protected[scavenger] def _compress(
+    xCompressed: TrivialJob[X], 
+    xBefore: Size, 
+    xAfter: Size
+  )(implicit ctx: BasicContext): Future[(TrivialJob[Y], Size, Size)] = {
+    import ctx.executionContext
+    val yAfter = xAfter * f.compressionFactor
+    val partiallyEvaluated = TrivialApply(this, xCompressed)
+    if (yAfter < xBefore) {
+      for (fullyEvaluated <- partiallyCompressed) yield {
+        (TrivialValue(fullyEvaluated), xBefore, yAfter)
+      }
+    } else {
+      Future { (TrivialApply(xCompressed), xBefore, yAfter) }
+    }
+  }
 }
 
 /** Do-nothing morphism.
@@ -51,8 +66,14 @@ abstract class TrivialAtomicAlgorithm[-X, +Y] extends TrivialAlgorithm[X, Y] {
   * different algorithms.
   */
 case class TrivialId[X]() extends TrivialAlgorithm[X, X] {
-  private[scavenger] def transformSizeEstimates(before: Size, after: Size): 
-  (Size, Size) = (before, after)
+  private[scavenger] def _compress(
+    input: TrivialJob[X], 
+    before: Size, 
+    after: Size
+  )(implicit ctx: BasicContext) = {
+    import ctx.executionContext
+    (input, before, after)
+  }
 }
 
 /** Formal composition of two algorithms.
@@ -71,10 +92,16 @@ case class TrivialComposition[-X, Y, +Z](
       zRes <- second.compute(yIntermedRes)
     } yield zRes
   }
-  private[scavenger] def transformSizeEstimates(before: Size, after: Size): 
-  (Size, Size) = {
-    val (b, a) = first.transformSizeEstimates(before, after)
-    second.transformSizeEstimates(b, a)
+  private[scavenger] def _compress(
+    input: TrivialJob[X], 
+    before: Size, 
+    after: Size
+  )(implicit ctx: BasicContext): Future[(TrivialJob[Z], Size, Size)] = {
+    import ctx.executionContext
+    for {
+      (y, yb, ya) <- first._compress(input, before, after)
+      result <- second._compress(y, yb, ya)
+    } yield result
   }
 }
 
@@ -139,7 +166,7 @@ case class TrivialCurry1[A, -B, +Z](
 
   private[scavenger] def transformSizeEstimates(before: Size, after: Size):
   (Size, Size) = {
-    
+
   }
 }
 

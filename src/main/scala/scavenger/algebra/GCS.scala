@@ -76,4 +76,12 @@ private[scavenger] object GCS {
 
   /** Constructor for functions which are non-zero at one single point */
   def apply[X](k: X, v: Double): GCS[X] = GCS(Map(k -> v))
+
+  /** Returns a GCS which is the characteristic function of the given set,
+    * that is, it takes every element of the set, multiplies it with scaling
+    * factor `1.0`, and adds the vectors together.
+    */
+  def charFct[X](set: Set[X]): GCS[X] = {
+    (for (elem <- set) yield basisVector(elem)).foldLeft(zero[X]){_ + _}
+  }
 }

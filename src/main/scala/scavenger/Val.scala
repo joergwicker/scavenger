@@ -4,6 +4,8 @@ import scala.collection.TraversableOnce
 import scala.collection.generic.CanBuildFrom
 import scala.concurrent.{Future, ExecutionContext}
 import scala.language.higherKinds
+import scavenger.util.Instance
+import scavenger.algebra.GCS
 
 /** Explicit value of type `X` that does not require any computation at all,
   * but might take some time to load from the remote cache.
@@ -15,6 +17,8 @@ import scala.language.higherKinds
 sealed trait NewValue[+X] {
   def identifier: Identifier
   def get(implicit ctx: BasicContext): Future[X]
+  protected[scavenger] def inputsInRam: Set[Instance]
+  protected[scavenger] def fullEvalSize: GCS[Instance]
 }
 
 /** A value that is available in the memory on this JVM.
@@ -25,6 +29,8 @@ extends NewValue[X] {
     import ctx.executionContext
     Future { value }
   }
+  protected[scavenger] def inputsInRam = Set(Instance(this))
+  protected[scavenger] def fullEvalSize = GCS.basisVector(Instance(this))
 }
 
 /** A value that can be easily retrieved from a (remote) cache.
@@ -33,6 +39,18 @@ private[scavenger] case class InCache[+X](identifier: Identifier)
 extends NewValue[X] {
   def get(implicit ctx: BasicContext): Future[X] = 
     ctx.loadFromCache(identifier)
+
+  /* This means: identifiers are tiny and lightweight, and occupy essentially
+   * no space.
+   */
+  protected[scavenger] def inputsInRam = Set.empty
+
+  /* This captures the fact that loading values from remote cache 
+   * can blow up their size by an arbitrarily large factor: we go from
+   * a tiny identifier to a potentially large data structure.
+   */
+  protected[scavenger] def fullEvalSize = 
+    GCS.basisVector(Instance(this)) * Double.PositiveInfinity
 }
 
 /** Pair of values, where both values can be scattered across multiple nodes.
@@ -46,6 +64,8 @@ extends NewValue[(X, Y)] {
     val fy = _2.get(ctx)
     for (vx <- fx; vy <- fy) yield (vx, vy)
   }
+  def inputsInRam = _1.inputsInRam ++ _2.inputsInRam
+  protected[scavenger] def fullEvalSize = _1.fullEvalSize + _2.fullEvalSize
 }
 
 /** A collection of fully evaluated values, which can be scattered across
@@ -65,4 +85,8 @@ extends NewValue[M[X]] {
     }
     Future.sequence(bldr1.result())(cbf2, ctx.executionContext)
   }
+  protected[scavenger] def inputsInRam = 
+    values.map(_.inputsInRam).foldLeft(Set.empty){_ ++ _}
+  protected[scavenger] def fullEvalSize = 
+    values.map(_.fullEvalSize).foldLeft(GCS.zero)(_ + _)
 }

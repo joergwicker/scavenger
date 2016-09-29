@@ -1,5 +1,8 @@
 package scavenger 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.collection.Set
+import scavenger.util.Instance
+import scavenger.TrivialJob.Size
 
 sealed trait TrivialAlgorithm[-X, +Y] {
 
@@ -12,7 +15,7 @@ sealed trait TrivialAlgorithm[-X, +Y] {
   /** Performs the actual computation in the specified context. */
   def compute(x: X)(implicit ctx: BasicContext): Future[Y]
 
-  import TrivialJob.Size
+  
 
   /** Returns a job that is equivalent to `this.apply(input)`, 
     * together with the exact size before compression, 
@@ -22,14 +25,15 @@ sealed trait TrivialAlgorithm[-X, +Y] {
     * it can be partially compressed (i.e. some of the sub-jobs can
     * be replaced by their compressed versions).
     */
-  /* (Somewhat surprisingly, this is exactly the signature of a helper 
-      method that I used in `TrivialApply._compressed`, so this method
-      actually seems quite natural) */
-  protected[scavenger] def _compress(
-    input: TrivialJob[X],
-    before: Size, 
-    after: Size
-  )(implicit ctx: BasicContext): Future[(TrivialJob[Y], Size, Size)]
+  // TODO CRUFT
+  // protected[scavenger] def _compress(
+  //   input: TrivialJob[X],
+  //   before: Size, 
+  //   after: Size
+  // )(implicit ctx: BasicContext): Future[(TrivialJob[Y], Size, Size)]
+
+  protected[scavenger] def inputsInRam(s: Set[Instance]): Set[Instance]
+  protected[scavenger] def fullEvalSize(s: Size): Size
 }
 
 abstract class TrivialAtomicAlgorithm[-X, +Y] extends TrivialAlgorithm[X, Y] {
@@ -40,22 +44,26 @@ abstract class TrivialAtomicAlgorithm[-X, +Y] extends TrivialAlgorithm[X, Y] {
    */
   def compressionFactor: Double
 
-  protected[scavenger] def _compress(
-    xCompressed: TrivialJob[X], 
-    xBefore: Size, 
-    xAfter: Size
-  )(implicit ctx: BasicContext): Future[(TrivialJob[Y], Size, Size)] = {
-    import ctx.executionContext
-    val yAfter = xAfter * f.compressionFactor
-    val partiallyEvaluated = TrivialApply(this, xCompressed)
-    if (yAfter < xBefore) {
-      for (fullyEvaluated <- partiallyCompressed) yield {
-        (TrivialValue(fullyEvaluated), xBefore, yAfter)
-      }
-    } else {
-      Future { (TrivialApply(xCompressed), xBefore, yAfter) }
-    }
-  }
+  // TODO CRUFT
+  // protected[scavenger] def _compress(
+  //   xCompressed: TrivialJob[X], 
+  //   xBefore: Size, 
+  //   xAfter: Size
+  // )(implicit ctx: BasicContext): Future[(TrivialJob[Y], Size, Size)] = {
+  //   import ctx.executionContext
+  //   val yAfter = xAfter * f.compressionFactor
+  //   val partiallyEvaluated = TrivialApply(this, xCompressed)
+  //   if (yAfter < xBefore) {
+  //     for (fullyEvaluated <- partiallyCompressed) yield {
+  //       (TrivialValue(fullyEvaluated), xBefore, yAfter)
+  //     }
+  //   } else {
+  //     Future { (TrivialApply(xCompressed), xBefore, yAfter) }
+  //   }
+  // }
+
+  protected[scavenger] def inputsInRam(s: Set[Instance]) = s
+  protected[scavenger] def fullEvalSize(s: Size) = s * compressionFactor
 }
 
 /** Do-nothing morphism.
@@ -66,14 +74,18 @@ abstract class TrivialAtomicAlgorithm[-X, +Y] extends TrivialAlgorithm[X, Y] {
   * different algorithms.
   */
 case class TrivialId[X]() extends TrivialAlgorithm[X, X] {
-  private[scavenger] def _compress(
-    input: TrivialJob[X], 
-    before: Size, 
-    after: Size
-  )(implicit ctx: BasicContext) = {
-    import ctx.executionContext
-    (input, before, after)
-  }
+  
+  // TODO CRUFT
+  // private[scavenger] def _compress(
+  //   input: TrivialJob[X], 
+  //   before: Size, 
+  //   after: Size
+  // )(implicit ctx: BasicContext) = {
+  //   import ctx.executionContext
+  //   (input, before, after)
+  // }
+  protected[scavenger] def inputsInRam(s: Set[Instance]) = s
+  protected[scavenger] def fullEvalSize(s: Size): Size = s
 }
 
 /** Formal composition of two algorithms.
@@ -85,24 +97,31 @@ case class TrivialComposition[-X, Y, +Z](
   second: TrivialAlgorithm[Y, Z],
   first: TrivialAlgorithm[X, Y]
 ) extends TrivialAlgorithm[X, Z] {
-  def compute(x: X)(implicit ctx: BasicContext): Future[Y] = {
+  def compute(x: X)(implicit ctx: BasicContext): Future[Z] = {
     import ctx.executionContext
     for {
       yIntermedRes <- first.compute(x)
       zRes <- second.compute(yIntermedRes)
     } yield zRes
   }
-  private[scavenger] def _compress(
-    input: TrivialJob[X], 
-    before: Size, 
-    after: Size
-  )(implicit ctx: BasicContext): Future[(TrivialJob[Z], Size, Size)] = {
-    import ctx.executionContext
-    for {
-      (y, yb, ya) <- first._compress(input, before, after)
-      result <- second._compress(y, yb, ya)
-    } yield result
-  }
+  
+  // TODO CRUFT
+  // private[scavenger] def _compress(
+  //   input: TrivialJob[X], 
+  //   before: Size, 
+  //   after: Size
+  // )(implicit ctx: BasicContext): Future[(TrivialJob[Z], Size, Size)] = {
+  //   import ctx.executionContext
+  //   for {
+  //     (y, yb, ya) <- first._compress(input, before, after)
+  //     result <- second._compress(y, yb, ya)
+  //   } yield result
+  // }
+
+  protected[scavenger] def inputsInRam(s: Set[Instance]) = 
+    second.inputsInRam(first.inputsInRam(s))
+  protected[scavenger] def fullEvalSize(s: Size) = 
+    second.fullEvalSize(first.fullEvalSize(s))
 }
 
 case class TrivialCouple[-X, +A, +B](
@@ -118,15 +137,11 @@ case class TrivialCouple[-X, +A, +B](
       rRes <- rFut
     } yield (lRes, rRes)
   }
-  private[scavenger] def transformSizeEstimates(before: Size, after: Size): 
-  (Size, Size) = {
-    val (lb, la) = transformSizeEstimates(before, after)
-    val (rb, ra) = transformSizeEstimates(before, after)
-    /* the `max` appears because we are essentially computing the characteristic
-       function of a union of two sets: the DAG-leaf nodes used in lb, and 
-       DAG-leaf nodes used in rb.
-    */
-    (lb.max(rb), la + ra)
+
+  protected[scavenger] def inputsInRam(s: Set[Instance]) = 
+    left.inputsInRam(s) ++ right.inputsInRam(s)
+  protected[scavenger] def fullEvalSize(s: Size) = {
+    left.fullEvalSize(s) + right.fullEvalSize(s)
   }
 }
 
@@ -164,10 +179,10 @@ case class TrivialCurry1[A, -B, +Z](
     } yield z
   }
 
-  private[scavenger] def transformSizeEstimates(before: Size, after: Size):
-  (Size, Size) = {
-
-  }
+  protected[scavenger] def inputsInRam(s: Set[Instance]) =
+    algorithm.inputsInRam(firstArgument.inputsInRam ++ s)
+  protected[scavenger] def fullEvalSize(s: Size) = 
+    algorithm.fullEvalSize(firstArgument.fullEvalSize + s)
 }
 
 
@@ -175,6 +190,18 @@ case class TrivialCurry2[-A, B, +Z](
   algorithm: TrivialAlgorithm[(A, B), Z],
   secondArgument: TrivialJob[B]
 ) extends TrivialAlgorithm[A, Z] {
-  def apply(firstArgument: TrivialJob[A]): TrivialJob[Z] = 
-    algorithm(TrivialPair(firstArgument, secondArgument))
+  def compute(firstArgument: A)(implicit ctx: BasicContext): Future[Z] = {
+    import ctx.executionContext
+    val aFut = firstArgument.evalAndGet
+    val bFut = secondArgument.evalAndGet
+    for {
+      a <- aFut
+      b <- bFut
+      z <- f.compute((a, b))
+    } yield z
+  }
+  protected[scavenger] def inputsInRam(s: Set[Instance]) = 
+    algorithm.inputsInRam(s ++ secondArgument.inputsInRam)
+  protected[scavenger] def fullEvalSize(s: Size) = 
+    algorithm.fullEvalSize(s + secondArgument.fullEvalSize)
 }

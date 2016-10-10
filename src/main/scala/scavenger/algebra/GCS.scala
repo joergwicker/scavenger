@@ -9,7 +9,7 @@ package scavenger.algebra
  * `Double`, with all operations defined point-wise. Therefore, `X` must 
  * provide reasonable `hashCode` and `equals` implementations.
  *
- * This class is used to represent symbolically size-estimates for 
+ * This class is used to represent symbolical size-estimates for 
  * certain data structures.
  *
  * @since 2.3
@@ -32,7 +32,7 @@ extends (X => Double) {
 
   def max(other: GCS[X]): GCS[X] = {
     val allKeys = underlying.keySet ++ other.underlying.keySet
-    GCS((for (k <- allkeys) yield (k, math.max(this(k), other(k)))).toMap)
+    GCS((for (k <- allKeys) yield (k, math.max(this(k), other(k)))).toMap)
   }
 
   override def toString = {

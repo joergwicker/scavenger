@@ -1,3 +1,5 @@
+package scavenger.algebra
+
 import scala.concurrent.{Future, ExecutionContext}
 import scala.language.higherKinds
 

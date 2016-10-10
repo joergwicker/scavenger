@@ -21,5 +21,5 @@ private[scavenger] class Instance(wrapped: AnyRef) {
     case anyRef: AnyRef => anyRef eq wrapped
     case _ => false
   }
-  override def hashCode(): Int = wrapped.identityHashCode
+  override def hashCode(): Int = java.lang.System.identityHashCode(wrapped)
 }

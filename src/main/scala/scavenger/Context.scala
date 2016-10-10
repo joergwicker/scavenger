@@ -48,13 +48,24 @@ trait Context {
     List[scavenger.categories.formalccc.Elem] 
 }
 
-
-trait BasicContext {
+trait TrivialContext {
   implicit def executionContext: ExecutionContext
   private[scavenger] def loadFromCache[X](id: Identifier): Future[X]
+  private[scavenger] def loadFromCache[X](selector: TrivialJob[X]): Future[X]
 }
 
-trait LocalContext extends BasicContext {
+/** 
+ * Computation context provided by the worker node, which does not 
+ * provide the possibility to look anything up in worker's cache.
+ * 
+ * Essentially the same as `TrivialContext` (corresponds to the fact that
+ * `IrreducibleJob` is a pure marker trait).
+ */
+trait IrreducibleContext extends TrivialContext {
+  
+}
+
+trait LocalContext extends IrreducibleContext {
   def submit[X](job: LocalComputation[X]): Future[X]
   def computeValue[X](job: LocalComputation[X]): Future[NewValue[X]]
 }

@@ -16,7 +16,7 @@ import scavenger.algebra.GCS
 // TODO: tear down old `Value`, replace by new `Value`
 sealed trait NewValue[+X] {
   def identifier: Identifier
-  def get(implicit ctx: BasicContext): Future[X]
+  def get(implicit ctx: TrivialContext): Future[X]
   protected[scavenger] def inputsInRam: Set[Instance]
   protected[scavenger] def fullEvalSize: GCS[Instance]
 }
@@ -25,19 +25,19 @@ sealed trait NewValue[+X] {
   */
 private[scavenger] case class InRam[+X](value: X, identifier: Identifier) 
 extends NewValue[X] {
-  def get(implicit ctx: BasicContext): Future[X] = {
+  def get(implicit ctx: TrivialContext): Future[X] = {
     import ctx.executionContext
     Future { value }
   }
-  protected[scavenger] def inputsInRam = Set(Instance(this))
-  protected[scavenger] def fullEvalSize = GCS.basisVector(Instance(this))
+  protected[scavenger] def inputsInRam = Set(new Instance(this))
+  protected[scavenger] def fullEvalSize = GCS.basisVector(new Instance(this))
 }
 
 /** A value that can be easily retrieved from a (remote) cache.
   */
 private[scavenger] case class InCache[+X](identifier: Identifier) 
 extends NewValue[X] {
-  def get(implicit ctx: BasicContext): Future[X] = 
+  def get(implicit ctx: TrivialContext): Future[X] = 
     ctx.loadFromCache(identifier)
 
   /* This means: identifiers are tiny and lightweight, and occupy essentially
@@ -50,7 +50,7 @@ extends NewValue[X] {
    * a tiny identifier to a potentially large data structure.
    */
   protected[scavenger] def fullEvalSize = 
-    GCS.basisVector(Instance(this)) * Double.PositiveInfinity
+    GCS.basisVector(new Instance(this)) * Double.PositiveInfinity
 }
 
 /** Pair of values, where both values can be scattered across multiple nodes.
@@ -58,7 +58,7 @@ extends NewValue[X] {
 case class ValuePair[+X, +Y](_1: NewValue[X], _2: NewValue[Y]) 
 extends NewValue[(X, Y)] {
   def identifier = ??? // TODO
-  def get(implicit ctx: BasicContext): Future[(X, Y)] = {
+  def get(implicit ctx: TrivialContext): Future[(X, Y)] = {
     import ctx.executionContext
     val fx = _1.get(ctx)
     val fy = _2.get(ctx)
@@ -77,7 +77,7 @@ case class Values[+X, M[+E] <: TraversableOnce[E]]
    cbf2: CanBuildFrom[M[Future[X]], X, M[X]]) 
 extends NewValue[M[X]] {
   def identifier = ??? // TODO: need better CCC's now...
-  def get(implicit ctx: BasicContext): Future[M[X]] = {
+  def get(implicit ctx: TrivialContext): Future[M[X]] = {
     import ctx.executionContext
     val bldr1 = cbf1(values)
     for (v <- values) {
@@ -86,7 +86,7 @@ extends NewValue[M[X]] {
     Future.sequence(bldr1.result())(cbf2, ctx.executionContext)
   }
   protected[scavenger] def inputsInRam = 
-    values.map(_.inputsInRam).foldLeft(Set.empty){_ ++ _}
+    values.map(_.inputsInRam).foldLeft(Set.empty[Instance]){_ ++ _}
   protected[scavenger] def fullEvalSize = 
-    values.map(_.fullEvalSize).foldLeft(GCS.zero)(_ + _)
+    values.map(_.fullEvalSize).foldLeft(GCS.zero[Instance])(_ + _)
 }

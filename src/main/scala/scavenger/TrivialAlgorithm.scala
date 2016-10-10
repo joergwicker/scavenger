@@ -13,9 +13,7 @@ sealed trait TrivialAlgorithm[-X, +Y] {
   def apply(t: TrivialJob[X]): TrivialJob[Y] = TrivialApply(this, t)
 
   /** Performs the actual computation in the specified context. */
-  def compute(x: X)(implicit ctx: BasicContext): Future[Y]
-
-  
+  def compute(x: X)(implicit ctx: TrivialContext): Future[Y]
 
   /** Returns a job that is equivalent to `this.apply(input)`, 
     * together with the exact size before compression, 
@@ -30,7 +28,7 @@ sealed trait TrivialAlgorithm[-X, +Y] {
   //   input: TrivialJob[X],
   //   before: Size, 
   //   after: Size
-  // )(implicit ctx: BasicContext): Future[(TrivialJob[Y], Size, Size)]
+  // )(implicit ctx: TrivialContext): Future[(TrivialJob[Y], Size, Size)]
 
   protected[scavenger] def inputsInRam(s: Set[Instance]): Set[Instance]
   protected[scavenger] def fullEvalSize(s: Size): Size
@@ -49,7 +47,7 @@ abstract class TrivialAtomicAlgorithm[-X, +Y] extends TrivialAlgorithm[X, Y] {
   //   xCompressed: TrivialJob[X], 
   //   xBefore: Size, 
   //   xAfter: Size
-  // )(implicit ctx: BasicContext): Future[(TrivialJob[Y], Size, Size)] = {
+  // )(implicit ctx: TrivialContext): Future[(TrivialJob[Y], Size, Size)] = {
   //   import ctx.executionContext
   //   val yAfter = xAfter * f.compressionFactor
   //   val partiallyEvaluated = TrivialApply(this, xCompressed)
@@ -75,12 +73,16 @@ abstract class TrivialAtomicAlgorithm[-X, +Y] extends TrivialAlgorithm[X, Y] {
   */
 case class TrivialId[X]() extends TrivialAlgorithm[X, X] {
   
+  def compute(x: X)(implicit ctx: TrivialContext): Future[X] = {
+    import ctx.executionContext
+    Future { x }
+  }
   // TODO CRUFT
   // private[scavenger] def _compress(
   //   input: TrivialJob[X], 
   //   before: Size, 
   //   after: Size
-  // )(implicit ctx: BasicContext) = {
+  // )(implicit ctx: TrivialContext) = {
   //   import ctx.executionContext
   //   (input, before, after)
   // }
@@ -97,7 +99,7 @@ case class TrivialComposition[-X, Y, +Z](
   second: TrivialAlgorithm[Y, Z],
   first: TrivialAlgorithm[X, Y]
 ) extends TrivialAlgorithm[X, Z] {
-  def compute(x: X)(implicit ctx: BasicContext): Future[Z] = {
+  def compute(x: X)(implicit ctx: TrivialContext): Future[Z] = {
     import ctx.executionContext
     for {
       yIntermedRes <- first.compute(x)
@@ -110,7 +112,7 @@ case class TrivialComposition[-X, Y, +Z](
   //   input: TrivialJob[X], 
   //   before: Size, 
   //   after: Size
-  // )(implicit ctx: BasicContext): Future[(TrivialJob[Z], Size, Size)] = {
+  // )(implicit ctx: TrivialContext): Future[(TrivialJob[Z], Size, Size)] = {
   //   import ctx.executionContext
   //   for {
   //     (y, yb, ya) <- first._compress(input, before, after)
@@ -128,7 +130,7 @@ case class TrivialCouple[-X, +A, +B](
   left: TrivialAlgorithm[X, A],
   right: TrivialAlgorithm[X, B]
 ) extends TrivialAlgorithm[X, (A, B)] {
-  def compute(x: X)(implicit ctx: BasicContext): Future[(A, B)] = {
+  def compute(x: X)(implicit ctx: TrivialContext): Future[(A, B)] = {
     import ctx.executionContext
     val lFut = left.compute(x)
     val rFut = right.compute(x)
@@ -148,7 +150,7 @@ case class TrivialCouple[-X, +A, +B](
 case class TrivialProj1[X, -Y](
   compressionFactor: Double = java.lang.Math.nextDown(1.0d)
 ) extends TrivialAtomicAlgorithm[(X, Y), X] {
-  def compute(xy: (X, Y))(implicit ctx: BasicContext): Future[X] = {
+  def compute(xy: (X, Y))(implicit ctx: TrivialContext): Future[X] = {
     import ctx.executionContext
     Future { xy._1 }
   }
@@ -157,7 +159,7 @@ case class TrivialProj1[X, -Y](
 case class TrivialProj2[-X, Y](
   compressionFactor: Double = java.lang.Math.nextDown(1.0d)
 ) extends TrivialAtomicAlgorithm[(X, Y), Y] {
-  def compute(xy: (X, Y))(implicit ctx: BasicContext): Future[Y] = {
+  def compute(xy: (X, Y))(implicit ctx: TrivialContext): Future[Y] = {
     import ctx.executionContext
     Future { xy._2 }
   }
@@ -168,14 +170,14 @@ case class TrivialCurry1[A, -B, +Z](
   firstArgument: TrivialJob[A]
 ) extends TrivialAlgorithm[B, Z] {
 
-  def compute(secondArgument: B)(implicit ctx: BasicContext): Future[Z] = {
+  def compute(b: B)
+    (implicit ctx: TrivialContext): Future[Z] = {
+
     import ctx.executionContext
     val aFut = firstArgument.evalAndGet
-    val bFut = secondArgument.evalAndGet
     for {
       a <- aFut
-      b <- bFut
-      z <- f.compute((a, b))
+      z <- algorithm.compute((a, b))
     } yield z
   }
 
@@ -185,19 +187,19 @@ case class TrivialCurry1[A, -B, +Z](
     algorithm.fullEvalSize(firstArgument.fullEvalSize + s)
 }
 
-
 case class TrivialCurry2[-A, B, +Z](
   algorithm: TrivialAlgorithm[(A, B), Z],
   secondArgument: TrivialJob[B]
 ) extends TrivialAlgorithm[A, Z] {
-  def compute(firstArgument: A)(implicit ctx: BasicContext): Future[Z] = {
+
+  def compute(a: A)
+    (implicit ctx: TrivialContext): Future[Z] = {
+
     import ctx.executionContext
-    val aFut = firstArgument.evalAndGet
     val bFut = secondArgument.evalAndGet
     for {
-      a <- aFut
       b <- bFut
-      z <- f.compute((a, b))
+      z <- algorithm.compute((a, b))
     } yield z
   }
   protected[scavenger] def inputsInRam(s: Set[Instance]) = 

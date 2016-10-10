@@ -1,6 +1,7 @@
 package scavenger 
 import scala.concurrent.{ExecutionContext, Future}
-import scala.collection.Set
+import scala.collection.immutable.Set
+import scavenger.algebra.FutNat
 import scavenger.util.Instance
 import scavenger.TrivialJob.Size
 
@@ -32,6 +33,11 @@ sealed trait TrivialAlgorithm[-X, +Y] {
 
   protected[scavenger] def inputsInRam(s: Set[Instance]): Set[Instance]
   protected[scavenger] def fullEvalSize(s: Size): Size
+
+  protected[scavenger] def mapChildren
+    (nat: FutNat[TrivialContext, TrivialJob, TrivialJob])
+    (implicit ctx: TrivialContext): 
+    Future[TrivialAlgorithm[X, Y]]
 }
 
 abstract class TrivialAtomicAlgorithm[-X, +Y] extends TrivialAlgorithm[X, Y] {
@@ -62,6 +68,17 @@ abstract class TrivialAtomicAlgorithm[-X, +Y] extends TrivialAlgorithm[X, Y] {
 
   protected[scavenger] def inputsInRam(s: Set[Instance]) = s
   protected[scavenger] def fullEvalSize(s: Size) = s * compressionFactor
+
+  protected[scavenger] def mapChildren
+    (nat: FutNat[TrivialContext, TrivialJob, TrivialJob])
+    (implicit ctx: TrivialContext): 
+    Future[TrivialAlgorithm[X, Y]] = {
+    
+    import ctx.executionContext
+    Future { this }
+
+  }
+
 }
 
 /** Do-nothing morphism.
@@ -88,6 +105,16 @@ case class TrivialId[X]() extends TrivialAlgorithm[X, X] {
   // }
   protected[scavenger] def inputsInRam(s: Set[Instance]) = s
   protected[scavenger] def fullEvalSize(s: Size): Size = s
+
+  protected[scavenger] def mapChildren
+    (nat: FutNat[TrivialContext, TrivialJob, TrivialJob])
+    (implicit ctx: TrivialContext): 
+    Future[TrivialAlgorithm[X, X]] = {
+    
+    import ctx.executionContext
+    Future { this }
+
+  }
 }
 
 /** Formal composition of two algorithms.
@@ -124,6 +151,22 @@ case class TrivialComposition[-X, Y, +Z](
     second.inputsInRam(first.inputsInRam(s))
   protected[scavenger] def fullEvalSize(s: Size) = 
     second.fullEvalSize(first.fullEvalSize(s))
+
+  protected[scavenger] def mapChildren
+    (nat: FutNat[TrivialContext, TrivialJob, TrivialJob])
+    (implicit ctx: TrivialContext): 
+    Future[TrivialAlgorithm[X, Z]] = {
+   
+    import ctx.executionContext
+
+    val fFut = first.mapChildren(nat) 
+    val sFut = second.mapChildren(nat)
+    for {
+      fRes <- fFut
+      sRes <- sFut
+    } yield TrivialComposition(sRes, fRes)
+
+  }
 }
 
 case class TrivialCouple[-X, +A, +B](
@@ -144,6 +187,22 @@ case class TrivialCouple[-X, +A, +B](
     left.inputsInRam(s) ++ right.inputsInRam(s)
   protected[scavenger] def fullEvalSize(s: Size) = {
     left.fullEvalSize(s) + right.fullEvalSize(s)
+  }
+
+  protected[scavenger] def mapChildren
+    (nat: FutNat[TrivialContext, TrivialJob, TrivialJob])
+    (implicit ctx: TrivialContext): 
+    Future[TrivialAlgorithm[X, (A, B)]] = {
+   
+    import ctx.executionContext
+
+    val lFut = left.mapChildren(nat) 
+    val rFut = right.mapChildren(nat)
+    for {
+      lRes <- lFut
+      rRes <- rFut
+    } yield TrivialCouple(lRes, rRes)
+
   }
 }
 
@@ -185,6 +244,22 @@ case class TrivialCurry1[A, -B, +Z](
     algorithm.inputsInRam(firstArgument.inputsInRam ++ s)
   protected[scavenger] def fullEvalSize(s: Size) = 
     algorithm.fullEvalSize(firstArgument.fullEvalSize + s)
+
+  protected[scavenger] def mapChildren
+    (nat: FutNat[TrivialContext, TrivialJob, TrivialJob])
+    (implicit ctx: TrivialContext): 
+    Future[TrivialAlgorithm[B, Z]] = {
+    
+    import ctx.executionContext
+
+    val aFut = algorithm.mapChildren(nat)
+    val fFut = nat(firstArgument)
+
+    for {
+      aRes <- aFut
+      fRes <- fFut
+    } yield TrivialCurry1(aRes, fRes)
+  }
 }
 
 case class TrivialCurry2[-A, B, +Z](
@@ -202,8 +277,25 @@ case class TrivialCurry2[-A, B, +Z](
       z <- algorithm.compute((a, b))
     } yield z
   }
+
   protected[scavenger] def inputsInRam(s: Set[Instance]) = 
     algorithm.inputsInRam(s ++ secondArgument.inputsInRam)
   protected[scavenger] def fullEvalSize(s: Size) = 
     algorithm.fullEvalSize(s + secondArgument.fullEvalSize)
+
+  protected[scavenger] def mapChildren
+    (nat: FutNat[TrivialContext, TrivialJob, TrivialJob])
+    (implicit ctx: TrivialContext): 
+    Future[TrivialAlgorithm[A, Z]] = {
+    
+    import ctx.executionContext
+
+    val aFut = algorithm.mapChildren(nat)
+    val sFut = nat(secondArgument)
+
+    for {
+      aRes <- aFut
+      sRes <- sFut
+    } yield TrivialCurry2(aRes, sRes)
+  }
 }

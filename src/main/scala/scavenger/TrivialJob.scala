@@ -2,7 +2,7 @@ package scavenger
 
 import scala.concurrent.{Future, ExecutionContext}
 import scala.collection.generic.CanBuildFrom
-import scala.collection.Set
+import scala.collection.immutable.{Set => iSet}
 import scala.collection.TraversableOnce
 import scala.language.higherKinds
 import scavenger.algebra.GCS
@@ -46,34 +46,42 @@ sealed trait TrivialJob[+X] {
   protected[scavenger] def inputsInRam: Set[Instance]
 
   /** Computes an estimate of the size of the fully evaluated job. */
-  protected[scavenger] def fullEvalSize: GCS[Instance]
+  protected[scavenger] def fullEvalSize: Size
 
   /** Applies `f` to all children, and then rebuilds a
     * formal job description of same shape.
     *
-    * Sort of "Asynchronous context-sensitive catamorphism".
+    * Sort of "Asynchronous context-sensitive quasi-catamorphism".
     */
-  /* [TODO: temporary deactivated until everything else compiles]
   protected[scavenger] def mapChildren
     (f: FutNat[TrivialContext, TrivialJob, TrivialJob])
     (implicit ctx: TrivialContext):
     Future[TrivialJob[X]]
-  */
 
   /** Returns an equivalent job which is maximally compressed for the 
     * serialization (that means: all trivial subjobs that could be 
     * compressed by evaluation, have been evaluated).
     */
-  /*
   private[scavenger] def compressed(implicit ctx: TrivialContext): 
   Future[TrivialJob[X]] = {
-    if (fullEvalSize < GCS.charFct(inputsInRam)) {
-      eval
-    } else {
-      mapChildren(_.compressed)
+
+    val nat = new FutNat[TrivialContext, TrivialJob, TrivialJob]() {
+      thisFutNat =>
+      def apply[X](j: TrivialJob[X])(implicit ctx: TrivialContext): 
+        Future[TrivialJob[X]] = {
+
+        import ctx.executionContext
+        if (j.fullEvalSize < GCS.charFct(j.inputsInRam)) {
+          for (fullyEvaluated <- j.eval) yield TrivialValue(fullyEvaluated)    
+        } else {
+          j.mapChildren(thisFutNat)
+        }
+      }
     }
+
+    nat(this)
   }
-  */
+  
 }
 
 /** Application of a trivial algorithm to a trivial computation 
@@ -105,11 +113,12 @@ case class TrivialApply[X, +Y](
   protected[scavenger] lazy val inputsInRam: Set[Instance] = {
     f.inputsInRam(x.inputsInRam)
   }
-  protected[scavenger] lazy val fullEvalSize: GCS[Instance] = {
+
+  import TrivialJob.Size
+  protected[scavenger] lazy val fullEvalSize: Size = {
     f.fullEvalSize(x.fullEvalSize)
   }
   
-  /*
   protected[scavenger] def mapChildren
     (nat: FutNat[TrivialContext, TrivialJob, TrivialJob])
     (implicit ctx: TrivialContext):
@@ -117,13 +126,14 @@ case class TrivialApply[X, +Y](
 
     import ctx.executionContext
 
+    val xFut = nat(x)
+    val fFut = f.mapChildren(nat)
     for {
-      mappedX <- nat(x)
-      mappedF <- f.mapChildren(nat)
-    } yield TrivialApply(mappedF, mappedX)
+      xRes <- xFut
+      fRes <- fFut
+    } yield TrivialApply(fRes, xRes)
 
   }
-  */
 
 }
 
@@ -146,8 +156,27 @@ case class TrivialPair[+X, +Y](
   
   protected[scavenger] lazy val inputsInRam: Set[Instance] = 
     _1.inputsInRam ++ _2.inputsInRam
-  protected[scavenger] lazy val fullEvalSize: GCS[Instance] = 
+
+  import TrivialJob.Size
+  protected[scavenger] lazy val fullEvalSize: Size = 
     _1.fullEvalSize + _2.fullEvalSize
+
+  protected[scavenger] def mapChildren
+    (nat: FutNat[TrivialContext, TrivialJob, TrivialJob])
+    (implicit ctx: TrivialContext):
+    Future[TrivialJob[(X, Y)]] = {
+
+    import ctx.executionContext
+
+    val f1 = nat(_1)
+    val f2 = nat(_2)
+
+    for {
+      res1 <- f1
+      res2 <- f2
+    } yield TrivialPair(res1, res2)
+
+  }
 }
 
 case class TrivialJobs[+X, M[+E] <: TraversableOnce[E]](jobs: M[TrivialJob[X]])
@@ -156,7 +185,9 @@ case class TrivialJobs[+X, M[+E] <: TraversableOnce[E]](jobs: M[TrivialJob[X]])
   cbf2: CanBuildFrom[M[Future[NewValue[X]]], NewValue[X], M[NewValue[X]]],
   cbf3: CanBuildFrom[M[NewValue[X]], Future[X], M[Future[X]]],
   cbf4: CanBuildFrom[M[Future[X]], X, M[X]],
-  cbf5: CanBuildFrom[M[TrivialJob[X]], TrivialJob[X], M[TrivialJob[X]]]
+  cbf5: CanBuildFrom[M[TrivialJob[X]], TrivialJob[X], M[TrivialJob[X]]],
+  cbf6: CanBuildFrom[M[TrivialJob[X]], Future[TrivialJob[X]], M[Future[TrivialJob[X]]]],
+  cbf7: CanBuildFrom[M[Future[TrivialJob[X]]], TrivialJob[X], M[TrivialJob[X]]]
 ) extends TrivialJob[M[X]] {
   def identifier = ??? // TODO
   def eval(implicit ctx: TrivialContext): Future[NewValue[M[X]]] = {
@@ -189,8 +220,26 @@ case class TrivialJobs[+X, M[+E] <: TraversableOnce[E]](jobs: M[TrivialJob[X]])
     jobs.map(_.inputsInRam).foldLeft(Set.empty[Instance])(_ ++ _)
   }
 
-  protected[scavenger] lazy val fullEvalSize: GCS[Instance] = {
+  import TrivialJob.Size
+  protected[scavenger] lazy val fullEvalSize: Size = {
     jobs.map(_.fullEvalSize).foldLeft(GCS.zero[Instance])(_ + _)
+  }
+
+  protected[scavenger] def mapChildren
+    (nat: FutNat[TrivialContext, TrivialJob, TrivialJob])
+    (implicit ctx: TrivialContext):
+    Future[TrivialJob[M[X]]] = {
+
+    import ctx.executionContext
+    
+    val futsBldr = cbf6(jobs)
+    for (j <- jobs) {
+      futsBldr += nat(j)
+    }
+    val futs = futsBldr.result
+    val fut = Future.sequence(futs)(cbf7, ctx.executionContext)
+    for (mappedJobs <- fut) yield TrivialJobs(mappedJobs)
+
   }
 }
 
@@ -211,30 +260,20 @@ case class TrivialValue[+X](value: NewValue[X]) extends TrivialJob[X] {
   //   Future { (this, GCS.basisVector(value.identifier), G)}
   // }
 
+  import TrivialJob.Size
   protected[scavenger] lazy val inputsInRam: Set[Instance] = value.inputsInRam
-  protected[scavenger] lazy val fullEvalSize: GCS[Instance] = value.fullEvalSize
-}
+  protected[scavenger] lazy val fullEvalSize: Size = value.fullEvalSize
 
-/** A trivial job that is delegated to the remote cache node.
-  * 
-  * The job is expected to be "compressing" in the sense that
-  * the result of the computation is smaller than 
-  * the inputs loaded from the cache. 
-  * For example, retrieving a value from the cache and 
-  * applying a projection to it, would be a typical selector-job,
-  * which should be executed on the cache node.
-  */
-/* CRUFT: deemed unnecessary 2016-10-10; subjobs of this kind will be extracted
- * on-demand.
- *
-case class TrivialSelectorJob[+X](selector: TrivialJob[X])
-extends TrivialJob[X] {
+  protected[scavenger] def mapChildren
+    (nat: FutNat[TrivialContext, TrivialJob, TrivialJob])
+    (implicit ctx: TrivialContext):
+    Future[TrivialJob[X]] = {
 
-  def eval(implicit ctx: TrivialContext): Future[NewValue[X]] = {
-    ctx.loadFromCache(selector)
+    import ctx.executionContext
+    
+    Future { this }
   }
 }
-*/
 
 object TrivialJob {
   private[scavenger] type Size = algebra.GCS[Instance]

@@ -23,7 +23,7 @@ class TrivialContext(printActions: Boolean) extends Context {
   }
   def asExplicitComputation[X](r: Computation[X]): 
     Future[ExplicitComputation[X]] = {
-    for (x <- submit(r)) yield Value(r.identifier, x, CachingPolicy.Nowhere)
+    for (x <- submit(r)) yield OldValue(r.identifier, x, CachingPolicy.Nowhere)
   }
 
   private[scavenger] def dumpCacheKeys = Nil

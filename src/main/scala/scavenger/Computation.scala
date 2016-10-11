@@ -174,7 +174,7 @@ trait Computation[+X] extends scala.Serializable { outer =>
 
 object Computation {
   def apply[X](id: String, x: X): Computation[X] = 
-    Value(new formalccc.Atom(id), x, CachingPolicy.Nowhere)
+    OldValue(new formalccc.Atom(id), x, CachingPolicy.Nowhere)
 
   /** Creates an ad-hoc computation with UUID as identifier
     */

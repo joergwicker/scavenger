@@ -42,22 +42,22 @@ with ContextProvider {
   // this map, we store promises for futures that require multiple passes
   // through the actor-receive-handlers
   private var internalSchedulerJobId: Long = 0
-  private val simplifiedJobs = new HashMap[Long, Promise[Value[Any]]]
+  private val simplifiedJobs = new HashMap[Long, Promise[OldValue[Any]]]
 
   /** Decomposes a potentially complex job and schedules
     * individual parts for computation.
     */
-  def schedule(job: Computation[Any]): Future[Value[Any]] = {
+  def schedule(job: Computation[Any]): Future[OldValue[Any]] = {
     
     val result = if (mustScheduleHere(job.cachingPolicy, job.difficulty)) {
       // no choice, we are forced to schedule it right here,
       // we can not delegate it anyway, so there is no
       // reason to try to simplify it.
       for(x <- computeHere(job)) 
-        yield Value(job.identifier, x, job.cachingPolicy)
+        yield OldValue(job.identifier, x, job.cachingPolicy)
     } else {
       // Here is where we need the boilerplate-hash-map
-      val p = Promise[Value[Any]]()
+      val p = Promise[OldValue[Any]]()
       val ijid = internalSchedulerJobId
       internalSchedulerJobId += 1
       simplifiedJobs(ijid) = p
@@ -75,7 +75,7 @@ with ContextProvider {
       } pipeTo self
     }
     case FinalResultSimplifiedJob(id, res, ijid) => {
-      simplifiedJobs(ijid).success(Value(id, res, CachingPolicy.Nowhere))
+      simplifiedJobs(ijid).success(OldValue(id, res, CachingPolicy.Nowhere))
       simplifiedJobs.remove(ijid)
     }
   } : Receive)

@@ -1,20 +1,24 @@
 package scavenger 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.collection.immutable.Set
-import scavenger.algebra.FutNat
+import scala.collection.IndexedSeq
+import scala.language.higherKinds
+import scavenger.algebra.categories.FutNat
 import scavenger.util.Instance
 import scavenger.TrivialJob.Size
 
 sealed trait TrivialAlgorithm[-X, +Y] {
 
+  /** Performs the actual computation in the specified context. */
+  def compute(x: X)(implicit ctx: TrivialContext): Future[Y]
+
   /** Transforms a trivial job with parameter `X` into a trivial job with
-    * parameter `Y`. The application is formal, no actual computation takes
+    * parameter `Y` by appending itself. 
+    * 
+    * The application is formal, no actual computation takes
     * place until `eval` is called on the resulting `TrivialJob`.
     */
   def apply(t: TrivialJob[X]): TrivialJob[Y] = TrivialApply(this, t)
-
-  /** Performs the actual computation in the specified context. */
-  def compute(x: X)(implicit ctx: TrivialContext): Future[Y]
 
   /** Returns a job that is equivalent to `this.apply(input)`, 
     * together with the exact size before compression, 
@@ -206,7 +210,7 @@ case class TrivialCouple[-X, +A, +B](
   }
 }
 
-case class TrivialProj1[X, -Y](
+case class TrivialFst[X, -Y](
   compressionFactor: Double = java.lang.Math.nextDown(1.0d)
 ) extends TrivialAtomicAlgorithm[(X, Y), X] {
   def compute(xy: (X, Y))(implicit ctx: TrivialContext): Future[X] = {
@@ -215,7 +219,7 @@ case class TrivialProj1[X, -Y](
   }
 }
 
-case class TrivialProj2[-X, Y](
+case class TrivialSnd[-X, Y](
   compressionFactor: Double = java.lang.Math.nextDown(1.0d)
 ) extends TrivialAtomicAlgorithm[(X, Y), Y] {
   def compute(xy: (X, Y))(implicit ctx: TrivialContext): Future[Y] = {
@@ -224,7 +228,17 @@ case class TrivialProj2[-X, Y](
   }
 }
 
-case class TrivialCurry1[A, -B, +Z](
+case class TrivialProj[X, M[+E] <: IndexedSeq[E]](
+  index: Int,
+  compressionFactor: Double = java.lang.Math.nextDown(1.0d)
+) extends TrivialAtomicAlgorithm[M[X], X] {
+  def compute(xs: M[X])(implicit ctx: TrivialContext): Future[X] = {
+    import ctx.executionContext
+    Future { xs(index) }
+  }
+}
+
+case class TrivialCurryFst[A, -B, +Z](
   algorithm: TrivialAlgorithm[(A, B), Z],
   firstArgument: TrivialJob[A]
 ) extends TrivialAlgorithm[B, Z] {
@@ -258,11 +272,11 @@ case class TrivialCurry1[A, -B, +Z](
     for {
       aRes <- aFut
       fRes <- fFut
-    } yield TrivialCurry1(aRes, fRes)
+    } yield TrivialCurryFst(aRes, fRes)
   }
 }
 
-case class TrivialCurry2[-A, B, +Z](
+case class TrivialCurrySnd[-A, B, +Z](
   algorithm: TrivialAlgorithm[(A, B), Z],
   secondArgument: TrivialJob[B]
 ) extends TrivialAlgorithm[A, Z] {
@@ -296,6 +310,6 @@ case class TrivialCurry2[-A, B, +Z](
     for {
       aRes <- aFut
       sRes <- sFut
-    } yield TrivialCurry2(aRes, sRes)
+    } yield TrivialCurrySnd(aRes, sRes)
   }
 }

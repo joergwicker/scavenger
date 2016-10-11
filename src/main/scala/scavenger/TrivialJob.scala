@@ -3,10 +3,10 @@ package scavenger
 import scala.concurrent.{Future, ExecutionContext}
 import scala.collection.generic.CanBuildFrom
 import scala.collection.immutable.{Set => iSet}
-import scala.collection.TraversableOnce
+import scala.collection.IndexedSeq
 import scala.language.higherKinds
 import scavenger.algebra.GCS
-import scavenger.algebra.FutNat
+import scavenger.algebra.categories.FutNat
 import scavenger.util.Instance
 
 /** `TrivialJob` requires only a `TrivialContext` to compute its value,
@@ -28,9 +28,9 @@ sealed trait TrivialJob[+X] {
   
   def identifier: scavenger.Identifier
 
-  /** Computes the result as `NewValue`
+  /** Computes the result as `Value`
     */
-  def eval(implicit ctx: TrivialContext): Future[NewValue[X]]
+  def eval(implicit ctx: TrivialContext): Future[Value[X]]
 
   /** Computes and loads the result into memory of this JVM */
   def evalAndGet(implicit ctx: TrivialContext): Future[X] = {
@@ -82,6 +82,7 @@ sealed trait TrivialJob[+X] {
     nat(this)
   }
   
+  def zip[Y](other: TrivialJob[Y]) = TrivialPair(this, other)
 }
 
 /** Application of a trivial algorithm to a trivial computation 
@@ -92,7 +93,7 @@ case class TrivialApply[X, +Y](
   x: TrivialJob[X]
 ) extends TrivialJob[Y] {
   def identifier = ??? // TODO
-  def eval(implicit ctx: TrivialContext): Future[NewValue[Y]] = {
+  def eval(implicit ctx: TrivialContext): Future[Value[Y]] = {
     import ctx.executionContext
     for {
       xLoaded <- x.evalAndGet
@@ -144,7 +145,7 @@ case class TrivialPair[+X, +Y](
   _2: TrivialJob[Y]
 ) extends TrivialJob[(X, Y)] {
   def identifier = ??? // TODO
-  def eval(implicit ctx: TrivialContext): Future[NewValue[(X, Y)]] = {
+  def eval(implicit ctx: TrivialContext): Future[Value[(X, Y)]] = {
     import ctx.executionContext
     val xFut = _1.eval
     val yFut = _2.eval
@@ -179,18 +180,18 @@ case class TrivialPair[+X, +Y](
   }
 }
 
-case class TrivialJobs[+X, M[+E] <: TraversableOnce[E]](jobs: M[TrivialJob[X]])
+case class TrivialJobs[+X, M[+E] <: IndexedSeq[E]](jobs: M[TrivialJob[X]])
 (implicit
-  cbf1: CanBuildFrom[M[TrivialJob[X]], Future[NewValue[X]], M[Future[NewValue[X]]]],
-  cbf2: CanBuildFrom[M[Future[NewValue[X]]], NewValue[X], M[NewValue[X]]],
-  cbf3: CanBuildFrom[M[NewValue[X]], Future[X], M[Future[X]]],
+  cbf1: CanBuildFrom[M[TrivialJob[X]], Future[Value[X]], M[Future[Value[X]]]],
+  cbf2: CanBuildFrom[M[Future[Value[X]]], Value[X], M[Value[X]]],
+  cbf3: CanBuildFrom[M[Value[X]], Future[X], M[Future[X]]],
   cbf4: CanBuildFrom[M[Future[X]], X, M[X]],
   cbf5: CanBuildFrom[M[TrivialJob[X]], TrivialJob[X], M[TrivialJob[X]]],
   cbf6: CanBuildFrom[M[TrivialJob[X]], Future[TrivialJob[X]], M[Future[TrivialJob[X]]]],
   cbf7: CanBuildFrom[M[Future[TrivialJob[X]]], TrivialJob[X], M[TrivialJob[X]]]
 ) extends TrivialJob[M[X]] {
   def identifier = ??? // TODO
-  def eval(implicit ctx: TrivialContext): Future[NewValue[M[X]]] = {
+  def eval(implicit ctx: TrivialContext): Future[Value[M[X]]] = {
     import ctx.executionContext
     val futsBldr = cbf1(jobs)
     for (f <- jobs.map({_.eval(ctx)})) {
@@ -244,9 +245,9 @@ case class TrivialJobs[+X, M[+E] <: TraversableOnce[E]](jobs: M[TrivialJob[X]])
 }
 
 /** Wrapper for `Value`; requires no further evaluation. */
-case class TrivialValue[+X](value: NewValue[X]) extends TrivialJob[X] {
+case class TrivialValue[+X](value: Value[X]) extends TrivialJob[X] {
   def identifier = value.identifier
-  def eval(implicit ctx: TrivialContext): Future[NewValue[X]] = {
+  def eval(implicit ctx: TrivialContext): Future[Value[X]] = {
     import ctx.executionContext
     Future { value }
   }

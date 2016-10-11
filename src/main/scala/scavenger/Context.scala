@@ -67,10 +67,10 @@ trait IrreducibleContext extends TrivialContext {
 
 trait LocalContext extends IrreducibleContext {
   def submit[X](job: LocalComputation[X]): Future[X]
-  def computeValue[X](job: LocalComputation[X]): Future[NewValue[X]]
+  def computeValue[X](job: LocalComputation[X]): Future[Value[X]]
 }
 
 trait DistributedContext extends LocalContext {
   def submit[X](job: DistributedComputation[X]): Future[X]
-  def computeValue[X](job: DistributedComputation[X]): Future[NewValue[X]]
+  def computeValue[X](job: DistributedComputation[X]): Future[Value[X]]
 }

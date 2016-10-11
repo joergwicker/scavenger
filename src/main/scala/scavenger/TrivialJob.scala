@@ -101,16 +101,6 @@ case class TrivialApply[X, +Y](
     } yield InRam(yResult, this.identifier)
   }
 
-  // TODO CRUFT
-  // protected[scavenger] def _compressed(implicit ctx: TrivialContext): 
-  // Future[(TrivialJob[Y], Size, Size)] = {
-  //   import ctx.executionContext
-  //   for {
-  //     (xCompressed, xBefore, xAfter) <- x._compressed
-  //     result <- f._compress(xCompressed, xBefore, xAfter)
-  //   } yield result
-  // }
-
   protected[scavenger] lazy val inputsInRam: Set[Instance] = {
     f.inputsInRam(x.inputsInRam)
   }
@@ -180,42 +170,23 @@ case class TrivialPair[+X, +Y](
   }
 }
 
-case class TrivialJobs[+X, M[+E] <: IndexedSeq[E]](jobs: M[TrivialJob[X]])
-(implicit
-  cbf1: CanBuildFrom[M[TrivialJob[X]], Future[Value[X]], M[Future[Value[X]]]],
-  cbf2: CanBuildFrom[M[Future[Value[X]]], Value[X], M[Value[X]]],
-  cbf3: CanBuildFrom[M[Value[X]], Future[X], M[Future[X]]],
-  cbf4: CanBuildFrom[M[Future[X]], X, M[X]],
-  cbf5: CanBuildFrom[M[TrivialJob[X]], TrivialJob[X], M[TrivialJob[X]]],
-  cbf6: CanBuildFrom[M[TrivialJob[X]], Future[TrivialJob[X]], M[Future[TrivialJob[X]]]],
-  cbf7: CanBuildFrom[M[Future[TrivialJob[X]]], TrivialJob[X], M[TrivialJob[X]]]
-) extends TrivialJob[M[X]] {
+case class TrivialJobs[X, +CC[E] <: scavenger.GenericProduct[E, CC]]
+(jobs: CC[TrivialJob[X]]) extends TrivialJob[CC[X]] {
   def identifier = ??? // TODO
-  def eval(implicit ctx: TrivialContext): Future[Value[M[X]]] = {
+  def eval(implicit ctx: TrivialContext): Future[Value[CC[X]]] = {
     import ctx.executionContext
-    val futsBldr = cbf1(jobs)
-    for (f <- jobs.map({_.eval(ctx)})) {
-      futsBldr += f
-    }
-    val futs = futsBldr.result()
-    val fut = Future.sequence(futs)(cbf2, ctx.executionContext)
-    for (values <- fut) yield Values(values)(cbf3, cbf4)
+
+    val fvCbf = genProdCbf[CC, Future[Value[X]]](jobs)
+    val vCbf = genProdCbf[CC, Value[X]](jobs)
+
+    val futs: CC[Future[Value[X]]] = jobs.map(_.eval(ctx))(fvCbf)
+    val fut: Future[CC[Value[X]]] = 
+      Future.sequence(futs)(vCbf, ctx.executionContext)
+
+    for (values <- fut) yield Values(values)
   }
 
   import TrivialJob._
-  // CRUFT TODO
-  // protected def _compressed: Future[(TrivialJob[M[X]], Size, Size)] = {
-  //   val compressedJobs = for (j <- jobs) yield j._compressed
-  //   var maxBefore = GCS.zero[Identifier]
-  //   var sumAfter = GCS.zero[Identifier]
-  //   for ((_, b, a) <- compressedJobs) {
-  //     maxBefore = maxBefore.max(b)
-  //     sumAfter += a
-  //   }
-  //   val bldr = cbf5(jobs)
-  //   for (j <- compressedJobs) bldr += j._1
-  //   (TrivialJobs(bldr.result()), sumBefore, sumAfter)
-  // }
 
   protected[scavenger] lazy val inputsInRam: Set[Instance] = {
     jobs.map(_.inputsInRam).foldLeft(Set.empty[Instance])(_ ++ _)
@@ -229,16 +200,15 @@ case class TrivialJobs[+X, M[+E] <: IndexedSeq[E]](jobs: M[TrivialJob[X]])
   protected[scavenger] def mapChildren
     (nat: FutNat[TrivialContext, TrivialJob, TrivialJob])
     (implicit ctx: TrivialContext):
-    Future[TrivialJob[M[X]]] = {
+    Future[TrivialJob[CC[X]]] = {
 
     import ctx.executionContext
     
-    val futsBldr = cbf6(jobs)
-    for (j <- jobs) {
-      futsBldr += nat(j)
-    }
-    val futs = futsBldr.result
-    val fut = Future.sequence(futs)(cbf7, ctx.executionContext)
+    val fjCbf = genProdCbf[CC, Future[TrivialJob[X]]](jobs)
+    val jCbf = genProdCbf[CC, TrivialJob[X]](jobs)
+
+    val futs = jobs.map(j => nat(j))(fjCbf)
+    val fut = Future.sequence(futs)(jCbf, ctx.executionContext)
     for (mappedJobs <- fut) yield TrivialJobs(mappedJobs)
 
   }
@@ -251,15 +221,6 @@ case class TrivialValue[+X](value: Value[X]) extends TrivialJob[X] {
     import ctx.executionContext
     Future { value }
   }
-
-  // TODO CRUFT
-  // protected[scavenger] def _compressed: Future[(TrivialJob[])]
-  // protected[scavenger] def _compressed(implicit ctx: TrivialContext): 
-  // Future[(TrivialJob[X], Size, Size)] = {
-  //   import ctx.executionContext
-  //   val bv = GCS.basisVector(value.identifier)
-  //   Future { (this, GCS.basisVector(value.identifier), G)}
-  // }
 
   import TrivialJob.Size
   protected[scavenger] lazy val inputsInRam: Set[Instance] = value.inputsInRam

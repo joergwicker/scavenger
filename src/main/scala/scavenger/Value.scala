@@ -74,19 +74,14 @@ extends Value[(X, Y)] {
 /** A collection of fully evaluated values, which can be scattered across
   * multiple nodes.
   */
-case class Values[+X, M[+E] <: TraversableOnce[E]]
-  (values: M[Value[X]])
-  (implicit cbf1: CanBuildFrom[M[Value[X]], Future[X], M[Future[X]]],
-   cbf2: CanBuildFrom[M[Future[X]], X, M[X]]) 
-extends Value[M[X]] {
+case class Values[X, +CC[E] <: scavenger.GenericProduct[E, CC]]
+(values: CC[Value[X]]) extends Value[CC[X]] {
   def identifier = ??? // TODO: need better CCC's now...
-  def get(implicit ctx: TrivialContext): Future[M[X]] = {
+  def get(implicit ctx: TrivialContext): Future[CC[X]] = {
     import ctx.executionContext
-    val bldr1 = cbf1(values)
-    for (v <- values) {
-      bldr1 += v.get(ctx)
-    }
-    Future.sequence(bldr1.result())(cbf2, ctx.executionContext)
+    val fCbf = genProdCbf[CC, Future[X]](values)
+    val futs = values.map(_.get(ctx))(fCbf)
+    Future.sequence(futs)(genProdCbf[CC, X](values), ctx.executionContext)
   }
   protected[scavenger] def inputsInRam = 
     values.map(_.inputsInRam).foldLeft(Set.empty[Instance]){_ ++ _}

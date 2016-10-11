@@ -1,11 +1,12 @@
 import scala.concurrent.Future
 import scala.language.implicitConversions
+import scala.language.higherKinds
 import scavenger.categories.formalccc
 
 /** Contains the API and an Akka-backend implementation of the 
   * Scavenger framework.
   */
-package object scavenger extends Serializable{
+package object scavenger /* TODO: why was it here??: extends Serializable */ {
   type Identifier = String
 
   // Three castings into the canonical form of a morphism
@@ -70,4 +71,46 @@ package object scavenger extends Serializable{
     def apply(a: Computation[A], b: Computation[B]): Computation[(A, B)] =
       ComputationPair(a, b)
   }
+
+  import scala.collection.GenTraversable
+  import scala.collection.IndexedSeqLike
+  import scala.collection.generic.CanBuildFrom
+  import scala.collection.mutable.Builder
+  import scala.collection.generic.GenericTraversableTemplate
+
+  /**
+   * This is an interface for a collection type that can be conveniently 
+   * used for products (in the sense of cartesian closed categories)
+   * with more than two components. It should at least subsume `Vector` and
+   * wrapped arrays.
+   *
+   * The `IndexedSeqLike` makes sure that we can quickly access elements of
+   * the product by index (necessary to implement projections).
+   * 
+   * Moreover, `IndexedSeqLike` makes sure that the right type of collection
+   * is used when we try to apply `map` and `flatMap`. If we used 
+   * `IndexedSeq` instead, we would lose the exact type of the collection
+   * (e.g. `WrappedArray` or `Vector`).
+   *
+   * `GenericTraversableTemplate` is there because it provides a 
+   * polymorphic `genericBuilder`.
+   *
+   * 
+   */
+  private[scavenger] type GenericProduct[E, +CC[X] <: IndexedSeq[X]] = 
+    IndexedSeq[E] with
+    IndexedSeqLike[E, CC[E]] with 
+    GenericTraversableTemplate[E, CC]
+
+  /** Special CBF's used inside collection-valued jobs.
+    *
+    */
+  private[scavenger] def genProdCbf[CC[X] <: GenericProduct[X, CC], Y]
+    (prototype: CC[_]) =
+    new CanBuildFrom[CC[_], Y, CC[Y]] {
+      // Here is why we need a "prototype"
+      // If you have a better idea, you can try to get rid of it
+      def apply(): Builder[Y, CC[Y]] = prototype.genericBuilder[Y]
+      def apply(coll: CC[_]): Builder[Y, CC[Y]] = coll.genericBuilder[Y]
+    }
 }

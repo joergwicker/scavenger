@@ -79,9 +79,9 @@ case class Values[X, +CC[E] <: scavenger.GenericProduct[E, CC]]
   def identifier = ??? // TODO: need better CCC's now...
   def get(implicit ctx: TrivialContext): Future[CC[X]] = {
     import ctx.executionContext
-    val fCbf = genProdCbf[CC, Future[X]](values)
+    val fCbf = genProdCbf[CC, Future[X]]
     val futs = values.map(_.get(ctx))(fCbf)
-    Future.sequence(futs)(genProdCbf[CC, X](values), ctx.executionContext)
+    Future.sequence(futs)(genProdCbf[CC, X], ctx.executionContext)
   }
   protected[scavenger] def inputsInRam = 
     values.map(_.inputsInRam).foldLeft(Set.empty[Instance]){_ ++ _}

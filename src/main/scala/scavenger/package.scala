@@ -105,12 +105,21 @@ package object scavenger /* TODO: why was it here??: extends Serializable */ {
   /** Special CBF's used inside collection-valued jobs.
     *
     */
-  private[scavenger] def genProdCbf[CC[X] <: GenericProduct[X, CC], Y]
-    (prototype: CC[_]) =
+  private[scavenger] def genProdCbf[CC[X] <: GenericProduct[X, CC], Y] =
     new CanBuildFrom[CC[_], Y, CC[Y]] {
-      // Here is why we need a "prototype"
-      // If you have a better idea, you can try to get rid of it
-      def apply(): Builder[Y, CC[Y]] = prototype.genericBuilder[Y]
+      def apply(): Builder[Y, CC[Y]] = {
+        throw new AssertionError(
+          "'This should never happen: genProdCbf.apply()' " + 
+          "Something or someone attempted to call `CanBuildFrom.apply()` on " +
+          "a `scavenger.genProdCbf`. However, `CanBuildFrom[_,_,_]` is " +
+          "contravariant in the first parameter, but `Unit` is never a " +
+          "subclass for any collection type. Therefore, forcing each " +
+          "`CanBuildFrom[X,...]` to be a `CanBuildFrom[Unit,...] " +
+          "is just pure evil, so this operation is not supported, " +
+          "and should never be used. " +
+          "If you see this message, then there is a bug in the framework. "
+        )
+      }
       def apply(coll: CC[_]): Builder[Y, CC[Y]] = coll.genericBuilder[Y]
     }
 }

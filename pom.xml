@@ -137,6 +137,7 @@
             <configuration>
               <executable>javac</executable>
               <arguments>
+                <argument>${basedir}/codegen/Complexity.java</argument>
                 <argument>${basedir}/codegen/Template.java</argument>
                 <argument>${basedir}/codegen/GenerateScavengerComputationAPI.java</argument>
               </arguments>

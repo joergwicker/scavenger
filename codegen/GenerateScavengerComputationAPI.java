@@ -24,6 +24,13 @@ import static java.lang.System.*;
  * It then grabs some of the templates in `/src/main/codegen/`, 
  * fills out the gaps, and saves the generated files in 
  * `${sourceManaged}/main/scala/`.
+ *
+ * The generated API does NOT include: 
+ * - size estimations 
+ * - resoure identification (only Strings for atomic algorithms and resources)
+ * - any evaluation
+ * - anything compression-related
+ * - any explicit caching and stuff like that
  */
 public class GenerateScavengerComputationAPI {
 
@@ -31,11 +38,12 @@ public class GenerateScavengerComputationAPI {
   throws IOException {
     LinkedList<Template> result = new LinkedList<Template>();
 
-    for (int i : Complexity.values()) {
-      Template t = new Template(
-        "main/codegen-scala/scavenger/Id.scala"
-      );
-      result.add(t.subst("body", "/* a comment for " + i + " */"));
+    for (Complexity complexity : Complexity.values()) {
+      Template xJob = new Template("main/codegen-scala/scavenger/XJob.scala");
+      result.add(xJob.subst("x", "BLOCKED" + complexity.prefix));
+      Template xAlgorithm = 
+        new Template("main/codegen-scala/scavenger/XAlgorithm.scala");
+      result.add(xAlgorithm.subst("x", "BLOCKED" + complexity.prefix));
     }
     return result;
   }

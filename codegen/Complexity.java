@@ -2,6 +2,7 @@ public enum Complexity {
   
   DISTRIBUTED("Distributed", 1000),
   LOCAL("Local", 500),
+  IRREDUCIBLE("Irreducible", 250),
   TRIVIAL("Trivial", 50);
 
   public final String prefix;

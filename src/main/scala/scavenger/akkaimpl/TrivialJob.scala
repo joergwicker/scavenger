@@ -1,4 +1,4 @@
-package scavenger
+package scavenger.akkaimpl
 
 import scala.concurrent.{Future, ExecutionContext}
 import scala.collection.generic.CanBuildFrom

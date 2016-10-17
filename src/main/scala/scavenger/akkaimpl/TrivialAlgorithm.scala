@@ -1,4 +1,4 @@
-package scavenger 
+package scavenger.akkaimpl
 import scala.concurrent.{ExecutionContext, Future}
 import scala.collection.immutable.Set
 import scala.collection.IndexedSeq

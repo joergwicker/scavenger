@@ -4,15 +4,17 @@ import static java.nio.file.Paths.get;
 
 public class Template {
   public final String code;
-  public final String relativePath;
+  public final String relativeDirname;
+  public final String fileName;
 
   /** 
    * Creates a template with content `code` that will be 
-   * saved under `{sourceManagedDir}/{relativePath}`.
+   * saved under `{sourceManagedDir}/{relativeDirname}/{fileName}`.
    */
-  public Template(String relativePath, String code) {
+  public Template(String relativeDirname, String fileName, String code) {
+    this.relativeDirname = relativeDirname;
+    this.fileName = fileName;
     this.code = code;
-    this.relativePath = relativePath;
   }
 
   /** 
@@ -22,7 +24,8 @@ public class Template {
    */
   public Template(String relativeTemplatePath) throws IOException {
     this(
-      relativeTemplatePath.replaceAll("codegen-", ""),
+      dirname(relativeTemplatePath.replaceAll("codegen-", "")),
+      basename(relativeTemplatePath),
       new String(readAllBytes(get("src/" + relativeTemplatePath)))
     );
   }
@@ -33,21 +36,121 @@ public class Template {
    */
   public Template subst(String gapName, String replacement) {
     return new Template(
-      relativePath,
+      relativeDirname,
+      fileName,
       code.replaceAll("<<" + gapName + ">>", replacement)
     );
   }
 
+  /**
+   * Substitutes preserving indentation.
+   *
+   * If the line where the gap marker occurs does not start with indented
+   * gap marker, the replacement is plugged in as-is.
+   */
+  public Template substIndent(String gapName, String replacement) {
+    String gapMarker = "<<" + gapName + ">>";
+    StringBuilder bldr = new StringBuilder();
+    int previousMatchEnd = 0;
+    int nextMatchPos = -1;
+    while ((nextMatchPos = code.indexOf(gapMarker, previousMatchEnd)) >= 0) {
+      // Search the start of the whitespace before gap marker
+      int whitespaceBegin = nextMatchPos - 1;
+      boolean isWhitespaceAfterLineBreak = false;
+      while (
+        whitespaceBegin >= 0 &&
+        code.charAt(whitespaceBegin) != '\n' &&
+        Character.isWhitespace(code.charAt(whitespaceBegin))
+      ) {
+        whitespaceBegin --;
+      }
+
+      isWhitespaceAfterLineBreak = 
+        (whitespaceBegin >= 0 && code.charAt(whitespaceBegin) == '\n') ||
+        (whitespaceBegin == -1);
+
+      whitespaceBegin ++; // eliminate lookahead
+
+      // append code between last gap marker and begin of whitespace
+      assert
+        previousMatchEnd >= 0 && whitespaceBegin >= previousMatchEnd :
+        "pme = " + previousMatchEnd + "; wb = " + whitespaceBegin;
+      
+      bldr.append(code.substring(previousMatchEnd, whitespaceBegin));
+
+      if (isWhitespaceAfterLineBreak) {
+        // carefully glue in each line of the replacement, indent it properly
+        String indentation = code.substring(whitespaceBegin, nextMatchPos);
+        boolean first = true;
+        for (String replacementLine : replacement.split("\n")) {
+          if (!first) {
+            bldr.append("\n");
+          }
+          first = false;
+          bldr.append(indentation);
+          bldr.append(replacementLine);
+        }
+      } else {
+        // the gap marker does not seem to be the first printable thing
+        // on the current line. Indent as-is.
+        bldr.append(replacement);
+      }
+      previousMatchEnd = nextMatchPos + gapMarker.length();
+    }
+    bldr.append(code.substring(previousMatchEnd, code.length()));
+    return new Template(
+      this.relativeDirname,
+      this.fileName,
+      bldr.toString()
+    );
+  }
+
+  /**
+   * Derives a modified template, with a new file name.
+   */
+  public Template withFileName(String newFileName) {
+    return new Template(
+      this.relativeDirname,
+      newFileName,
+      this.code
+    );
+  }
+
   /** 
-   * Saves this template to `{sourceManagedDir}/{relTemplatePath}`,
-   * where `{relTemplatePath}` is the path specified in the full constructor.
+   * Saves this template to `{sourceManagedDir}/{relDirname}/{fileName}`.
    */
   public void saveTo(String sourceManagedDir) throws IOException {
-    File f = new File(sourceManagedDir + "/" + relativePath);
+    File f = 
+      new File(sourceManagedDir + "/" + relativeDirname + "/" + fileName);
     f.getParentFile().mkdirs();
     PrintWriter pw = new PrintWriter(new FileOutputStream(f));
     pw.write(code);
     pw.flush();
     pw.close();
+  }
+
+  /**
+   * Cuts the file 
+   */
+  private static String dirname(String path) {
+    String[] parts = path.split("/");
+    StringBuilder bldr = new StringBuilder();
+    boolean first = true;
+
+    for (int i = 0; i < parts.length - 1; i++ ) {
+      String p = parts[i];
+      if (i == 0) {
+        bldr.append(p);
+      } else {
+        bldr.append("/");
+        bldr.append(p);
+      }
+    }
+    return bldr.toString();
+  }
+
+  private static String basename(String path) {
+    String[] parts = path.split("/");
+    return parts[parts.length - 1];
   }
 }

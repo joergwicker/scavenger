@@ -1,9 +1,27 @@
 package scavenger
+import scala.language.higherKinds
 
-sealed trait <<x>>Job[A] {
-  def zip(other: <<x>>Job[B]): <<x>>Job[(A, B)] = <<x>>Pair(this, other)
+/** <<DOC_TOP>>
+  *
+  * @since 2.3
+  * @author Andrey Tyukin
+  */
+sealed trait <<X>>Job[+X] extends <<EXTENDS>> {
+  <<ZIP_METHODS>>
+}
+ 
+case class <<X>>Apply[X, +Y](
+  f: <<X>>Algorithm[X, Y], 
+  x: <<X>>Job[X]
+) extends <<X>>Job[Y]
+
+case class <<X>>Pair[+X, +Y](
+  _1: <<X>>Job[X],
+  _2: <<X>>Job[Y]
+) extends <<X>>Job[(X, Y)] {
 }
 
-case class <<x>>Pair(a: <<x>>Job[A], b: <<x>>Job[B]) extends <<x>>Job[(A, B)]
-case class <<x>>Jobs[A, +CC[E] <: scavenger.GenericProduct[E, CC]]
-  (jobs: CC[<<x>>Job[A]]) extends <<x>>Job[CC[X]]
+case class <<X>>Jobs[X, +CC[E] <: scavenger.GenericProduct[E, CC]]
+(jobs: CC[<<X>>Job[X]]) extends <<X>>Job[CC[X]] 
+
+// case class <<X>>Value[+X](value: X, identifier: String) extends <<X>>Job[X]

@@ -47,7 +47,7 @@ public class GenerateScavengerComputationAPI {
 
       // Generate `<<X>>Job.scala`
       Template xJob = new Template("main/codegen-scala/scavenger/XJob.scala");
-      String _extends = generateExtends(complexity, "Job");
+      String _extends = generateExtends(complexity, "Job[X]");
       String zipMethods = generateZipMethods(complexity);
       result.add(
         xJob
@@ -55,6 +55,7 @@ public class GenerateScavengerComputationAPI {
           .subst("X", complexity.prefix)
           .subst("EXTENDS", _extends)
           .substIndent("ZIP_METHODS", zipMethods)
+          .withWarning()
           .withFileName(complexity.prefix + "Job.scala")
       );
       Template xAlgorithm = 
@@ -62,6 +63,7 @@ public class GenerateScavengerComputationAPI {
       result.add(
         xAlgorithm
           .subst("x", "BLOCKED" + complexity.prefix)
+          .withWarning()
           .withFileName(complexity.prefix + "Algorithm.scala")
       );
     }
@@ -75,13 +77,17 @@ public class GenerateScavengerComputationAPI {
   private static String generateExtends(Complexity c, String suffix) {
     Complexity candidate = null;
     for (Complexity potentialParent : Complexity.values()) {
-      if (potentialParent.index >= c.index) {
+      if (potentialParent.index > c.index) {
         if (candidate == null || potentialParent.index < candidate.index) {
           candidate = potentialParent;
         }
       }
     }
-    return candidate.prefix + suffix;
+    if (candidate == null) {
+      return ""; // can happen for most general Complexity
+    } else {
+      return "extends " + candidate.prefix + suffix;
+    }
   }
  
   /**
@@ -94,9 +100,27 @@ public class GenerateScavengerComputationAPI {
    */
   public static String generateZipMethods(Complexity c) {
     StringBuilder bldr = new StringBuilder();
-    for (Complexity other: Complexity.values()) {
-      if (other.index >= c.index) {
-        bldr.append("// olololo " + other + "\n");
+    for (Complexity otherStatic: Complexity.values()) {
+      if (otherStatic.index >= c.index) {
+        // the return type is the least general that is possible,
+        // and since the `other` is at least as general as `this`,
+        // we must return the type of the `other`.
+        bldr.append(String.format(
+            "def zip[Y](other: %1$sJob[Y]): %1$sJob[(X, Y)] = {\n",
+            otherStatic.prefix
+        ));
+
+        bldr.append("  other match {\n");
+        // dispatch by actual runtime type
+        for (Complexity otherRuntime: Complexity.inIncreasingOrder()) {
+          if (otherRuntime.index >= c.index) {
+            bldr.append(String.format(
+              "    case y: %2$sJob[Y] => %2$sPair(this, y)\n",
+              c.prefix, otherRuntime.prefix
+            ));
+          }
+        }
+        bldr.append("  }\n}\n");
       }
     }
     return bldr.toString();

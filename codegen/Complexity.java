@@ -1,3 +1,8 @@
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Comparator;
+
 public enum Complexity {
   
   DISTRIBUTED("Distributed", 1000),
@@ -14,4 +19,18 @@ public enum Complexity {
   public String toLowerCase() {
     return prefix.toLowerCase();
   }
+
+  public static List<Complexity> inIncreasingOrder() {
+    ArrayList<Complexity> a = new ArrayList<Complexity>();
+    for (Complexity c : Complexity.values()) {
+      a.add(c);
+    }
+    Collections.sort(a, new Comparator<Complexity>() {
+      public int compare(Complexity a, Complexity b) {
+        return a.index - b.index;
+      }
+    });
+    return a;
+  }
+
 }

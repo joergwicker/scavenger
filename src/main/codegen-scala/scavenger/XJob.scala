@@ -6,7 +6,7 @@ import scala.language.higherKinds
   * @since 2.3
   * @author Andrey Tyukin
   */
-sealed trait <<X>>Job[+X] extends <<EXTENDS>> {
+sealed trait <<X>>Job[+X] <<EXTENDS>> {
   <<ZIP_METHODS>>
 }
  

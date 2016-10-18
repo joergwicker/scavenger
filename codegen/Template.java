@@ -3,18 +3,25 @@ import static java.nio.file.Files.readAllBytes;
 import static java.nio.file.Paths.get;
 
 public class Template {
-  public final String code;
-  public final String relativeDirname;
-  public final String fileName;
+  public final String code;                  
+  public final String relativeDirname;       // where in `sourceManaged` to save
+  public final String fileName;              // how to call the generated file
+  private final String originalTemplateFilePath; // where's the original?
 
   /** 
    * Creates a template with content `code` that will be 
    * saved under `{sourceManagedDir}/{relativeDirname}/{fileName}`.
    */
-  public Template(String relativeDirname, String fileName, String code) {
+  public Template(
+    String relativeDirname, 
+    String fileName, 
+    String code,
+    String originalTemplateFilePath
+  ) {
     this.relativeDirname = relativeDirname;
     this.fileName = fileName;
     this.code = code;
+    this.originalTemplateFilePath = originalTemplateFilePath;
   }
 
   /** 
@@ -26,7 +33,8 @@ public class Template {
     this(
       dirname(relativeTemplatePath.replaceAll("codegen-", "")),
       basename(relativeTemplatePath),
-      new String(readAllBytes(get("src/" + relativeTemplatePath)))
+      new String(readAllBytes(get("src/" + relativeTemplatePath))),
+      "src/" + relativeTemplatePath
     );
   }
 
@@ -38,7 +46,8 @@ public class Template {
     return new Template(
       relativeDirname,
       fileName,
-      code.replaceAll("<<" + gapName + ">>", replacement)
+      code.replaceAll("<<" + gapName + ">>", replacement),
+      this.originalTemplateFilePath
     );
   }
 
@@ -101,7 +110,8 @@ public class Template {
     return new Template(
       this.relativeDirname,
       this.fileName,
-      bldr.toString()
+      bldr.toString(),
+      this.originalTemplateFilePath
     );
   }
 
@@ -112,7 +122,25 @@ public class Template {
     return new Template(
       this.relativeDirname,
       newFileName,
-      this.code
+      this.code,
+      this.originalTemplateFilePath
+    );
+  }
+
+  /**
+   * Prepends a warning comment to the source code.
+   * Uses the `originalTemplateFilePath` in the comment.
+   */
+  public Template withWarning() {
+    return new Template(
+      this.relativeDirname,
+      this.fileName,
+      "// This source code file has been generated automatically.\n" +
+      "// Do not modify this file, all changes will be overridden.\n" + 
+      "// The template file is located at: " + 
+      this.originalTemplateFilePath + "\n" + 
+      this.code,
+      this.originalTemplateFilePath
     );
   }
 
@@ -129,6 +157,8 @@ public class Template {
     pw.close();
   }
 
+    
+   
   /**
    * Cuts the file 
    */

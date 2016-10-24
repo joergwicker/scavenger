@@ -82,12 +82,6 @@ For the basic demo run:
 mvn exec:java -Dexec.mainClass="scavenger.demo.Demo" -Dakka.remote.netty.tcp.hostname=<host> -Dakka.remote.netty.tcp.port=<port>  -Dconfig.file=<configFile>
 ```
 
-Examples
-====
-
-We have a seperate demo git repository with a few examples at https://github.com/joergwicker/scavenger_demo (note that the README file uses sbt, but Scavenger uses Maven).
-
-
 Cite
 ====
 
@@ -119,7 +113,9 @@ If you have a maven project with java and scala classes, this seems to work:
 ```
    <dependency>
       <groupId>org.scala-lang</groupId>
-    <artifactId>scala-library</artifactId>
+      <artifactId>scala-library</artifactId>
+   </dependency>
+
       ...
 
   <pluginManagement>

@@ -117,9 +117,6 @@ trait CanCurrySnd[+In, -InA, -InB, +Out] {
 }
 */
 
-trait CanBuildProduct[-A, -B, +Prod] {
-  def apply(a: Computation[A], b: Computation[B]): Computation[Prod]
-}
 
 /** This is the natural notion of a morphism between
   * objects of type `Computation[X]` for some `X`.

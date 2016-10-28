@@ -8,6 +8,7 @@ import scavenger.categories.formalccc
   */
 package object scavenger /* TODO: why was it here??: extends Serializable */ {
   type Identifier = String
+  private[scavenger] val NextDown1 = java.lang.Math.nextDown(1.0)
 
   // Three castings into the canonical form of a morphism
   implicit def withoutContextToFull[X, Y](f: X => Future[Y]): 
